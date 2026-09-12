@@ -63,7 +63,7 @@ jobs:
       - name: Run scraper
         if: steps.node_project.outputs.exists == 'true'
         env:
-          PRODUCT_URL: ${{ inputs.url }}
+          PRODUCT_URL: ${{ vars.PRODUCT_URL }}
         run: |
           npm install
           npx playwright install chromium
