@@ -11,6 +11,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const OUTPUT_FILE = path.resolve(__dirname, '../output/product.json');
 
+const TARGET_URL =
+  'https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI';
+
 const originalConsole = {
   log: console.log.bind(console),
   warn: console.warn.bind(console),
@@ -545,12 +548,12 @@ function validateResult(product) {
 }
 
 async function main() {
-  const targetUrl = process.env.PRODUCT_URL || process.argv[2];
+  const targetUrl = process.argv[2] || process.env.PRODUCT_URL || TARGET_URL;
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
 
-  const isHeadless = JSON.parse(process.env.HEADLESS || process.argv[3] || true);
+  const isHeadless = JSON.parse(process.argv[3] || process.env.HEADLESS || true);
   const browser = await chromium.launch({
     headless: isHeadless,
     channel: 'chromium',

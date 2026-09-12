@@ -16,7 +16,10 @@ npx playwright install chromium
 
 ## Run
 
-Optional URL override:
+# By default
+npm run scrape
+
+# Optional URL override:
 
 ```bash
 targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
