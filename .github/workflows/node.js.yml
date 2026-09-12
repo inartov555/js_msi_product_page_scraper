@@ -5,19 +5,16 @@ name: Node.js CI
 
 on:
   push:
+
   workflow_dispatch:
     inputs:
       url:
         description: 'Product URL'
-        required: true
+        required: false
         type: string
 
 permissions:
   contents: read
-
-defaults:
-  run:
-    working-directory: .
 
 jobs:
   js_scrape:
@@ -31,60 +28,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check Node project
-        id: node_project
-        shell: bash
-        run: |
-          if [ -s "package.json" ] && node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))" 2>/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-          if [ -f "package-lock.json" ]; then
-            echo "lock_exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "lock_exists=false" >> "$GITHUB_OUTPUT"
-          fi        
-
-      - name: Use Node.js ${{ matrix.node-version }} with cache
-        if: steps.node_project.outputs.exists == 'true' && steps.node_project.outputs.lock_exists == 'true'
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: package-lock.json
 
-      - name: Use Node.js ${{ matrix.node-version }} without cache
-        if: steps.node_project.outputs.exists == 'true' && steps.node_project.outputs.lock_exists != 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Run scrape
-        if: steps.node_project.outputs.exists == 'true'
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run scraper
         env:
-          PRODUCT_URL: ${{ vars.PRODUCT_URL }}
+          PRODUCT_URL: ${{ inputs.url || vars.PRODUCT_URL }}
+          HEADLESS: 'true'
         run: |
-          if [ -z "$PRODUCT_URL" ]; then
-            echo "ERROR: PRODUCT_URL is empty"
-            exit 1
+          echo "Running MSI scraper"
+
+          if [ -n "$PRODUCT_URL" ]; then
+            echo "Using PRODUCT_URL from GitHub Actions"
+          else
+            echo "No PRODUCT_URL supplied; scraper will use TARGET_URL from src/scrape.js"
           fi
-      
-          echo "PRODUCT_URL is configured"
-      
-          echo "Node sees PRODUCT_URL:"
-          node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
-      
-          echo "Actual scrape code:"
-          grep -n "targetUrl" src/scrape.js
-      
-          npm install
-          npx playwright install chromium
+
           npm run scrape
 
-      - name: Upload coverage artifact
-        if: always() && hashFiles('coverage/**') != ''
+      - name: Upload scraped product
+        if: always() && hashFiles('output/product.json') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.node-version }}
-          path: coverage
+          name: msi-product-${{ matrix.node-version }}
+          path: output/product.json
