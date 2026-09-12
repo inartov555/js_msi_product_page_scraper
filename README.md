@@ -22,7 +22,7 @@ npm run scrape
 ### Optional URL override:
 
 ```bash
-# URl to a particular item, you can find some in `https://us-store.msi.com`
+# URl to a particular item, you can find some in https://us-store.msi.com
 targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
 
 # url = $targetUrl
