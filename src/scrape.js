@@ -42,11 +42,11 @@ class MsiProductPageLocators {
   }
 
   productTitleSelector() {
-    return '.product-detail h2.title';
+    return '.product-detail > .row > .col-md-6 h2.title';
   }
 
   productDescriptionSelectors() {
-    return ['.product-detail h2.title + div p'];
+    return ['.product-detail > .row > .col-md-6 h2.title + div p'];
   }
 
   regularPriceSelectors() {
@@ -101,7 +101,7 @@ class MsiProductPageLocators {
 
   specificationSelectors() {
     return {
-      tables: 'table',
+      tables: '.product-detail table.table.table-borderless',
       tableRows: 'tr',
       tableCells: ':scope > th, :scope > td',
       definitionLists: 'dl',
@@ -111,14 +111,6 @@ class MsiProductPageLocators {
     };
   }
 
-  brandSelectors() {
-    return [
-      'main [class*="brand" i]',
-      '.product-info [class*="brand" i]',
-      'main [class*="manufacturer" i]',
-    ];
-  }
-
   ratingSelectors() {
     return ['#description-list-average-rating #average-rating-info'];
   }
@@ -126,6 +118,13 @@ class MsiProductPageLocators {
   productIdInput() {
     return this.page
       .locator('#product_qty input[name="product_id"]')
+      .first();
+  }
+
+  viewItemAnalyticsScript() {
+    return this.page
+      .locator('script')
+      .filter({ hasText: /gtag\("event",\s*"view_item"/ })
       .first();
   }
 }
@@ -244,44 +243,102 @@ async function extractAvailability(page, locators) {
 }
 
 async function extractCategoryTree(page, locators, title) {
-  return page.evaluate(({ currentTitle, containers }) => {
-    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
-    const current = clean(currentTitle).toLowerCase();
+  const breadcrumbTree = await page.evaluate(
+    ({ currentTitle, containers }) => {
+      const clean = (value) =>
+        String(value ?? '')
+          .replace(/\s+/g, ' ')
+          .trim();
 
-    for (const selector of containers) {
-      const container = document.querySelector(selector);
-      if (!container) continue;
+      const current = clean(currentTitle).toLowerCase();
 
-      const listItems = [...container.querySelectorAll('li')];
-      const source = listItems.length >= 2 ? listItems : [...container.querySelectorAll('a')];
-      const result = [];
+      for (const selector of containers) {
+        const container = document.querySelector(selector);
+        if (!container) continue;
 
-      for (const element of source) {
-        const name = clean(element.innerText);
-        if (!name) continue;
-        if (/^(home|store)$/i.test(name)) continue;
-        if (current && name.toLowerCase() === current) continue;
+        const listItems = [...container.querySelectorAll('li')];
+        const source =
+          listItems.length >= 2
+            ? listItems
+            : [...container.querySelectorAll('a')];
 
-        const anchor = element.matches('a') ? element : element.querySelector('a');
-        result.push({
-          name,
-          url: anchor?.href || null,
-        });
+        const result = [];
+
+        for (const element of source) {
+          const name = clean(element.innerText);
+
+          if (!name) continue;
+          if (/^(home|store)$/i.test(name)) continue;
+          if (current && name.toLowerCase() === current) continue;
+
+          const anchor = element.matches('a')
+            ? element
+            : element.querySelector('a');
+
+          result.push({
+            name,
+            url: anchor?.href || null,
+          });
+        }
+
+        const deduped = result.filter(
+          (item, index, array) =>
+            index ===
+            array.findIndex(
+              (other) =>
+                other.name === item.name &&
+                other.url === item.url,
+            ),
+        );
+
+        if (deduped.length) {
+          return deduped;
+        }
       }
 
-      const deduped = result.filter(
-        (item, index, array) =>
-          index === array.findIndex((other) => other.name === item.name && other.url === item.url),
+      return [];
+    },
+    {
+      currentTitle: title,
+      containers: locators.breadcrumbSelectors(),
+    },
+  );
+
+  if (breadcrumbTree.length) {
+    return breadcrumbTree;
+  }
+
+  const analyticsText = await locators
+    .viewItemAnalyticsScript()
+    .textContent()
+    .catch(() => null);
+
+  if (!analyticsText) {
+    return [];
+  }
+
+  const categoryKeys = [
+    'item_category',
+    'item_category2',
+    'item_category3',
+  ];
+
+  return categoryKeys
+    .map((key) => {
+      const match = analyticsText.match(
+        new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`),
       );
 
-      if (deduped.length) return deduped;
-    }
+      const name = cleanText(match?.[1]);
 
-    return [];
-  }, {
-    currentTitle: title,
-    containers: locators.breadcrumbSelectors(),
-  });
+      return name
+        ? {
+            name,
+            url: null,
+          }
+        : null;
+    })
+    .filter(Boolean);
 }
 
 async function extractImages(page, locators) {
@@ -464,14 +521,8 @@ async function extractItemId(locators) {
 }
 
 async function extractBrand(page, locators) {
-  const brandText = await firstVisibleText(page, locators.brandSelectors());
-
-  if (brandText) {
-    const match = brandText.match(/(?:brand|manufacturer)\s*:?\s*(.+)/i);
-    return cleanText(match?.[1] ?? brandText);
-  }
-
   const bodyText = await locators.body().innerText();
+
   return /\bMSI\b/i.test(bodyText) ? 'MSI' : null;
 }
 

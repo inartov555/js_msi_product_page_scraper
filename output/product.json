@@ -1,36 +1,44 @@
 {
-  "url": "https://us-store.msi.com/Motherboards/B550M-GAMING-PLUS-WIFI6E?utm_source=chatgpt.com",
-  "item_id": "3123",
-  "title": "B550M GAMING PLUS WIFI6E",
+  "url": "https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI",
+  "item_id": "2373",
+  "title": "MAG Z890 TOMAHAWK WIFI",
   "brand": "MSI",
-  "product_category": "Motherboards",
+  "product_category": "Motherboards > INTEL PLATFORM > Intel Z890",
   "category_tree": [
     {
       "name": "Motherboards",
       "url": "https://us-store.msi.com/Motherboards"
+    },
+    {
+      "name": "INTEL PLATFORM",
+      "url": "https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard"
+    },
+    {
+      "name": "Intel Z890",
+      "url": "https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890"
     }
   ],
-  "description": "The B550M GAMING PLUS WIFI6E is a gaming oriented MATX motherboard that is constructed around the AMD B550 chipset which supports AMD Ryzen 5000 series desktop processors, featuring PCIe 4.0, 1G LAN, Wi-Fi 6E and DDR4 that balances both value and premium hardware.",
-  "price": 109.99,
-  "sale_price": 99.99,
-  "availability": "in_stock",
-  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-1-1024x1024.png",
+  "description": "The MAG Z890 TOMAHAWK WIFI Intel LGA 1851 gaming motherboard delivers cutting-edge connectivity, including Wi-Fi 7, 5G LAN, Thunderbolt 4, PCIe 5.0, and M.2 Gen5. Designed for AI-PCs and EZ DIY, it’s an ideal Z890 ATX motherboard for Intel Core Ultra CPU.",
+  "price": 259.99,
+  "sale_price": null,
+  "availability": "out_of_stock",
+  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-1-1024x1024.png",
   "additional_image_urls": [
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-3-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-4-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-5-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-6-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-7-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/B550mgamingwifi6e/B550mgamingwifi6e-2-1024x1024.png"
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-3-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-4-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-5-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-6-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-7-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-2-1024x1024.png"
   ],
   "specs": [
     {
       "name": "OPERATING SYSTEM",
-      "value": "Support for Windows® 11 64-bit, Windows® 10 64-bit"
+      "value": "Support for Windows® 11 64-bit"
     },
     {
       "name": "MANUFACTURER NUMBER",
-      "value": "B550M GAMING PLUS WIFI6E"
+      "value": "MAG Z890 TOMAHAWK WIFI"
     },
     {
       "name": "PRODUCT CONDITION",
@@ -38,40 +46,44 @@
     },
     {
       "name": "CPU",
-      "value": "Supports AMD Ryzen™ 5000 Series, 5000 G-Series, 4000 G Series, and 3000 Series Processors"
+      "value": "Supports Intel® Core™ Ultra Processors (Series 2) LGA 1851"
     },
     {
       "name": "CHIPSET",
-      "value": "AMD® B550 Chipset"
+      "value": "INTEL Z890 Chipset"
     },
     {
       "name": "CPU SOCKET",
-      "value": "AM4"
+      "value": "LGA 1851"
     },
     {
       "name": "FORM FACTOR",
-      "value": "mATX"
+      "value": "ATX Form Factor"
     },
     {
       "name": "MEMORY",
-      "value": "4 DIMMs, Dual Channel DDR4-4400+ MHz (OC)"
+      "value": "4x DDR5 UDIMM, Maximum Memory Capacity 256GB Memory Support 9200 - 6400 (OC) MT/s / 6400 - 4800 (JEDEC) MT/s Max. overclocking frequency: 1DPC 1R Max speed up to 9200+ MT/s 1DPC 2R Max speed up to 7200+ MT/s 2DPC 1R Max speed up to 4800+ MT/s 2DPC 2R Max speed up to 4800+ MT/s Supports Intel® POR Speed and JEDEC Speed Supports Memory Overclocking and Intel® XMP 3.0 Supports Dual-Controller Dual-Channel mode Supports Non-ECC, Un-buffered memory Supports CUDIMM"
     },
     {
       "name": "LAN",
-      "value": "Realtek® RTL8111H Gigabit LAN"
+      "value": "Intel® Killer™ E5000 5Gbps LAN"
     },
     {
       "name": "WIRELESS LAN",
-      "value": "Wi-Fi 6E Solution"
+      "value": "Intel® Killer™ BE1750x Wi-Fi 7 The Wireless module is pre-installed in the M.2 (Key-E) slot Supports MU-MIMO TX/RX, 2.4GHz / 5GHz / 6GHz* (320MHz) up to 5.8Gbps Supports 802.11 a/ b/ g/ n/ ac/ ax/ be"
     },
     {
       "name": "BLUETOOTH",
-      "value": "Bluetooth 5.3"
+      "value": "Supports Bluetooth® 5.4**, MLO, 4KQAM 6GHz band support may depend on every country’s regulations and Wi-Fi 7 will be ready in Windows 11 SV3. The Bluetooth version may be updated, please refer to the Wi-Fi chipset vendor's website for details. Bluetooth 5.4 support schedule depends on MSFT Windows 11 plan."
+    },
+    {
+      "name": "AUDIO",
+      "value": "Realtek® ALC1220P Codec 7.1-Channel High Definition Audio Supports S/PDIF output"
     }
   ],
-  "star_rating": 0,
-  "review_count": 0,
+  "star_rating": 4.7,
+  "review_count": 3,
   "gtin": null,
-  "mpn": "B550M GAMING PLUS WIFI6E",
-  "scraped_at": "2026-09-12T16:33:39.611Z"
+  "mpn": "MAG Z890 TOMAHAWK WIFI",
+  "scraped_at": "2026-09-12T17:00:22.355Z"
 }
