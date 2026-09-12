@@ -600,7 +600,7 @@ async function main() {
     console.log(`Scraping: ${targetUrl}`);
     await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
-      timeout: 45_000,
+      timeout: 45000,
     });
 
     // Wait for the product content rather than using an arbitrary sleep.
@@ -609,7 +609,7 @@ async function main() {
       .waitForFunction(
         () => /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(document.body.innerText),
         null,
-        { timeout: 15_000 },
+        { timeout: 15000 },
       )
       .catch(() => {});
 
