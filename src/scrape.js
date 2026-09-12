@@ -272,11 +272,11 @@ async function extractImages(page, locators) {
     const mainImage = document.querySelector(mainImageSelector);
 
     if (mainImage) {
-      urls.push(image.getAttribute('popup_img') || mainImage.currentSrc || mainImage.src);
+      urls.push(mainImage.currentSrc || mainImage.src);
     }
 
     for (const image of document.querySelectorAll(carouselImageSelector)) {
-      urls.push(image.currentSrc || image.src);
+      urls.push(image.getAttribute('popup_img') || image.currentSrc || image.src);
     }
 
     return urls.filter(Boolean);
@@ -425,6 +425,17 @@ async function extractSpecs(page, locators) {
 }
 
 async function extractItemId(locators) {
+  const productId = cleanText(
+    await locators
+      .productIdInput()
+      .inputValue()
+      .catch(() => null),
+  );
+
+  if (productId) {
+    return productId;
+  }
+
   const bodyText = await locators.body().innerText();
   const match = bodyText.match(
     /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i,
