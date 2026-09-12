@@ -3,7 +3,14 @@
 
 name: Node.js CI
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Product URL'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -24,15 +31,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Check Node project
+        id: node_project
+        shell: bash
+        run: |
+          if [ -f "package.json" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -f "package-lock.json" ]; then
+            echo "lock_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "lock_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Use Node.js ${{ matrix.node-version }} with cache
+        if: steps.node_project.outputs.exists == 'true' && steps.node_project.outputs.lock_exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Use Node.js ${{ matrix.node-version }} without cache
+        if: steps.node_project.outputs.exists == 'true' && steps.node_project.outputs.lock_exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run scraper
+        if: steps.node_project.outputs.exists == 'true'
+        env:
+          PRODUCT_URL: ${{ inputs.url }}
+        run: |
+          npm install
+          npx playwright install chromium
+          npm run scrape
 
       - name: Upload coverage artifact
         if: always() && hashFiles('coverage/**') != ''
@@ -42,7 +78,7 @@ jobs:
           path: coverage
 
       - name: Build (JavaScript type-check + NodeJS build)
+        if: steps.node_project.outputs.exists == 'true'
         env:
           CI: true
         run: npm run build
-
