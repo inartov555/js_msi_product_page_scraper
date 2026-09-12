@@ -18,6 +18,30 @@
  * - validateResult()       -> warns about missing required values.
  *
  * MsiProductPageLocators keeps all page selectors in one place.
+ * 
+ * Architecture:
+ *
+ *   main()
+ *   ├─ acceptCookiesIfPresent()
+ *   ├─ extractProduct()
+ *   │  ├─ firstVisibleText()
+ *   │  ├─ extractCategoryTree()
+ *   │  ├─ extractImages()
+ *   │  ├─ extractSpecs()
+ *   │  │  └─ revealSpecifications()
+ *   │  ├─ extractPricePair()
+ *   │  │  ├─ firstVisibleText()
+ *   │  │  └─ parsePrice()
+ *   │  ├─ extractRating()
+ *   │  │  ├─ firstVisibleText()
+ *   │  │  └─ parsePrice()
+ *   │  ├─ extractItemId()
+ *   │  ├─ extractBrand()
+ *   │  ├─ extractAvailability()
+ *   │  │  ├─ firstVisibleText()
+ *   │  │  └─ normalizeAvailability()
+ *   │  └─ findSpecValue()
+ *   └─ validateResult()
  */
 
 import { chromium } from 'playwright';
