@@ -582,7 +582,7 @@ function validateResult(product) {
 }
 
 async function main() {
-  const targetUrl = process.argv[2];
+  const targetUrl = process.env.PRODUCT_URL || process.argv[2];
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
