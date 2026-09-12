@@ -106,7 +106,6 @@ class MsiProductPageLocators {
   breadcrumbSelectors() {
     return [
       'ol.breadcrumb',
-      'ul.breadcrumb',
     ];
   }
 
