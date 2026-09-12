@@ -24,7 +24,7 @@ targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL
 # url = $targetUrl
 # isHeadless = true/false/not set
 
-npm run scrape $url $isHeadless
+npm run scrape $targetUrl $isHeadless
 
 # E.g.
 npm run scrape $targetUrl
