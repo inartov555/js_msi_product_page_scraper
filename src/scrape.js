@@ -85,96 +85,6 @@ function normalizeAvailability(value) {
   return null;
 }
 
-function findProductNode(node) {
-  if (!node) return null;
-
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      const found = findProductNode(item);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  if (typeof node !== 'object') return null;
-
-  const type = node['@type'];
-  const types = Array.isArray(type) ? type : [type];
-  if (types.some((entry) => String(entry).toLowerCase() === 'product')) {
-    return node;
-  }
-
-  if (node['@graph']) {
-    const found = findProductNode(node['@graph']);
-    if (found) return found;
-  }
-
-  for (const value of Object.values(node)) {
-    if (value && typeof value === 'object') {
-      const found = findProductNode(value);
-      if (found) return found;
-    }
-  }
-
-  return null;
-}
-
-async function extractJsonLdProduct(page) {
-  const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-
-  for (const script of scripts) {
-    try {
-      const parsed = JSON.parse(script);
-      const product = findProductNode(parsed);
-      if (product) return product;
-    } catch {
-      // Invalid JSON-LD should not fail the whole scrape; DOM fallbacks are used below.
-    }
-  }
-
-  return null;
-}
-
-function readBrandFromJsonLd(product) {
-  const brand = product?.brand;
-  if (typeof brand === 'string') return cleanText(brand);
-  if (brand && typeof brand === 'object') return cleanText(brand.name);
-  return null;
-}
-
-function readOffer(product) {
-  const offers = product?.offers;
-  if (Array.isArray(offers)) return offers.find((offer) => offer && typeof offer === 'object') ?? null;
-  if (offers && typeof offers === 'object') return offers;
-  return null;
-}
-
-function readJsonLdImages(product, baseUrl) {
-  const value = product?.image;
-  const images = Array.isArray(value) ? value : value ? [value] : [];
-
-  return unique(
-    images.map((image) => {
-      if (typeof image === 'string') return normalizeUrl(image, baseUrl);
-      if (image && typeof image === 'object') {
-        return normalizeUrl(image.url ?? image.contentUrl, baseUrl);
-      }
-      return null;
-    }),
-  );
-}
-
-async function readMeta(page, selectors) {
-  return page.evaluate((candidateSelectors) => {
-    for (const selector of candidateSelectors) {
-      const element = document.querySelector(selector);
-      const value = element?.getAttribute('content');
-      if (value?.trim()) return value.trim();
-    }
-    return null;
-  }, selectors);
-}
-
 async function firstVisibleText(page, selectors) {
   for (const selector of selectors) {
     const locator = page.locator(selector);
@@ -184,7 +94,7 @@ async function firstVisibleText(page, selectors) {
       const candidate = locator.nth(i);
       try {
         if (!(await candidate.isVisible())) continue;
-        const text = cleanText(await candidate.textContent());
+        const text = cleanText(await candidate.innerText());
         if (text) return text;
       } catch {
         // Continue to the next candidate if the DOM changed while inspecting it.
@@ -195,11 +105,8 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
-async function extractTitle(page, productJsonLd) {
-  const fromJsonLd = cleanText(productJsonLd?.name);
-  if (fromJsonLd) return fromJsonLd;
-
-  const fromDom = await firstVisibleText(page, [
+async function extractTitle(page) {
+  return firstVisibleText(page, [
     'main [itemprop="name"]',
     'main .product-title',
     'main [class*="product-name"]',
@@ -210,21 +117,17 @@ async function extractTitle(page, productJsonLd) {
     'h1',
     'h2',
   ]);
-  if (fromDom) return fromDom;
-
-  const ogTitle = await readMeta(page, ['meta[property="og:title"]', 'meta[name="twitter:title"]']);
-  return cleanText(ogTitle);
 }
 
-async function extractDescription(page, productJsonLd) {
-  const fromJsonLd = cleanText(productJsonLd?.description);
-  if (fromJsonLd) return fromJsonLd;
-
-  const metaDescription = await readMeta(page, [
-    'meta[name="description"]',
-    'meta[property="og:description"]',
+async function extractDescription(page) {
+  return firstVisibleText(page, [
+    'main .product-description',
+    'main [class*="product-description" i]',
+    '.product-info [class*="description" i]',
+    '.product-info [class*="summary" i]',
+    '.product-info p',
+    'main [class*="summary" i]',
   ]);
-  return cleanText(metaDescription);
 }
 
 async function extractHeroText(page, title) {
@@ -258,7 +161,7 @@ async function extractHeroText(page, title) {
   }, title);
 }
 
-function extractPricePair(heroText, offer) {
+function extractPricePair(heroText) {
   const text = cleanText(heroText) ?? '';
 
   const saleMatch = text.match(
@@ -269,11 +172,6 @@ function extractPricePair(heroText, offer) {
       price: parsePrice(saleMatch[1]),
       sale_price: parsePrice(saleMatch[2]),
     };
-  }
-
-  const offerPrice = parsePrice(offer?.price ?? offer?.lowPrice);
-  if (offerPrice !== null) {
-    return { price: offerPrice, sale_price: null };
   }
 
   const priceMatches = [...text.matchAll(/\$\s*([\d,.]+)/g)]
@@ -307,7 +205,7 @@ async function extractCategoryTree(page, title) {
       const result = [];
 
       for (const element of source) {
-        const name = clean(element.textContent);
+        const name = clean(element.innerText);
         if (!name) continue;
         if (/^(home|store)$/i.test(name)) continue;
         if (current && name.toLowerCase() === current) continue;
@@ -330,20 +228,7 @@ async function extractCategoryTree(page, title) {
     return [];
   }, title);
 
-  if (breadcrumbs.length) return breadcrumbs;
-
-  // Safe fallback: build a readable category path from the target URL itself.
-  const url = new URL(page.url());
-  const segments = url.pathname.split('/').filter(Boolean).slice(0, -1);
-
-  return segments.map((segment, index) => {
-    const name = decodeURIComponent(segment).replace(/-/g, ' ');
-    const partialPath = `/${segments.slice(0, index + 1).join('/')}`;
-    return {
-      name,
-      url: new URL(partialPath, url.origin).href,
-    };
-  });
+  return breadcrumbs;
 }
 
 async function extractDomImages(page) {
@@ -373,18 +258,13 @@ async function extractDomImages(page) {
   });
 }
 
-async function extractImages(page, productJsonLd) {
+async function extractImages(page) {
   const baseUrl = page.url();
-  const jsonLdImages = readJsonLdImages(productJsonLd, baseUrl);
-  const ogImage = normalizeUrl(
-    await readMeta(page, ['meta[property="og:image"]', 'meta[name="twitter:image"]']),
-    baseUrl,
-  );
   const domImages = (await extractDomImages(page))
     .map((url) => normalizeUrl(url, baseUrl))
     .filter((url) => url && !/(logo|icon|shipping|warranty|payment)/i.test(url));
 
-  const allImages = unique([...jsonLdImages, ogImage, ...domImages]);
+  const allImages = unique(domImages);
 
   return {
     image_url: allImages[0] ?? null,
@@ -420,18 +300,7 @@ async function revealSpecifications(page) {
   }
 }
 
-async function extractSpecs(page, productJsonLd) {
-  if (Array.isArray(productJsonLd?.additionalProperty)) {
-    const jsonLdSpecs = productJsonLd.additionalProperty
-      .map((property) => ({
-        name: cleanText(property?.name),
-        value: cleanText(property?.value),
-      }))
-      .filter((item) => item.name);
-
-    if (jsonLdSpecs.length >= 3) return jsonLdSpecs;
-  }
-
+async function extractSpecs(page) {
   await revealSpecifications(page);
 
   return page.evaluate(() => {
@@ -499,39 +368,53 @@ async function extractSpecs(page, productJsonLd) {
   });
 }
 
-async function extractItemId(page, productJsonLd) {
-  const fromJsonLd = cleanText(productJsonLd?.productID ?? productJsonLd?.sku);
-  if (fromJsonLd) return fromJsonLd;
-
-  return page.evaluate(() => {
-    const candidates = [
-      document.querySelector('input[name="product_id"]')?.value,
-      document.querySelector('[data-product-id]')?.getAttribute('data-product-id'),
-      document.querySelector('[data-product_id]')?.getAttribute('data-product_id'),
-    ];
-
-    return candidates.find((value) => value?.trim())?.trim() ?? null;
-  });
-}
-
-async function extractBrand(page, productJsonLd) {
-  const fromJsonLd = readBrandFromJsonLd(productJsonLd);
-  if (fromJsonLd) return fromJsonLd;
-
-  const fromMeta = cleanText(
-    await readMeta(page, ['meta[property="product:brand"]', 'meta[name="brand"]']),
+async function extractItemId(page) {
+  const bodyText = await page.locator('body').innerText();
+  const match = bodyText.match(
+    /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i,
   );
-  if (fromMeta) return fromMeta;
 
-  const documentTitle = cleanText(await page.title());
-  return /\bMSI\b/i.test(documentTitle ?? '') ? 'MSI' : null;
+  return cleanText(match?.[1]);
 }
 
-function readRating(productJsonLd) {
-  const aggregate = productJsonLd?.aggregateRating;
+async function extractBrand(page) {
+  const brandText = await firstVisibleText(page, [
+    'main [class*="brand" i]',
+    '.product-info [class*="brand" i]',
+    'main [class*="manufacturer" i]',
+  ]);
+
+  if (brandText) {
+    const match = brandText.match(/(?:brand|manufacturer)\s*:?\s*(.+)/i);
+    return cleanText(match?.[1] ?? brandText);
+  }
+
+  const bodyText = await page.locator('body').innerText();
+  return /\bMSI\b/i.test(bodyText) ? 'MSI' : null;
+}
+
+async function extractRating(page) {
+  const ratingText = await firstVisibleText(page, [
+    '[class*="rating" i]',
+    '[class*="review-summary" i]',
+    '[class*="reviews" i]',
+  ]);
+
+  if (!ratingText) {
+    return {
+      star_rating: null,
+      review_count: null,
+    };
+  }
+
+  const ratingMatch = ratingText.match(/\b([0-5](?:\.\d+)?)\b/);
+  const reviewMatch =
+    ratingText.match(/\((\d+)\)/) ??
+    ratingText.match(/\b(\d+)\s+reviews?\b/i);
+
   return {
-    star_rating: parsePrice(aggregate?.ratingValue),
-    review_count: parsePrice(aggregate?.reviewCount ?? aggregate?.ratingCount),
+    star_rating: parsePrice(ratingMatch?.[1]),
+    review_count: parsePrice(reviewMatch?.[1]),
   };
 }
 
@@ -540,47 +423,32 @@ function findSpecValue(specs, pattern) {
 }
 
 async function extractProduct(page) {
-  const productJsonLd = await extractJsonLdProduct(page);
-  const title = await extractTitle(page, productJsonLd);
+  const title = await extractTitle(page);
   const heroText = await extractHeroText(page, title);
-  const offer = readOffer(productJsonLd);
   const categoryTree = await extractCategoryTree(page, title);
-  const images = await extractImages(page, productJsonLd);
-  const specs = await extractSpecs(page, productJsonLd);
-  const prices = extractPricePair(heroText, offer);
-  const rating = readRating(productJsonLd);
-
-  const jsonLdAvailability = normalizeAvailability(offer?.availability);
-  const domAvailability = normalizeAvailability(heroText);
-
-  const jsonLdGtin = cleanText(
-    productJsonLd?.gtin ??
-      productJsonLd?.gtin14 ??
-      productJsonLd?.gtin13 ??
-      productJsonLd?.gtin12 ??
-      productJsonLd?.gtin8,
-  );
-
-  const jsonLdMpn = cleanText(productJsonLd?.mpn);
+  const images = await extractImages(page);
+  const specs = await extractSpecs(page);
+  const prices = extractPricePair(heroText);
+  const rating = await extractRating(page);
 
   return {
     url: page.url(),
-    item_id: await extractItemId(page, productJsonLd),
+    item_id: await extractItemId(page),
     title,
-    brand: await extractBrand(page, productJsonLd),
+    brand: await extractBrand(page),
     product_category: categoryTree.length ? categoryTree.map((item) => item.name).join(' > ') : null,
     category_tree: categoryTree,
-    description: await extractDescription(page, productJsonLd),
+    description: await extractDescription(page),
     price: prices.price,
     sale_price: prices.sale_price,
-    availability: jsonLdAvailability ?? domAvailability,
+    availability: normalizeAvailability(heroText),
     image_url: images.image_url,
     additional_image_urls: images.additional_image_urls,
     specs,
     star_rating: rating.star_rating,
     review_count: rating.review_count,
-    gtin: jsonLdGtin ?? findSpecValue(specs, /^(gtin|upc|ean)$/i),
-    mpn: jsonLdMpn ?? findSpecValue(specs, /^(mpn|manufacturer (part|number))/i),
+    gtin: findSpecValue(specs, /^(gtin|upc|ean)$/i),
+    mpn: findSpecValue(specs, /^(mpn|manufacturer (part|number))/i),
     scraped_at: new Date().toISOString(),
   };
 }
@@ -622,6 +490,7 @@ async function main() {
       waitUntil: 'domcontentloaded',
       timeout: 45000,
     });
+    await page.waitForTimeout(20000);
     const status = response?.status();
     const title = await page.title();
     const bodyText = await page.locator('body').innerText();
