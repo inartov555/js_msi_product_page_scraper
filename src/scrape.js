@@ -432,32 +432,25 @@ function validateResult(product) {
 
 async function main() {
   const targetUrl = process.env.PRODUCT_URL || process.argv[2];
-  const isHeadless = JSON.parse(process.env.HEADLESS || process.argv[3] || true);
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
+  const isHeadless = JSON.parse(process.env.HEADLESS || process.argv[3] || true);
   const browser = await chromium.launch({ headless: isHeadless, channel: 'chromium', });
-
   const contextOptions = {
     ...devices['Desktop Chromium'],
-
     userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
-
     locale: 'en-US',
     timezoneId: 'America/Los_Angeles',
-
     viewport: {
       width: 1440,
       height: 1000,
     },
-
     screen: {
       width: 1440,
       height: 1000,
     },
-
     colorScheme: 'light',
-
     deviceScaleFactor: 1,
     isMobile: false,
     hasTouch: false,
@@ -465,31 +458,6 @@ async function main() {
 
   try {
     const context = await browser.newContext(contextOptions)
-    /*
-    const context = await browser.newContext({
-      locale: 'en-US',
-      viewport: { width: 1440, height: 1000 },
-    });
-    */
-    /*
-    const context = await browser.newContext({
-      locale: 'en-US',
-      timezoneId: 'America/Los_Angeles',
-      viewport: {
-        width: 1440,
-        height: 1000,
-      },
-      colorScheme: 'light',
-    });
-    */
-    /*
-    const context = await chromium.launchPersistentContext('./.browser-profile', {
-      headless: true,
-      channel: 'chrome',
-      locale: 'en-US',
-      viewport: { width: 1440, height: 1000 },
-    });
-    */
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
 
