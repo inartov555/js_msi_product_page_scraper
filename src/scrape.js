@@ -11,8 +11,109 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const OUTPUT_FILE = path.resolve(__dirname, '../output/product.json');
 
-async function acceptCookiesIfPresent(page) {
-  const acceptButton = page.getByRole('button', { name: /^accept$/i }).first();
+class MsiProductPageLocators {
+  constructor(page) {
+    this.page = page;
+  }
+
+  acceptCookiesButton() {
+    return this.page.getByRole('button', { name: /^accept$/i }).first();
+  }
+
+  body() {
+    return this.page.locator('body');
+  }
+
+  productTitle() {
+    return this.page.locator('.product-detail h2.title').first();
+  }
+
+  productTitleSelector() {
+    return '.product-detail h2.title';
+  }
+
+  productDescriptionSelectors() {
+    return ['.product-detail h2.title + div p'];
+  }
+
+  regularPriceSelectors() {
+    return ['#prices-wrapper #prices-old'];
+  }
+
+  currentPriceSelectors() {
+    return ['#prices-wrapper #prices-new'];
+  }
+
+  priceWrapperSelectors() {
+    return ['#prices-wrapper'];
+  }
+
+  priceWrapperSelector() {
+    return '#prices-wrapper';
+  }
+
+  productQuantitySelectors() {
+    return ['#product_qty'];
+  }
+
+  breadcrumbSelectors() {
+    return [
+      'nav[aria-label*="breadcrumb" i]',
+      'ol.breadcrumb',
+      'ul.breadcrumb',
+      '.breadcrumb',
+      '[class*="breadcrumb"]',
+    ];
+  }
+
+  mainImageSelector() {
+    return '.product-detail #imagePopup';
+  }
+
+  carouselImageSelector() {
+    return '.product-detail #carouselImages img.product-detail-thumb-bto';
+  }
+
+  specificationButton() {
+    return this.page
+      .getByRole('button', { name: /detail specification|specification/i })
+      .first();
+  }
+
+  specificationLink() {
+    return this.page
+      .getByRole('link', { name: /detail specification|specification/i })
+      .first();
+  }
+
+  specificationSelectors() {
+    return {
+      tables: 'table',
+      tableRows: 'tr',
+      tableCells: ':scope > th, :scope > td',
+      definitionLists: 'dl',
+      definitionTerms: ':scope > dt',
+      sections: '[class*="spec" i], [id*="spec" i]',
+      sectionRows: 'tr, [class*="row" i]',
+    };
+  }
+
+  brandSelectors() {
+    return [
+      'main [class*="brand" i]',
+      '.product-info [class*="brand" i]',
+      'main [class*="manufacturer" i]',
+    ];
+  }
+
+  ratingSelectors() {
+    return ['#description-list-average-rating #average-rating-info'];
+  }
+}
+
+
+async function acceptCookiesIfPresent(locators) {
+  const acceptButton = locators.acceptCookiesButton();
 
   try {
     await acceptButton.waitFor({
@@ -94,13 +195,9 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
-async function extractPricePair(page) {
-  const regularPriceText = await firstVisibleText(page, [
-    '#prices-wrapper #prices-old',
-  ]);
-  const currentPriceText = await firstVisibleText(page, [
-    '#prices-wrapper #prices-new',
-  ]);
+async function extractPricePair(page, locators) {
+  const regularPriceText = await firstVisibleText(page, locators.regularPriceSelectors());
+  const currentPriceText = await firstVisibleText(page, locators.currentPriceSelectors());
 
   const regularPrice = parsePrice(regularPriceText);
   const currentPrice = parsePrice(currentPriceText);
@@ -118,26 +215,19 @@ async function extractPricePair(page) {
   };
 }
 
-async function extractAvailability(page) {
-  const priceBlockText = await firstVisibleText(page, ['#prices-wrapper']);
-  const purchaseControlsText = await firstVisibleText(page, ['#product_qty']);
+async function extractAvailability(page, locators) {
+  const priceBlockText = await firstVisibleText(page, locators.priceWrapperSelectors());
+  const purchaseControlsText = await firstVisibleText(page, locators.productQuantitySelectors());
 
   return normalizeAvailability(
     [priceBlockText, purchaseControlsText].filter(Boolean).join(' '),
   );
 }
 
-async function extractCategoryTree(page, title) {
-  return page.evaluate((currentTitle) => {
+async function extractCategoryTree(page, locators, title) {
+  return page.evaluate(({ currentTitle, containers }) => {
     const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
     const current = clean(currentTitle).toLowerCase();
-    const containers = [
-      'nav[aria-label*="breadcrumb" i]',
-      'ol.breadcrumb',
-      'ul.breadcrumb',
-      '.breadcrumb',
-      '[class*="breadcrumb"]',
-    ];
 
     for (const selector of containers) {
       const container = document.querySelector(selector);
@@ -169,26 +259,30 @@ async function extractCategoryTree(page, title) {
     }
 
     return [];
-  }, title);
+  }, {
+    currentTitle: title,
+    containers: locators.breadcrumbSelectors(),
+  });
 }
 
-async function extractImages(page) {
+async function extractImages(page, locators) {
   const baseUrl = page.url();
-  const imageUrls = await page.evaluate(() => {
+  const imageUrls = await page.evaluate(({ mainImageSelector, carouselImageSelector }) => {
     const urls = [];
-    const mainImage = document.querySelector('.product-detail #imagePopup');
+    const mainImage = document.querySelector(mainImageSelector);
 
     if (mainImage) {
       urls.push(mainImage.currentSrc || mainImage.src);
     }
 
-    for (const image of document.querySelectorAll(
-      '.product-detail #carouselImages img.product-detail-thumb-bto',
-    )) {
+    for (const image of document.querySelectorAll(carouselImageSelector)) {
       urls.push(image.currentSrc || image.src);
     }
 
     return urls.filter(Boolean);
+  }, {
+    mainImageSelector: locators.mainImageSelector(),
+    carouselImageSelector: locators.carouselImageSelector(),
   });
 
   const images = [
@@ -214,8 +308,8 @@ async function extractImages(page) {
   };
 }
 
-async function revealSpecifications(page) {
-  const button = page.getByRole('button', { name: /detail specification|specification/i }).first();
+async function revealSpecifications(locators) {
+  const button = locators.specificationButton();
 
   try {
     if ((await button.count()) && (await button.isVisible())) {
@@ -227,7 +321,7 @@ async function revealSpecifications(page) {
     console.error('Failed to reveal specifications using the specification button:', error);
   }
 
-  const link = page.getByRole('link', { name: /detail specification|specification/i }).first();
+  const link = locators.specificationLink();
 
   try {
     if (!(await link.count()) || !(await link.isVisible())) return;
@@ -244,10 +338,10 @@ async function revealSpecifications(page) {
   }
 }
 
-async function extractSpecs(page) {
-  await revealSpecifications(page);
+async function extractSpecs(page, locators) {
+  await revealSpecifications(locators);
 
-  return page.evaluate(() => {
+  return page.evaluate((selectors) => {
     const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
     const result = [];
     const seen = new Set();
@@ -266,12 +360,12 @@ async function extractSpecs(page) {
       result.push({ name: cleanName, value: cleanValue });
     };
 
-    const tables = [...document.querySelectorAll('table')];
+    const tables = [...document.querySelectorAll(selectors.tables)];
     const parsedTables = tables.map((table) => {
       const pairs = [];
 
-      for (const row of table.querySelectorAll('tr')) {
-        const cells = [...row.querySelectorAll(':scope > th, :scope > td')];
+      for (const row of table.querySelectorAll(selectors.tableRows)) {
+        const cells = [...row.querySelectorAll(selectors.tableCells)];
         if (cells.length < 2) continue;
 
         const name = clean(cells[0].innerText);
@@ -298,8 +392,8 @@ async function extractSpecs(page) {
       return result;
     }
 
-    for (const dl of document.querySelectorAll('dl')) {
-      const terms = [...dl.querySelectorAll(':scope > dt')];
+    for (const dl of document.querySelectorAll(selectors.definitionLists)) {
+      const terms = [...dl.querySelectorAll(selectors.definitionTerms)];
 
       for (const term of terms) {
         const description = term.nextElementSibling;
@@ -311,10 +405,10 @@ async function extractSpecs(page) {
 
     if (result.length >= 3) return result;
 
-    const sections = [...document.querySelectorAll('[class*="spec" i], [id*="spec" i]')];
+    const sections = [...document.querySelectorAll(selectors.sections)];
 
     for (const section of sections) {
-      const rows = section.querySelectorAll('tr, [class*="row" i]');
+      const rows = section.querySelectorAll(selectors.sectionRows);
 
       for (const row of rows) {
         const children = [...row.children].filter((child) => clean(child.innerText));
@@ -327,11 +421,11 @@ async function extractSpecs(page) {
     }
 
     return result;
-  });
+  }, locators.specificationSelectors());
 }
 
-async function extractItemId(page) {
-  const bodyText = await page.locator('body').innerText();
+async function extractItemId(locators) {
+  const bodyText = await locators.body().innerText();
   const match = bodyText.match(
     /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i,
   );
@@ -339,26 +433,20 @@ async function extractItemId(page) {
   return cleanText(match?.[1]);
 }
 
-async function extractBrand(page) {
-  const brandText = await firstVisibleText(page, [
-    'main [class*="brand" i]',
-    '.product-info [class*="brand" i]',
-    'main [class*="manufacturer" i]',
-  ]);
+async function extractBrand(page, locators) {
+  const brandText = await firstVisibleText(page, locators.brandSelectors());
 
   if (brandText) {
     const match = brandText.match(/(?:brand|manufacturer)\s*:?\s*(.+)/i);
     return cleanText(match?.[1] ?? brandText);
   }
 
-  const bodyText = await page.locator('body').innerText();
+  const bodyText = await locators.body().innerText();
   return /\bMSI\b/i.test(bodyText) ? 'MSI' : null;
 }
 
-async function extractRating(page) {
-  const ratingText = await firstVisibleText(page, [
-    '#description-list-average-rating #average-rating-info',
-  ]);
+async function extractRating(page, locators) {
+  const ratingText = await firstVisibleText(page, locators.ratingSelectors());
 
   if (!ratingText) {
     return {
@@ -380,20 +468,20 @@ function findSpecValue(specs, pattern) {
   return specs.find((spec) => pattern.test(spec.name))?.value ?? null;
 }
 
-async function extractProduct(page) {
-  const title = await firstVisibleText(page, ['.product-detail h2.title']);
-  const description = await firstVisibleText(page, ['.product-detail h2.title + div p']);
-  const categoryTree = await extractCategoryTree(page, title);
-  const images = await extractImages(page);
-  const specs = await extractSpecs(page);
-  const prices = await extractPricePair(page);
-  const rating = await extractRating(page);
+async function extractProduct(page, locators) {
+  const title = await firstVisibleText(page, [locators.productTitleSelector()]);
+  const description = await firstVisibleText(page, locators.productDescriptionSelectors());
+  const categoryTree = await extractCategoryTree(page, locators, title);
+  const images = await extractImages(page, locators);
+  const specs = await extractSpecs(page, locators);
+  const prices = await extractPricePair(page, locators);
+  const rating = await extractRating(page, locators);
 
   return {
     url: page.url(),
-    item_id: await extractItemId(page),
+    item_id: await extractItemId(locators),
     title,
-    brand: await extractBrand(page),
+    brand: await extractBrand(page, locators),
     product_category: categoryTree.length
       ? categoryTree.map((item) => item.name).join(' > ')
       : null,
@@ -401,7 +489,7 @@ async function extractProduct(page) {
     description,
     price: prices.price,
     sale_price: prices.sale_price,
-    availability: await extractAvailability(page),
+    availability: await extractAvailability(page, locators),
     image_url: images.image_url,
     additional_image_urls: images.additional_image_urls,
     specs,
@@ -464,6 +552,8 @@ async function main() {
   try {
     const context = await browser.newContext(contextOptions);
     const page = await context.newPage();
+    const locators = new MsiProductPageLocators(page);
+
     page.setDefaultTimeout(15000);
 
     console.log(`Scraping: ${targetUrl}`);
@@ -475,7 +565,7 @@ async function main() {
 
     const status = response?.status();
     const title = await page.title();
-    const bodyText = await page.locator('body').innerText();
+    const bodyText = await locators.body().innerText();
 
     if (
       (status && status >= 400) ||
@@ -487,25 +577,25 @@ async function main() {
       );
     }
 
-    await acceptCookiesIfPresent(page);
+    await acceptCookiesIfPresent(locators);
 
     // Wait for product content instead of using an arbitrary sleep.
-    await page.locator('.product-detail h2.title').first().waitFor({ state: 'visible' });
+    await locators.productTitle().waitFor({ state: 'visible' });
     await page
       .waitForFunction(
-        () => {
-          const priceBlock = document.querySelector('#prices-wrapper');
+        (priceWrapperSelector) => {
+          const priceBlock = document.querySelector(priceWrapperSelector);
           return (
             priceBlock &&
             /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(priceBlock.innerText)
           );
         },
-        null,
+        locators.priceWrapperSelector(),
         { timeout: 15000 },
       )
       .catch(() => {});
 
-    const product = await extractProduct(page);
+    const product = await extractProduct(page, locators);
     validateResult(product);
 
     await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
