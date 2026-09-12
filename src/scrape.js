@@ -2,7 +2,7 @@
  * Target URL to pass: https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
  */
 
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,81 +108,54 @@ async function firstVisibleText(page, selectors) {
 
 async function extractTitle(page) {
   return firstVisibleText(page, [
-    'main [itemprop="name"]',
-    'main .product-title',
-    'main [class*="product-name"]',
-    'main h1',
-    'main h2',
-    '.product-info h1',
-    '.product-info h2',
-    'h1',
-    'h2',
+    '.product-detail h2.title',
   ]);
 }
 
 async function extractDescription(page) {
   return firstVisibleText(page, [
-    'main .product-description',
-    'main [class*="product-description" i]',
-    '.product-info [class*="description" i]',
-    '.product-info [class*="summary" i]',
-    '.product-info p',
-    'main [class*="summary" i]',
+    '.product-detail h2.title + div p',
   ]);
 }
 
-async function extractHeroText(page, title) {
-  if (!title) return '';
 
-  return page.evaluate((expectedTitle) => {
-    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
-    const normalizedTitle = clean(expectedTitle).toLowerCase();
-    const headings = [...document.querySelectorAll('h1, h2, h3')];
+async function extractPricePair(page) {
+  const regularPriceText = await firstVisibleText(page, [
+    '#prices-wrapper #prices-old',
+  ]);
 
-    const heading = headings.find((element) => {
-      const text = clean(element.textContent).toLowerCase();
-      return text === normalizedTitle || text.includes(normalizedTitle) || normalizedTitle.includes(text);
-    });
+  const currentPriceText = await firstVisibleText(page, [
+    '#prices-wrapper #prices-new',
+  ]);
 
-    if (!heading) return '';
+  const regularPrice = parsePrice(regularPriceText);
+  const currentPrice = parsePrice(currentPriceText);
 
-    let node = heading;
-    let fallback = clean(heading.parentElement?.innerText);
-
-    for (let depth = 0; node && depth < 7; depth += 1, node = node.parentElement) {
-      const text = clean(node.innerText);
-      if (text.length < 12000) fallback = text;
-
-      const containsPrice = /\$\s*\d/.test(text);
-      const containsCommerceState = /(in stock|out of stock|pre[- ]?order|notify me|add to cart)/i.test(text);
-      if (containsPrice && containsCommerceState && text.length < 10000) return text;
-    }
-
-    return fallback || '';
-  }, title);
-}
-
-function extractPricePair(heroText) {
-  const text = cleanText(heroText) ?? '';
-
-  const saleMatch = text.match(
-    /(?:was|regular(?:\s+price)?|list(?:\s+price)?)\s*\$\s*([\d,.]+)[\s\S]{0,80}?\$\s*([\d,.]+)/i,
-  );
-  if (saleMatch) {
+  if (regularPrice !== null && currentPrice !== null) {
     return {
-      price: parsePrice(saleMatch[1]),
-      sale_price: parsePrice(saleMatch[2]),
+      price: regularPrice,
+      sale_price: currentPrice,
     };
   }
 
-  const priceMatches = [...text.matchAll(/\$\s*([\d,.]+)/g)]
-    .map((match) => parsePrice(match[1]))
-    .filter((value) => value !== null);
-
   return {
-    price: priceMatches[0] ?? null,
+    price: currentPrice ?? regularPrice,
     sale_price: null,
   };
+}
+
+async function extractAvailability(page) {
+  const priceBlockText = await firstVisibleText(page, [
+    '#prices-wrapper',
+  ]);
+
+  const purchaseControlsText = await firstVisibleText(page, [
+    '#product_qty',
+  ]);
+
+  return normalizeAvailability(
+    [priceBlockText, purchaseControlsText].filter(Boolean).join(' '),
+  );
 }
 
 async function extractCategoryTree(page, title) {
@@ -235,24 +208,16 @@ async function extractCategoryTree(page, title) {
 async function extractDomImages(page) {
   return page.evaluate(() => {
     const urls = [];
-    const roots = [
-      '.product-image',
-      '.product-images',
-      '.image-additional',
-      '.thumbnails',
-      '[class*="gallery"]',
-      '[class*="product"] [class*="image"]',
-    ];
 
-    for (const selector of roots) {
-      for (const root of document.querySelectorAll(selector)) {
-        for (const anchor of root.querySelectorAll('a[href]')) urls.push(anchor.href);
-        for (const image of root.querySelectorAll('img')) {
-          urls.push(image.currentSrc || image.src);
-          urls.push(image.getAttribute('data-src'));
-          urls.push(image.getAttribute('data-zoom-image'));
-        }
-      }
+    const mainImage = document.querySelector('.product-detail #imagePopup');
+    if (mainImage) {
+      urls.push(mainImage.currentSrc || mainImage.src);
+    }
+
+    for (const image of document.querySelectorAll(
+      '.product-detail #carouselImages img.product-detail-thumb-bto',
+    )) {
+      urls.push(image.currentSrc || image.src);
     }
 
     return urls.filter(Boolean);
@@ -396,9 +361,7 @@ async function extractBrand(page) {
 
 async function extractRating(page) {
   const ratingText = await firstVisibleText(page, [
-    '[class*="rating" i]',
-    '[class*="review-summary" i]',
-    '[class*="reviews" i]',
+    '#description-list-average-rating #average-rating-info',
   ]);
 
   if (!ratingText) {
@@ -409,9 +372,7 @@ async function extractRating(page) {
   }
 
   const ratingMatch = ratingText.match(/\b([0-5](?:\.\d+)?)\b/);
-  const reviewMatch =
-    ratingText.match(/\((\d+)\)/) ??
-    ratingText.match(/\b(\d+)\s+reviews?\b/i);
+  const reviewMatch = ratingText.match(/\((\d+)\)/);
 
   return {
     star_rating: parsePrice(ratingMatch?.[1]),
@@ -425,11 +386,10 @@ function findSpecValue(specs, pattern) {
 
 async function extractProduct(page) {
   const title = await extractTitle(page);
-  const heroText = await extractHeroText(page, title);
   const categoryTree = await extractCategoryTree(page, title);
   const images = await extractImages(page);
   const specs = await extractSpecs(page);
-  const prices = extractPricePair(heroText);
+  const prices = await extractPricePair(page);
   const rating = await extractRating(page);
 
   return {
@@ -442,7 +402,7 @@ async function extractProduct(page) {
     description: await extractDescription(page),
     price: prices.price,
     sale_price: prices.sale_price,
-    availability: normalizeAvailability(heroText),
+    availability: await extractAvailability(page),
     image_url: images.image_url,
     additional_image_urls: images.additional_image_urls,
     specs,
@@ -476,13 +436,60 @@ async function main() {
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
-  const browser = await chromium.launch({ headless: isHeadless });
+  const browser = await chromium.launch({ headless: isHeadless, channel: 'chromium', });
+
+  const contextOptions = {
+    ...devices['Desktop Chromium'],
+
+    userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+
+    locale: 'en-US',
+    timezoneId: 'America/Los_Angeles',
+
+    viewport: {
+      width: 1440,
+      height: 1000,
+    },
+
+    screen: {
+      width: 1440,
+      height: 1000,
+    },
+
+    colorScheme: 'light',
+
+    deviceScaleFactor: 1,
+    isMobile: false,
+    hasTouch: false,
+  };
 
   try {
+    const context = await browser.newContext(contextOptions)
+    /*
     const context = await browser.newContext({
       locale: 'en-US',
       viewport: { width: 1440, height: 1000 },
     });
+    */
+    /*
+    const context = await browser.newContext({
+      locale: 'en-US',
+      timezoneId: 'America/Los_Angeles',
+      viewport: {
+        width: 1440,
+        height: 1000,
+      },
+      colorScheme: 'light',
+    });
+    */
+    /*
+    const context = await chromium.launchPersistentContext('./.browser-profile', {
+      headless: true,
+      channel: 'chrome',
+      locale: 'en-US',
+      viewport: { width: 1440, height: 1000 },
+    });
+    */
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
 
@@ -508,10 +515,14 @@ async function main() {
     await acceptCookiesIfPresent(page);
 
     // Wait for the product content rather than using an arbitrary sleep
-    await page.locator('h1, h2').first().waitFor({ state: 'visible' });
+    await page.locator('.product-detail h2.title').first().waitFor({ state: 'visible' });
     await page
       .waitForFunction(
-        () => /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(document.body.innerText),
+        () => {
+          const priceBlock = document.querySelector('#prices-wrapper');
+          return priceBlock &&
+            /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(priceBlock.innerText);
+        },
         null,
         { timeout: 15000 },
       )
