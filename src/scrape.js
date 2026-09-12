@@ -67,50 +67,62 @@ console.warn = (...args) => originalConsole.warn('[WARN]', ...args);
 console.error = (...args) => originalConsole.error('[ERROR]', ...args);
 
 class MsiProductPageLocators {
+  // Stores the Playwright page instance used by all locator helpers.
   constructor(page) {
     this.page = page;
   }
 
+  // Returns the locator for the cookie consent accept button.
   acceptCookiesButton() {
     return this.page.getByRole('button', { name: /^accept$/i }).first();
   }
 
+  // Returns the locator for the page body.
   body() {
     return this.page.locator('body');
   }
 
+  // Returns the locator for the visible product title.
   productTitle() {
     return this.page.locator('.product-detail h2.title').first();
   }
 
+  // Returns the CSS selector used to read the product title.
   productTitleSelector() {
     return '.product-detail > .row > .col-md-6 h2.title';
   }
 
+  // Returns candidate selectors for the product description.
   productDescriptionSelectors() {
     return ['.product-detail > .row > .col-md-6 h2.title + div p'];
   }
 
+  // Returns selectors for the regular/original product price.
   regularPriceSelectors() {
     return ['#prices-wrapper #prices-old'];
   }
 
+  // Returns selectors for the current or discounted product price.
   currentPriceSelectors() {
     return ['#prices-wrapper #prices-new'];
   }
 
+  // Returns selectors for the product price and availability block.
   priceWrapperSelectors() {
     return ['#prices-wrapper'];
   }
 
+  // Returns the primary selector for the price wrapper.
   priceWrapperSelector() {
     return '#prices-wrapper';
   }
 
+  // Returns selectors for the purchase quantity controls.
   productQuantitySelectors() {
     return ['#product_qty'];
   }
 
+  // Returns fallback selectors for breadcrumb navigation.
   breadcrumbSelectors() {
     return [
       'nav[aria-label*="breadcrumb" i]',
@@ -121,26 +133,31 @@ class MsiProductPageLocators {
     ];
   }
 
+  // Returns the selector for the main product image.
   mainImageSelector() {
     return '.product-detail #imagePopup';
   }
 
+  // Returns the selector for additional carousel product images.
   carouselImageSelector() {
     return '.product-detail #carouselImages img.product-detail-thumb-bto';
   }
 
+  // Returns the locator for a specifications button when present.
   specificationButton() {
     return this.page
       .getByRole('button', { name: /detail specification|specification/i })
       .first();
   }
 
+  // Returns the locator for a specifications link when present.
   specificationLink() {
     return this.page
       .getByRole('link', { name: /detail specification|specification/i })
       .first();
   }
 
+  // Returns selectors used to discover and parse specification sections.
   specificationSelectors() {
     return {
       tables: '.product-detail table.table.table-borderless',
@@ -153,16 +170,19 @@ class MsiProductPageLocators {
     };
   }
 
+  // Returns selectors for the product rating information.
   ratingSelectors() {
     return ['#description-list-average-rating #average-rating-info'];
   }
 
+  // Returns the locator for the hidden product ID input.
   productIdInput() {
     return this.page
       .locator('#product_qty input[name="product_id"]')
       .first();
   }
 
+  // Returns the analytics script containing fallback product category data.
   viewItemAnalyticsScript() {
     return this.page
       .locator('script')
@@ -172,6 +192,7 @@ class MsiProductPageLocators {
 }
 
 
+// Accepts the cookie consent dialog when it is visible.
 async function acceptCookiesIfPresent(locators) {
   const acceptButton = locators.acceptCookiesButton();
 
@@ -190,6 +211,7 @@ async function acceptCookiesIfPresent(locators) {
   }
 }
 
+// Normalizes text by trimming whitespace and converting empty values to null.
 function cleanText(value) {
   if (value === null || value === undefined) return null;
 
@@ -197,6 +219,7 @@ function cleanText(value) {
   return text || null;
 }
 
+// Extracts a finite numeric value from a price-like input.
 function parsePrice(value) {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
@@ -208,6 +231,7 @@ function parsePrice(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+// Converts stock-related text into the required normalized availability value.
 function normalizeAvailability(value) {
   const text = cleanText(value)?.toLowerCase();
   if (!text) return null;
@@ -232,6 +256,7 @@ function normalizeAvailability(value) {
   return null;
 }
 
+// Returns the first non-empty text from the first visible matching selector.
 async function firstVisibleText(page, selectors) {
   for (const selector of selectors) {
     const locator = page.locator(selector);
@@ -255,6 +280,7 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
+// Extracts and normalizes the regular price and optional sale price.
 async function extractPricePair(page, locators) {
   const regularPriceText = await firstVisibleText(page, locators.regularPriceSelectors());
   const currentPriceText = await firstVisibleText(page, locators.currentPriceSelectors());
@@ -275,6 +301,7 @@ async function extractPricePair(page, locators) {
   };
 }
 
+// Extracts stock information and normalizes it to the required availability value.
 async function extractAvailability(page, locators) {
   const priceBlockText = await firstVisibleText(page, locators.priceWrapperSelectors());
   const purchaseControlsText = await firstVisibleText(page, locators.productQuantitySelectors());
@@ -284,6 +311,7 @@ async function extractAvailability(page, locators) {
   );
 }
 
+// Extracts breadcrumb categories, falling back to analytics data when needed.
 async function extractCategoryTree(page, locators, title) {
   const breadcrumbTree = await page.evaluate(
     ({ currentTitle, containers }) => {
@@ -383,6 +411,7 @@ async function extractCategoryTree(page, locators, title) {
     .filter(Boolean);
 }
 
+// Extracts, resolves, filters, and deduplicates product image URLs.
 async function extractImages(page, locators) {
   const baseUrl = page.url();
   const imageUrls = await page.evaluate(({ mainImageSelector, carouselImageSelector }) => {
@@ -426,6 +455,7 @@ async function extractImages(page, locators) {
   };
 }
 
+// Opens the specifications section when it is hidden behind a tab or control.
 async function revealSpecifications(locators) {
   const button = locators.specificationButton();
 
@@ -456,6 +486,7 @@ async function revealSpecifications(locators) {
   }
 }
 
+// Extracts technical specification name-value pairs from the page.
 async function extractSpecs(page, locators) {
   await revealSpecifications(locators);
 
@@ -542,6 +573,7 @@ async function extractSpecs(page, locators) {
   }, locators.specificationSelectors());
 }
 
+// Extracts the product ID from page controls or visible page text.
 async function extractItemId(locators) {
   const productId = cleanText(
     await locators
@@ -562,6 +594,7 @@ async function extractItemId(locators) {
   return cleanText(match?.[1]);
 }
 
+// Extracts the MSI brand name from the page content.
 async function extractBrand(page, locators) {
   const bodyText = await locators.body().innerText();
   const match = bodyText.match(/\bMSI\b/i);
@@ -569,6 +602,7 @@ async function extractBrand(page, locators) {
   return cleanText(match?.[0]);
 }
 
+// Extracts the average star rating and review count when available.
 async function extractRating(page, locators) {
   const ratingText = await firstVisibleText(page, locators.ratingSelectors());
 
@@ -588,10 +622,12 @@ async function extractRating(page, locators) {
   };
 }
 
+// Finds a specification value whose name matches the provided pattern.
 function findSpecValue(specs, pattern) {
   return specs.find((spec) => pattern.test(spec.name))?.value ?? null;
 }
 
+// Builds the final normalized product object from all extracted page data.
 async function extractProduct(page, locators) {
   const title = await firstVisibleText(page, [locators.productTitleSelector()]);
   const description = await firstVisibleText(page, locators.productDescriptionSelectors());
@@ -625,6 +661,7 @@ async function extractProduct(page, locators) {
   };
 }
 
+// Warns when expected product fields are missing or incomplete.
 function validateResult(product) {
   const problems = [];
 
@@ -641,6 +678,7 @@ function validateResult(product) {
   }
 }
 
+// Runs the complete scraping flow and writes the result to output/product.json.
 async function main() {
   const targetUrl = process.argv[2] || process.env.PRODUCT_URL || TARGET_URL;
   if (!targetUrl) {
