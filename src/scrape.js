@@ -1,3 +1,7 @@
+/*
+ * Target URL to pass: https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
+ */
+
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import path from 'node:path';
