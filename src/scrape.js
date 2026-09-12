@@ -582,47 +582,6 @@ function validateResult(product) {
 }
 
 async function main() {
-  const targetUrl = process.argv[2] || TARGET_URL;
-  const browser = await chromium.launch({ headless: true });
-
-  try {
-    const context = await browser.newContext({
-      locale: 'en-US',
-      viewport: { width: 1440, height: 1000 },
-    });
-    const page = await context.newPage();
-    page.setDefaultTimeout(15_000);
-
-    console.log(`Scraping: ${targetUrl}`);
-    await page.goto(targetUrl, {
-      waitUntil: 'domcontentloaded',
-      timeout: 45_000,
-    });
-
-    // Wait for the product content rather than using an arbitrary sleep.
-    await page.locator('h1, h2').first().waitFor({ state: 'visible' });
-    await page
-      .waitForFunction(
-        () => /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(document.body.innerText),
-        null,
-        { timeout: 15_000 },
-      )
-      .catch(() => {});
-
-    const product = await extractProduct(page);
-    validateResult(product);
-
-    await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
-    await fs.writeFile(OUTPUT_FILE, `${JSON.stringify(product, null, 2)}\n`, 'utf8');
-
-    console.log(`Saved: ${OUTPUT_FILE}`);
-    await context.close();
-  } finally {
-    await browser.close();
-  }
-}
-
-async function main() {
   const targetUrl = process.argv[2];
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
