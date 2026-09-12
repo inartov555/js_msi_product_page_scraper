@@ -18,7 +18,9 @@ npx playwright install chromium
 
 ### Default
 (By default, the scraper runs with `https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI` URL)
+```bash
 npm run scrape
+```
 
 ### Optional URL override:
 
