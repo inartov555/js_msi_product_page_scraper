@@ -382,8 +382,9 @@ async function revealSpecifications(page) {
       await button.click();
       return;
     }
-  } catch {
+  } catch (error) {
     // Specs may already be visible.
+    console.error('Failed to reveal specifications using the specification button: ', error);
   }
 
   const link = page.getByRole('link', { name: /detail specification|specification/i }).first();
@@ -395,8 +396,9 @@ async function revealSpecifications(page) {
     if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
       await link.click();
     }
-  } catch {
+  } catch (error) {
     // Specs may already be visible or the control may have changed.
+    console.error('Failed to reveal specifications using the specification link: ', error);
   }
 }
 
