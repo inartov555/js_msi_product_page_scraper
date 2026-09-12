@@ -560,7 +560,7 @@ async function extractItemId(locators) {
 }
 
 // Extracts the MSI brand name from the page content
-async function extractBrand(page, locators) {
+async function extractBrand(locators) {
   const bodyText = await locators.body().innerText();
   const match = bodyText.match(/\bMSI\b/i);
 
@@ -606,7 +606,7 @@ async function extractProduct(page, locators) {
     url: page.url(),
     item_id: await extractItemId(locators),
     title,
-    brand: await extractBrand(page, locators),
+    brand: await extractBrand(locators),
     product_category: categoryTree.length
       ? categoryTree.map((item) => item.name).join(' > ')
       : null,
