@@ -29,7 +29,7 @@ By default, the scraper runs with URL from below in headless mode, if the URL is
 
 ```bash
 # URl to a particular item, you can find some in https://us-store.msi.com
-targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
+targetUrl=https://us-store.msi.com/PC-Components/CPU-Coolers/MPG-CORELIQUID-P13-360-WHITE
 
 # url = $targetUrl
 # isHeadless = true/false/not set
