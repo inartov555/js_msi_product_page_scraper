@@ -14,7 +14,6 @@
  *   │  ├─ extractCategoryTree()
  *   │  ├─ extractImages()
  *   │  ├─ extractSpecs()
- *   │  │  └─ revealSpecifications()
  *   │  ├─ extractPricePair()
  *   │  │  ├─ firstVisibleText()
  *   │  │  └─ parsePrice()
@@ -52,13 +51,16 @@ console.log = (...args) => originalConsole.log('[INFO]', ...args);
 console.warn = (...args) => originalConsole.warn('[WARN]', ...args);
 console.error = (...args) => originalConsole.error('[ERROR]', ...args);
 
+
 class MsiProductPageLocators {
   constructor(page) {
     this.page = page;
   }
 
   acceptCookiesButton() {
-    return this.page.getByRole('button', { name: /^accept$/i }).first();
+    return this.page
+      .getByRole('button', { name: /^accept$/i })
+      .first();
   }
 
   body() {
@@ -66,23 +68,27 @@ class MsiProductPageLocators {
   }
 
   productTitle() {
-    return this.page.locator('.product-detail h2.title').first();
+    return this.page
+      .locator('.product-detail h2.crop-text-2.title')
+      .first();
   }
 
   productTitleSelector() {
-    return '.product-detail > .row > .col-md-6 h2.title';
+    return '.product-detail h2.crop-text-2.title';
   }
 
   productDescriptionSelectors() {
-    return ['.product-detail > .row > .col-md-6 h2.title + div p'];
+    return [
+      '.product-detail h2.crop-text-2.title + div p',
+    ];
   }
 
   regularPriceSelectors() {
-    return ['#prices-wrapper #prices-old'];
+    return ['#prices-old'];
   }
 
   currentPriceSelectors() {
-    return ['#prices-wrapper #prices-new'];
+    return ['#prices-new'];
   }
 
   priceWrapperSelectors() {
@@ -99,32 +105,18 @@ class MsiProductPageLocators {
 
   breadcrumbSelectors() {
     return [
-      'nav[aria-label*="breadcrumb" i]',
       'ol.breadcrumb',
       'ul.breadcrumb',
       '.breadcrumb',
-      '[class*="breadcrumb"]',
     ];
   }
 
   mainImageSelector() {
-    return '.product-detail #imagePopup';
+    return '#imagePopup';
   }
 
   carouselImageSelector() {
-    return '.product-detail #carouselImages img.product-detail-thumb-bto';
-  }
-
-  specificationButton() {
-    return this.page
-      .getByRole('button', { name: /detail specification|specification/i })
-      .first();
-  }
-
-  specificationLink() {
-    return this.page
-      .getByRole('link', { name: /detail specification|specification/i })
-      .first();
+    return '#carouselImages img.product-detail-thumb-bto';
   }
 
   specificationSelectors() {
@@ -140,7 +132,9 @@ class MsiProductPageLocators {
   }
 
   ratingSelectors() {
-    return ['#description-list-average-rating #average-rating-info'];
+    return [
+      '#description-list-average-rating #average-rating-info',
+    ];
   }
 
   productIdInput() {
@@ -152,7 +146,9 @@ class MsiProductPageLocators {
   viewItemAnalyticsScript() {
     return this.page
       .locator('script')
-      .filter({ hasText: /gtag\("event",\s*"view_item"/ })
+      .filter({
+        hasText: /gtag\("event",\s*"view_item"/,
+      })
       .first();
   }
 }
@@ -409,41 +405,8 @@ async function extractImages(page, locators) {
   };
 }
 
-// Opens the specifications section when it is hidden behind a tab or control
-async function revealSpecifications(locators) {
-  const button = locators.specificationButton();
-
-  if (
-    (await button.count()) &&
-    (await button.isVisible().catch(() => false))
-  ) {
-    await button.click().catch(() => null);
-    return;
-  }
-
-  const link = locators.specificationLink();
-
-  if (
-    !(await link.count()) ||
-    !(await link.isVisible().catch(() => false))
-  ) {
-    return;
-  }
-
-  const href = await link.getAttribute('href');
-
-  if (
-    !href ||
-    href.startsWith('#') ||
-    href.toLowerCase().startsWith('javascript:')
-  ) {
-    await link.click().catch(() => null);
-  }
-}
-
 // Extracts technical specification name-value pairs from the page
 async function extractSpecs(page, locators) {
-  await revealSpecifications(locators);
 
   return page.evaluate((selectors) => {
     const clean = (value) =>
