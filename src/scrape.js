@@ -1,5 +1,63 @@
-/*
- * Target URL to pass: https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
+/**
+ * MSI Product Page Scraper
+ *
+ * Purpose:
+ * Scrapes one MSI product detail page with Playwright, normalizes the extracted
+ * values, validates the main required fields, and writes the result to
+ * output/product.json.
+ *
+ * Execution flow:
+ * main()
+ * 1. Resolves the target URL and headless mode.
+ * 2. Launches Chromium and creates MsiProductPageLocators for the page.
+ * 3. Opens the product page, checks for access errors, accepts cookies, and
+ *    waits for the main product content.
+ * 4. Calls extractProduct() to build the final product object.
+ * 5. Calls validateResult() and writes the JSON file.
+ *
+ * extractProduct() calls:
+ * - firstVisibleText()       -> title and description.
+ * - extractCategoryTree()    -> breadcrumb categories; analytics is the fallback.
+ * - extractImages()          -> main and additional product images.
+ * - extractSpecs()           -> technical specification key/value pairs.
+ * - extractPricePair()       -> regular price and sale price.
+ * - extractRating()          -> star rating and review count.
+ * - extractItemId()          -> hidden product ID, with page-text fallback.
+ * - extractBrand()           -> brand found in page content.
+ * - extractAvailability()    -> normalized stock status.
+ * - findSpecValue()          -> GTIN/UPC/EAN and MPN values from specifications.
+ *
+ * Helper functions:
+ * - acceptCookiesIfPresent() -> accepts the cookie banner when present.
+ * - cleanText()              -> trims text and normalizes whitespace.
+ * - parsePrice()             -> converts price text to a number.
+ * - normalizeAvailability()  -> maps stock text to in_stock, out_of_stock,
+ *                               pre_order, or null.
+ * - firstVisibleText()       -> returns the first visible non-empty selector match.
+ * - revealSpecifications()   -> opens a specification control when required.
+ * - validateResult()         -> warns when important extracted fields are missing.
+ *
+ * Locator class:
+ * MsiProductPageLocators keeps page selectors in one place:
+ * - acceptCookiesButton()        -> cookie Accept button.
+ * - body()                       -> page body.
+ * - productTitle()               -> visible product title locator.
+ * - productTitleSelector()       -> product title CSS selector.
+ * - productDescriptionSelectors()-> product description selectors.
+ * - regularPriceSelectors()      -> old/regular price.
+ * - currentPriceSelectors()      -> current displayed price.
+ * - priceWrapperSelectors()      -> price/availability container.
+ * - priceWrapperSelector()       -> price container selector used while waiting.
+ * - productQuantitySelectors()   -> purchase/quantity area.
+ * - breadcrumbSelectors()        -> category breadcrumb candidates.
+ * - mainImageSelector()          -> main product image.
+ * - carouselImageSelector()      -> product gallery images.
+ * - specificationButton()        -> optional specification button.
+ * - specificationLink()          -> optional specification link.
+ * - specificationSelectors()     -> tables and fallback specification selectors.
+ * - ratingSelectors()            -> rating/review text.
+ * - productIdInput()             -> hidden product ID input.
+ * - viewItemAnalyticsScript()    -> view_item analytics script used as category fallback.
  */
 
 import { chromium } from 'playwright';
