@@ -618,10 +618,23 @@ async function main() {
     page.setDefaultTimeout(15_000);
 
     console.log(`Scraping: ${targetUrl}`);
-    await page.goto(targetUrl, {
+    const response = await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
       timeout: 45000,
     });
+    const status = response?.status();
+    const title = await page.title();
+    const bodyText = await page.locator('body').innerText();
+    if (
+      (status && status >= 400) ||
+      /access denied|forbidden|request blocked/i.test(title) ||
+      /access denied|forbidden|request blocked/i.test(bodyText)
+    ) {
+      throw new Error(
+        `Product page access denied. HTTP status: ${status ?? 'unknown'}, title: "${title}"`
+      );
+    }
+
     await acceptCookiesIfPresent(page);
 
     // Wait for the product content rather than using an arbitrary sleep.
