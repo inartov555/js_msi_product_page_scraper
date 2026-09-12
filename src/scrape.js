@@ -605,8 +605,7 @@ async function main() {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
 
-  const isHeadless =
-    String(process.argv[3] ?? process.env.HEADLESS ?? 'true').toLowerCase() !== 'false';
+  const isHeadless = JSON.parse(process.argv[3] || process.env.HEADLESS || true);
   const browser = await chromium.launch({
     headless: isHeadless,
     channel: 'chromium',
