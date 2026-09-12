@@ -75,7 +75,7 @@ jobs:
           grep -n "targetUrl" src/scrape.js
 
           npm install
-          npx playwright install chromium
+          npx playwright install --with-deps chromium
           npm run scrape
 
       - name: Upload coverage artifact
