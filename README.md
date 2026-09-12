@@ -2,10 +2,6 @@
 
 Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript + Playwright**, runs Chromium in headless mode, normalizes the requested fields, and writes the result to `output/product.json`.
 
-## Target page
-
-targetUrl = `https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI`
-
 ## Requirements
 
 - Node.js 20+
@@ -23,13 +19,15 @@ npx playwright install chromium
 Optional URL override:
 
 ```bash
-# url = targetUrl from the Target page section
+targetUrl=`https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI`
+
+# url = $targetUrl
 # isHeadless = true/false/not set
 
 npm run scrape $url $isHeadless
 
 # E.g.
-npm run scrape targetUrl
+npm run scrape $targetUrl
 ```
 
 After the command finishes, `output/product.json` is created or overwritten.
