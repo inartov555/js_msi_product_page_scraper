@@ -7,11 +7,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const OUTPUT_FILE = path.resolve(__dirname, '../output/product.json');
-
 
 async function acceptCookiesIfPresent(page) {
   const acceptButton = page.getByRole('button', { name: /^accept$/i }).first();
@@ -33,6 +31,7 @@ async function acceptCookiesIfPresent(page) {
 
 function cleanText(value) {
   if (value === null || value === undefined) return null;
+
   const text = String(value).replace(/\s+/g, ' ').trim();
   return text || null;
 }
@@ -48,21 +47,6 @@ function parsePrice(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function normalizeUrl(value, baseUrl) {
-  const text = cleanText(value);
-  if (!text || text.startsWith('data:')) return null;
-
-  try {
-    return new URL(text, baseUrl).href;
-  } catch {
-    return null;
-  }
-}
-
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
 function normalizeAvailability(value) {
   const text = cleanText(value)?.toLowerCase();
   if (!text) return null;
@@ -70,6 +54,7 @@ function normalizeAvailability(value) {
   if (text.includes('preorder') || text.includes('pre-order') || text.includes('pre order')) {
     return 'pre_order';
   }
+
   if (
     text.includes('outofstock') ||
     text.includes('out of stock') ||
@@ -78,6 +63,7 @@ function normalizeAvailability(value) {
   ) {
     return 'out_of_stock';
   }
+
   if (text.includes('instock') || text.includes('in stock') || text.includes('add to cart')) {
     return 'in_stock';
   }
@@ -92,13 +78,15 @@ async function firstVisibleText(page, selectors) {
 
     for (let i = 0; i < Math.min(count, 8); i += 1) {
       const candidate = locator.nth(i);
+
       try {
         if (!(await candidate.isVisible())) continue;
+
         const text = cleanText(await candidate.innerText());
         if (text) return text;
       } catch (error) {
-        // Continue to the next candidate if the DOM changed while inspecting it
-        console.error('Failed to check candidate visibility: ', error);
+        // Continue to the next candidate if the DOM changed while inspecting it.
+        console.error('Failed to check candidate visibility:', error);
       }
     }
   }
@@ -106,24 +94,10 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
-async function extractTitle(page) {
-  return firstVisibleText(page, [
-    '.product-detail h2.title',
-  ]);
-}
-
-async function extractDescription(page) {
-  return firstVisibleText(page, [
-    '.product-detail h2.title + div p',
-  ]);
-}
-
-
 async function extractPricePair(page) {
   const regularPriceText = await firstVisibleText(page, [
     '#prices-wrapper #prices-old',
   ]);
-
   const currentPriceText = await firstVisibleText(page, [
     '#prices-wrapper #prices-new',
   ]);
@@ -145,13 +119,8 @@ async function extractPricePair(page) {
 }
 
 async function extractAvailability(page) {
-  const priceBlockText = await firstVisibleText(page, [
-    '#prices-wrapper',
-  ]);
-
-  const purchaseControlsText = await firstVisibleText(page, [
-    '#product_qty',
-  ]);
+  const priceBlockText = await firstVisibleText(page, ['#prices-wrapper']);
+  const purchaseControlsText = await firstVisibleText(page, ['#product_qty']);
 
   return normalizeAvailability(
     [priceBlockText, purchaseControlsText].filter(Boolean).join(' '),
@@ -159,7 +128,7 @@ async function extractAvailability(page) {
 }
 
 async function extractCategoryTree(page, title) {
-  const breadcrumbs = await page.evaluate((currentTitle) => {
+  return page.evaluate((currentTitle) => {
     const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
     const current = clean(currentTitle).toLowerCase();
     const containers = [
@@ -201,15 +170,14 @@ async function extractCategoryTree(page, title) {
 
     return [];
   }, title);
-
-  return breadcrumbs;
 }
 
-async function extractDomImages(page) {
-  return page.evaluate(() => {
+async function extractImages(page) {
+  const baseUrl = page.url();
+  const imageUrls = await page.evaluate(() => {
     const urls = [];
-
     const mainImage = document.querySelector('.product-detail #imagePopup');
+
     if (mainImage) {
       urls.push(mainImage.currentSrc || mainImage.src);
     }
@@ -222,19 +190,27 @@ async function extractDomImages(page) {
 
     return urls.filter(Boolean);
   });
-}
 
-async function extractImages(page) {
-  const baseUrl = page.url();
-  const domImages = (await extractDomImages(page))
-    .map((url) => normalizeUrl(url, baseUrl))
-    .filter((url) => url && !/(logo|icon|shipping|warranty|payment)/i.test(url));
+  const images = [
+    ...new Set(
+      imageUrls
+        .map((value) => {
+          const text = cleanText(value);
+          if (!text || text.startsWith('data:')) return null;
 
-  const allImages = unique(domImages);
+          try {
+            return new URL(text, baseUrl).href;
+          } catch {
+            return null;
+          }
+        })
+        .filter((url) => url && !/(logo|icon|shipping|warranty|payment)/i.test(url)),
+    ),
+  ];
 
   return {
-    image_url: allImages[0] ?? null,
-    additional_image_urls: allImages.slice(1),
+    image_url: images[0] ?? null,
+    additional_image_urls: images.slice(1),
   };
 }
 
@@ -248,21 +224,23 @@ async function revealSpecifications(page) {
     }
   } catch (error) {
     // Specs may already be visible.
-    console.error('Failed to reveal specifications using the specification button: ', error);
+    console.error('Failed to reveal specifications using the specification button:', error);
   }
 
   const link = page.getByRole('link', { name: /detail specification|specification/i }).first();
+
   try {
     if (!(await link.count()) || !(await link.isVisible())) return;
 
     const href = await link.getAttribute('href');
-    // Click only tab-like links. Do not navigate away to a separate specifications page
+
+    // Click only tab-like links. Do not navigate away to a separate specifications page.
     if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
       await link.click();
     }
   } catch (error) {
-    // Specs may already be visible or the control may have changed
-    console.error('Failed to reveal specifications using the specification link: ', error);
+    // Specs may already be visible or the control may have changed.
+    console.error('Failed to reveal specifications using the specification link:', error);
   }
 }
 
@@ -277,11 +255,13 @@ async function extractSpecs(page) {
     const add = (name, value) => {
       const cleanName = clean(name);
       const cleanValue = clean(value) || null;
+
       if (!cleanName || cleanName.length > 120) return;
       if (/^(detail )?specification(s)?$/i.test(cleanName)) return;
 
       const key = `${cleanName}\u0000${cleanValue ?? ''}`;
       if (seen.has(key)) return;
+
       seen.add(key);
       result.push({ name: cleanName, value: cleanValue });
     };
@@ -289,9 +269,11 @@ async function extractSpecs(page) {
     const tables = [...document.querySelectorAll('table')];
     const parsedTables = tables.map((table) => {
       const pairs = [];
+
       for (const row of table.querySelectorAll('tr')) {
         const cells = [...row.querySelectorAll(':scope > th, :scope > td')];
         if (cells.length < 2) continue;
+
         const name = clean(cells[0].innerText);
         const value = clean(cells.slice(1).map((cell) => cell.innerText).join(' '));
         if (name && value) pairs.push({ name, value });
@@ -299,27 +281,41 @@ async function extractSpecs(page) {
 
       const surroundingText = clean(table.parentElement?.innerText).slice(0, 500).toLowerCase();
       const specBonus = /detail specification|specifications/.test(surroundingText) ? 20 : 0;
-      return { pairs, score: pairs.length + specBonus };
+
+      return {
+        pairs,
+        score: pairs.length + specBonus,
+      };
     });
 
     parsedTables.sort((a, b) => b.score - a.score);
+
     if (parsedTables[0]?.pairs.length >= 3) {
-      for (const pair of parsedTables[0].pairs) add(pair.name, pair.value);
+      for (const pair of parsedTables[0].pairs) {
+        add(pair.name, pair.value);
+      }
+
       return result;
     }
 
     for (const dl of document.querySelectorAll('dl')) {
       const terms = [...dl.querySelectorAll(':scope > dt')];
+
       for (const term of terms) {
         const description = term.nextElementSibling;
-        if (description?.tagName === 'DD') add(term.innerText, description.innerText);
+        if (description?.tagName === 'DD') {
+          add(term.innerText, description.innerText);
+        }
       }
     }
+
     if (result.length >= 3) return result;
 
     const sections = [...document.querySelectorAll('[class*="spec" i], [id*="spec" i]')];
+
     for (const section of sections) {
       const rows = section.querySelectorAll('tr, [class*="row" i]');
+
       for (const row of rows) {
         const children = [...row.children].filter((child) => clean(child.innerText));
         if (children.length < 2 || children.length > 5) continue;
@@ -385,7 +381,8 @@ function findSpecValue(specs, pattern) {
 }
 
 async function extractProduct(page) {
-  const title = await extractTitle(page);
+  const title = await firstVisibleText(page, ['.product-detail h2.title']);
+  const description = await firstVisibleText(page, ['.product-detail h2.title + div p']);
   const categoryTree = await extractCategoryTree(page, title);
   const images = await extractImages(page);
   const specs = await extractSpecs(page);
@@ -397,9 +394,11 @@ async function extractProduct(page) {
     item_id: await extractItemId(page),
     title,
     brand: await extractBrand(page),
-    product_category: categoryTree.length ? categoryTree.map((item) => item.name).join(' > ') : null,
+    product_category: categoryTree.length
+      ? categoryTree.map((item) => item.name).join(' > ')
+      : null,
     category_tree: categoryTree,
-    description: await extractDescription(page),
+    description,
     price: prices.price,
     sale_price: prices.sale_price,
     availability: await extractAvailability(page),
@@ -435,11 +434,17 @@ async function main() {
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
+
   const isHeadless = JSON.parse(process.env.HEADLESS || process.argv[3] || true);
-  const browser = await chromium.launch({ headless: isHeadless, channel: 'chromium', });
+  const browser = await chromium.launch({
+    headless: isHeadless,
+    channel: 'chromium',
+  });
+
   const contextOptions = {
     ...devices['Desktop Chromium'],
-    userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+    userAgent:
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
     locale: 'en-US',
     timezoneId: 'America/Los_Angeles',
     viewport: {
@@ -457,39 +462,43 @@ async function main() {
   };
 
   try {
-    const context = await browser.newContext(contextOptions)
+    const context = await browser.newContext(contextOptions);
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
 
     console.log(`Scraping: ${targetUrl}`);
+
     const response = await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
       timeout: 45000,
     });
-    // await page.waitForTimeout(20000);
+
     const status = response?.status();
     const title = await page.title();
     const bodyText = await page.locator('body').innerText();
+
     if (
       (status && status >= 400) ||
       /access denied|forbidden|request blocked/i.test(title) ||
       /access denied|forbidden|request blocked/i.test(bodyText)
     ) {
       throw new Error(
-        `Product page access denied. HTTP status: ${status ?? 'unknown'}, title: "${title}"`
+        `Product page access denied. HTTP status: ${status ?? 'unknown'}, title: "${title}"`,
       );
     }
 
     await acceptCookiesIfPresent(page);
 
-    // Wait for the product content rather than using an arbitrary sleep
+    // Wait for product content instead of using an arbitrary sleep.
     await page.locator('.product-detail h2.title').first().waitFor({ state: 'visible' });
     await page
       .waitForFunction(
         () => {
           const priceBlock = document.querySelector('#prices-wrapper');
-          return priceBlock &&
-            /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(priceBlock.innerText);
+          return (
+            priceBlock &&
+            /\$\s*\d|in stock|out of stock|pre[- ]?order/i.test(priceBlock.innerText)
+          );
         },
         null,
         { timeout: 15000 },
