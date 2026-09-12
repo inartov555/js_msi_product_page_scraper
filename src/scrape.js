@@ -13,6 +13,24 @@ const __dirname = path.dirname(__filename);
 const OUTPUT_FILE = path.resolve(__dirname, '../output/product.json');
 
 
+async function acceptCookiesIfPresent(page) {
+  const acceptButton = page.getByRole('button', { name: /^accept$/i }).first();
+
+  try {
+    await acceptButton.waitFor({
+      state: 'visible',
+      timeout: 5000,
+    });
+
+    await acceptButton.click();
+    console.log('Cookie consent accepted.');
+  } catch (error) {
+    if (error.name !== 'TimeoutError') {
+      console.error('Failed to accept cookie consent:', error);
+    }
+  }
+}
+
 function cleanText(value) {
   if (value === null || value === undefined) return null;
   const text = String(value).replace(/\s+/g, ' ').trim();
@@ -604,6 +622,7 @@ async function main() {
       waitUntil: 'domcontentloaded',
       timeout: 45000,
     });
+    await acceptCookiesIfPresent(page);
 
     // Wait for the product content rather than using an arbitrary sleep.
     await page.locator('h1, h2').first().waitFor({ state: 'visible' });
