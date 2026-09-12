@@ -272,7 +272,7 @@ async function extractImages(page, locators) {
     const mainImage = document.querySelector(mainImageSelector);
 
     if (mainImage) {
-      urls.push(mainImage.currentSrc || mainImage.src);
+      urls.push(image.getAttribute('popup_img') || mainImage.currentSrc || mainImage.src);
     }
 
     for (const image of document.querySelectorAll(carouselImageSelector)) {
