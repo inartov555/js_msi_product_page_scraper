@@ -19,7 +19,7 @@ npx playwright install chromium
 Optional URL override:
 
 ```bash
-targetUrl=`https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI`
+targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI
 
 # url = $targetUrl
 # isHeadless = true/false/not set
