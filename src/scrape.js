@@ -460,13 +460,13 @@ async function extractSpecs(page, locators) {
 
     parsedTables.sort((a, b) => b.score - a.score);
 
-    if (parsedTables[0]?.pairs.length >= 3) {
-      for (const pair of parsedTables[0].pairs) {
+    for (const table of parsedTables) {
+      for (const pair of table.pairs) {
         add(pair.name, pair.value);
       }
-
-      return result;
     }
+
+    if (result.length >= 3) return result;
 
     for (const dl of document.querySelectorAll(selectors.definitionLists)) {
       const terms = [...dl.querySelectorAll(selectors.definitionTerms)];
@@ -522,8 +522,9 @@ async function extractItemId(locators) {
 
 async function extractBrand(page, locators) {
   const bodyText = await locators.body().innerText();
+  const match = bodyText.match(/\bMSI\b/i);
 
-  return /\bMSI\b/i.test(bodyText) ? 'MSI' : null;
+  return cleanText(match?.[0]);
 }
 
 async function extractRating(page, locators) {
@@ -604,7 +605,8 @@ async function main() {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
 
-  const isHeadless = JSON.parse(process.argv[3] || process.env.HEADLESS || true);
+  const isHeadless =
+    String(process.argv[3] ?? process.env.HEADLESS ?? 'true').toLowerCase() !== 'false';
   const browser = await chromium.launch({
     headless: isHeadless,
     channel: 'chromium',
@@ -674,7 +676,9 @@ async function main() {
         locators.priceWrapperSelector(),
         { timeout: 15000 },
       )
-      .catch(() => {});
+      .catch((error) => {
+        console.warn('Price block wait timed out:', error.message);
+      });
 
     const product = await extractProduct(page, locators);
     validateResult(product);
@@ -690,6 +694,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`Scrape failed: ${error}`);
+  console.error('Scrape failed:', error);
   process.exitCode = 1;
 });
