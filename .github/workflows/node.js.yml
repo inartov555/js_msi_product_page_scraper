@@ -20,7 +20,7 @@ defaults:
     working-directory: .
 
 jobs:
-  js_scrapper:
+  js_scrape:
     runs-on: ubuntu-latest
 
     strategy:
@@ -60,7 +60,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Run scraper
+      - name: Run scrape
         if: steps.node_project.outputs.exists == 'true'
         env:
           PRODUCT_URL: ${{ vars.PRODUCT_URL }}
@@ -71,6 +71,12 @@ jobs:
           fi
       
           echo "PRODUCT_URL is configured"
+      
+          echo "Node sees PRODUCT_URL:"
+          node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
+      
+          echo "Actual scrape code:"
+          grep -n "targetUrl" src/scrape.js
       
           npm install
           npx playwright install chromium
@@ -83,7 +89,7 @@ jobs:
           name: coverage-${{ matrix.node-version }}
           path: coverage
 
-      - name: Build (JavaScript type-check + NodeJS build) 
+      - name: Build (JavaScript type-check + NodeJS build)
         if: steps.node_project.outputs.exists == 'true'
         env:
           CI: true
