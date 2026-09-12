@@ -79,11 +79,59 @@
     {
       "name": "AUDIO",
       "value": "Realtek® ALC1220P Codec 7.1-Channel High Definition Audio Supports S/PDIF output"
+    },
+    {
+      "name": "MULTI-GPU",
+      "value": "-"
+    },
+    {
+      "name": "STORAGE",
+      "value": "4x M.2 M.2_1 Source (From CPU) supports up to PCIe 5.0 x4 , supports 2280/2260 devices M.2_2 Source (From CPU) supports up to PCIe 4.0 x4 , supports 22110/2280/2260 devices M.2_3 Source (From Chipset) supports up to PCIe 4.0 x4 , supports 2280/2260/2242 devices M.2_4 Source (From Chipset) supports up to PCIe 4.0 x4 / SATA mode, supports 2280/2260/2242 devices 4x SATA 6G Please refer to the manual for M.2 SSD heatsink restrictions."
+    },
+    {
+      "name": "ONBOARD GRAPHICS",
+      "value": "1x HDMI™ Support HDMI™ 2.1 with FRL, maximum resolution of 4K 120Hz 2x Type-C DisplayPort Thunderbolt™ 4 ports, supporting DisplayPort 1.4 over USB Type-C®, with a maximum resolution of 4K 120Hz / 8K 60Hz Available only on processors featuring integrated graphics. Graphics specifications may vary depending on the CPU installed."
+    },
+    {
+      "name": "RAID",
+      "value": "Supports RAID 0, RAID 1, RAID 5 and RAID 10 for SATA storage devices Supports RAID 0, RAID 1, RAID 5 and RAID 10 for M.2 NVMe storage devices"
+    },
+    {
+      "name": "I/O (REAR)",
+      "value": "USB 10Gbps Type-A USB 5Gbps Type-A 5G LAN Wi-Fi / Bluetooth Audio Connectors HDMI™ Thunderbolt™ 4 40Gbps (Type-C) USB 10Gbps Type-C Flash BIOS Button Clear CMOS Button USB 5Gbps Type-A S/PDIF-OUT"
+    },
+    {
+      "name": "EXPANSION SLOTS",
+      "value": "3x PCI-E x16 slot PCI_E1 Gen PCIe 5.0 supports up to x16 (From CPU) PCI_E2 Gen PCIe 4.0 supports up to x4 (From Chipset) PCI_E3 Gen PCIe 4.0 supports up to x4 (From Chipset)"
+    },
+    {
+      "name": "USB (FRONT)",
+      "value": "4x USB 2.0 2x USB 5Gbps Type A 1x USB 20Gbps Type C USB 20Gbps Type-C (Front) support USB PD 27W fast charging for JUSBC1"
+    },
+    {
+      "name": "USB (REAR)",
+      "value": "4x USB 5Gbps Type A 3x USB 10Gbps Type A 1x USB 10Gbps Type C"
+    },
+    {
+      "name": "TYPE-C PORT",
+      "value": "1x USB 10Gbps Type C 1x USB 20Gbps Type C"
+    },
+    {
+      "name": "INTERNAL CONNECTORS",
+      "value": "1x Thunderbolt5 card connector(JTBT5, support RTD3) 1x Power Connector(ATX_PWR) 2x Power Connector(CPU_PWR) 1x Power Connector(PCIE_PWR 8pin) 1x CPU Fan 1x Combo Fan (Pump_Sys Fan) 6x System Fan 1x EZ Conn-header (JAF_2) 2x Front Panel (JFP) 1x Chassis Intrusion (JCI) 1x Front Audio (JAUD) 3x Addressable V2 RGB LED connector (JARGB_V2) 1x RGB LED connector(JRGB) 1x TPM pin header(Support TPM 2.0) 4x USB 2.0 ports 2x USB 5Gbps Type A ports 1x USB 20Gbps Type C ports"
+    },
+    {
+      "name": "DIMENSIONS",
+      "value": "12.00\" x 9.60\""
+    },
+    {
+      "name": "MANUFACTURER WARRANTY",
+      "value": "3 Year"
     }
   ],
   "star_rating": 4.7,
   "review_count": 3,
   "gtin": null,
   "mpn": "MAG Z890 TOMAHAWK WIFI",
-  "scraped_at": "2026-09-12T17:00:22.355Z"
+  "scraped_at": "2026-09-12T17:23:12.902Z"
 }

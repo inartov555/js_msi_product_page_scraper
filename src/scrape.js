@@ -595,7 +595,7 @@ function validateResult(product) {
   if (!Array.isArray(product.specs) || product.specs.length < 3) problems.push('several specs');
 
   if (problems.length) {
-    console.warn(`Warning: could not extract expected fields: ${problems.join(', ')}`);
+    console.warn('Warning: could not extract expected fields:', problems.join(', '));
   }
 }
 
@@ -639,7 +639,7 @@ async function main() {
 
     page.setDefaultTimeout(15000);
 
-    console.log(`Scraping: ${targetUrl}`);
+    console.log('Scraping:', targetUrl);
 
     const response = await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
@@ -677,7 +677,7 @@ async function main() {
         { timeout: 15000 },
       )
       .catch((error) => {
-        console.warn('Price block wait timed out:', error.message);
+        console.warn('Price block wait timed out:', error);
       });
 
     const product = await extractProduct(page, locators);
@@ -686,7 +686,7 @@ async function main() {
     await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
     await fs.writeFile(OUTPUT_FILE, `${JSON.stringify(product, null, 2)}\n`, 'utf8');
 
-    console.log(`Saved: ${OUTPUT_FILE}`);
+    console.log('Saved:', OUTPUT_FILE);
     await context.close();
   } finally {
     await browser.close();
