@@ -109,6 +109,12 @@ class MsiProductPageLocators {
   ratingSelectors() {
     return ['#description-list-average-rating #average-rating-info'];
   }
+
+  productIdInput() {
+    return this.page
+      .locator('#product_qty input[name="product_id"]')
+      .first();
+  }
 }
 
 
