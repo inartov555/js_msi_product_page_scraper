@@ -35,17 +35,16 @@ jobs:
         id: node_project
         shell: bash
         run: |
-          if [ -f "package.json" ]; then
+          if [ -s "package.json" ] && node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))" 2>/dev/null; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-
           if [ -f "package-lock.json" ]; then
             echo "lock_exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "lock_exists=false" >> "$GITHUB_OUTPUT"
-          fi
+          fi        
 
       - name: Use Node.js ${{ matrix.node-version }} with cache
         if: steps.node_project.outputs.exists == 'true' && steps.node_project.outputs.lock_exists == 'true'
