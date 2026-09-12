@@ -583,10 +583,11 @@ function validateResult(product) {
 
 async function main() {
   const targetUrl = process.env.PRODUCT_URL || process.argv[2];
+  const isHeadless = JSON.parse(process.env.HEADLESS || process.argv[3] || true);
   if (!targetUrl) {
     throw new Error('Product URL is required. Usage: node scraper.js <url>');
   }
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: isHeadless });
 
   try {
     const context = await browser.newContext({
