@@ -11,6 +11,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const OUTPUT_FILE = path.resolve(__dirname, '../output/product.json');
 
+const originalConsole = {
+  log: console.log.bind(console),
+  warn: console.warn.bind(console),
+  error: console.error.bind(console),
+};
+
+console.log = (...args) => originalConsole.log('[INFO]', ...args);
+console.warn = (...args) => originalConsole.warn('[WARN]', ...args);
+console.error = (...args) => originalConsole.error('[ERROR]', ...args);
+
 class MsiProductPageLocators {
   constructor(page) {
     this.page = page;
@@ -626,6 +636,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`Scrape failed: ${error.message}`);
+  console.error(`Scrape failed: ${error}`);
   process.exitCode = 1;
 });
