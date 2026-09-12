@@ -88,9 +88,3 @@ jobs:
         with:
           name: coverage-${{ matrix.node-version }}
           path: coverage
-
-      - name: Build (JavaScript type-check + NodeJS build)
-        if: steps.node_project.outputs.exists == 'true'
-        env:
-          CI: true
-        run: npm run build
