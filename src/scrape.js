@@ -96,8 +96,9 @@ async function firstVisibleText(page, selectors) {
         if (!(await candidate.isVisible())) continue;
         const text = cleanText(await candidate.innerText());
         if (text) return text;
-      } catch {
-        // Continue to the next candidate if the DOM changed while inspecting it.
+      } catch (error) {
+        // Continue to the next candidate if the DOM changed while inspecting it
+        console.error('Failed to check candidate visibility: ', error);
       }
     }
   }
@@ -290,12 +291,12 @@ async function revealSpecifications(page) {
     if (!(await link.count()) || !(await link.isVisible())) return;
 
     const href = await link.getAttribute('href');
-    // Click only tab-like links. Do not navigate away to a separate specifications page.
+    // Click only tab-like links. Do not navigate away to a separate specifications page
     if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
       await link.click();
     }
   } catch (error) {
-    // Specs may already be visible or the control may have changed.
+    // Specs may already be visible or the control may have changed
     console.error('Failed to reveal specifications using the specification link: ', error);
   }
 }
@@ -483,14 +484,14 @@ async function main() {
       viewport: { width: 1440, height: 1000 },
     });
     const page = await context.newPage();
-    page.setDefaultTimeout(15_000);
+    page.setDefaultTimeout(15000);
 
     console.log(`Scraping: ${targetUrl}`);
     const response = await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
       timeout: 45000,
     });
-    await page.waitForTimeout(20000);
+    // await page.waitForTimeout(20000);
     const status = response?.status();
     const title = await page.title();
     const bodyText = await page.locator('body').innerText();
@@ -506,7 +507,7 @@ async function main() {
 
     await acceptCookiesIfPresent(page);
 
-    // Wait for the product content rather than using an arbitrary sleep.
+    // Wait for the product content rather than using an arbitrary sleep
     await page.locator('h1, h2').first().waitFor({ state: 'visible' });
     await page
       .waitForFunction(
