@@ -35,7 +35,7 @@ targetUrl=https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL
 
 npm run scrape $targetUrl $isHeadless
 
-# E.g.
+# If only URL needs to be overriden, then pass only URL
 npm run scrape $targetUrl
 ```
 
