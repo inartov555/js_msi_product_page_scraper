@@ -107,7 +107,6 @@ class MsiProductPageLocators {
     return [
       'ol.breadcrumb',
       'ul.breadcrumb',
-      '.breadcrumb',
     ];
   }
 
@@ -124,10 +123,6 @@ class MsiProductPageLocators {
       tables: '.product-detail table.table.table-borderless',
       tableRows: 'tr',
       tableCells: ':scope > th, :scope > td',
-      definitionLists: 'dl',
-      definitionTerms: ':scope > dt',
-      sections: '[class*="spec" i], [id*="spec" i]',
-      sectionRows: 'tr, [class*="row" i]',
     };
   }
 
@@ -490,48 +485,6 @@ async function extractSpecs(page, locators) {
       table.pairs.forEach(({ name, value }) =>
         add(name, value),
       );
-    }
-
-    if (result.length >= 3) return result;
-
-    for (const dl of document.querySelectorAll(
-      selectors.definitionLists,
-    )) {
-      for (const term of dl.querySelectorAll(
-        selectors.definitionTerms,
-      )) {
-        const description = term.nextElementSibling;
-
-        if (description?.tagName === 'DD') {
-          add(term.innerText, description.innerText);
-        }
-      }
-    }
-
-    if (result.length >= 3) return result;
-
-    for (const section of document.querySelectorAll(
-      selectors.sections,
-    )) {
-      for (const row of section.querySelectorAll(
-        selectors.sectionRows,
-      )) {
-        const children = [...row.children].filter((child) =>
-          clean(child.innerText),
-        );
-
-        if (children.length < 2 || children.length > 5) {
-          continue;
-        }
-
-        add(
-          children[0].innerText,
-          children
-            .slice(1)
-            .map((child) => child.innerText)
-            .join(' '),
-        );
-      }
     }
 
     return result;
