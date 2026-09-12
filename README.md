@@ -1,1 +1,1 @@
-# js-msi-product-page-scraper
+# Test Task: MSI Product Page Scraper
