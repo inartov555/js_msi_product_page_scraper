@@ -178,21 +178,18 @@ async function acceptCookiesIfPresent(locators) {
 
 // Normalizes text by trimming whitespace and converting empty values to null
 function cleanText(value) {
-  if (value === null || value === undefined) return null;
-
-  const text = String(value).replace(/\s+/g, ' ').trim();
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text || null;
 }
 
 // Extracts a finite numeric value from a price-like input
 function parsePrice(value) {
-  if (value === null || value === undefined || value === '') return null;
+  if (value == null || value === '') return null;
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
 
   const match = String(value).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
-  if (!match) return null;
+  const number = match ? Number(match[0]) : NaN;
 
-  const number = Number(match[0]);
   return Number.isFinite(number) ? number : null;
 }
 
@@ -201,20 +198,15 @@ function normalizeAvailability(value) {
   const text = cleanText(value)?.toLowerCase();
   if (!text) return null;
 
-  if (text.includes('preorder') || text.includes('pre-order') || text.includes('pre order')) {
+  if (/pre[- ]?order/.test(text)) {
     return 'pre_order';
   }
 
-  if (
-    text.includes('outofstock') ||
-    text.includes('out of stock') ||
-    text.includes('sold out') ||
-    text.includes('notify me')
-  ) {
+  if (/out\s*of\s*stock|sold out|notify me/.test(text)) {
     return 'out_of_stock';
   }
 
-  if (text.includes('instock') || text.includes('in stock') || text.includes('add to cart')) {
+  if (/in\s*stock|add to cart/.test(text)) {
     return 'in_stock';
   }
 
@@ -225,20 +217,19 @@ function normalizeAvailability(value) {
 async function firstVisibleText(page, selectors) {
   for (const selector of selectors) {
     const locator = page.locator(selector);
-    const count = await locator.count();
+    const count = Math.min(await locator.count(), 8);
 
-    for (let i = 0; i < Math.min(count, 8); i += 1) {
+    for (let i = 0; i < count; i += 1) {
       const candidate = locator.nth(i);
 
-      try {
-        if (!(await candidate.isVisible())) continue;
+      const visible = await candidate.isVisible().catch(() => false);
+      if (!visible) continue;
 
-        const text = cleanText(await candidate.innerText());
-        if (text) return text;
-      } catch (error) {
-        // Continue to the next candidate if the DOM changed while inspecting it
-        console.error('Failed to check candidate visibility:', error);
-      }
+      const text = cleanText(
+        await candidate.innerText().catch(() => null),
+      );
+
+      if (text) return text;
     }
   }
 
@@ -247,32 +238,34 @@ async function firstVisibleText(page, selectors) {
 
 // Extracts and normalizes the regular price and optional sale price
 async function extractPricePair(page, locators) {
-  const regularPriceText = await firstVisibleText(page, locators.regularPriceSelectors());
-  const currentPriceText = await firstVisibleText(page, locators.currentPriceSelectors());
+  const regularPrice = parsePrice(
+    await firstVisibleText(page, locators.regularPriceSelectors()),
+  );
 
-  const regularPrice = parsePrice(regularPriceText);
-  const currentPrice = parsePrice(currentPriceText);
+  const currentPrice = parsePrice(
+    await firstVisibleText(page, locators.currentPriceSelectors()),
+  );
 
-  if (regularPrice !== null && currentPrice !== null) {
-    return {
-      price: regularPrice,
-      sale_price: currentPrice,
-    };
-  }
-
-  return {
-    price: currentPrice ?? regularPrice,
-    sale_price: null,
-  };
+  return regularPrice !== null && currentPrice !== null
+    ? {
+        price: regularPrice,
+        sale_price: currentPrice,
+      }
+    : {
+        price: currentPrice ?? regularPrice,
+        sale_price: null,
+      };
 }
 
 // Extracts stock information and normalizes it to the required availability value
 async function extractAvailability(page, locators) {
-  const priceBlockText = await firstVisibleText(page, locators.priceWrapperSelectors());
-  const purchaseControlsText = await firstVisibleText(page, locators.productQuantitySelectors());
+  const texts = await Promise.all([
+    firstVisibleText(page, locators.priceWrapperSelectors()),
+    firstVisibleText(page, locators.productQuantitySelectors()),
+  ]);
 
   return normalizeAvailability(
-    [priceBlockText, purchaseControlsText].filter(Boolean).join(' '),
+    texts.filter(Boolean).join(' '),
   );
 }
 
@@ -281,9 +274,7 @@ async function extractCategoryTree(page, locators, title) {
   const breadcrumbTree = await page.evaluate(
     ({ currentTitle, containers }) => {
       const clean = (value) =>
-        String(value ?? '')
-          .replace(/\s+/g, ' ')
-          .trim();
+        String(value ?? '').replace(/\s+/g, ' ').trim();
 
       const current = clean(currentTitle).toLowerCase();
 
@@ -292,14 +283,15 @@ async function extractCategoryTree(page, locators, title) {
         if (!container) continue;
 
         const listItems = [...container.querySelectorAll('li')];
-        const source =
+        const elements =
           listItems.length >= 2
             ? listItems
             : [...container.querySelectorAll('a')];
 
+        const seen = new Set();
         const result = [];
 
-        for (const element of source) {
+        for (const element of elements) {
           const name = clean(element.innerText);
 
           if (!name) continue;
@@ -310,25 +302,20 @@ async function extractCategoryTree(page, locators, title) {
             ? element
             : element.querySelector('a');
 
-          result.push({
+          const item = {
             name,
             url: anchor?.href || null,
-          });
+          };
+
+          const key = `${item.name}|${item.url ?? ''}`;
+
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push(item);
+          }
         }
 
-        const deduped = result.filter(
-          (item, index, array) =>
-            index ===
-            array.findIndex(
-              (other) =>
-                other.name === item.name &&
-                other.url === item.url,
-            ),
-        );
-
-        if (deduped.length) {
-          return deduped;
-        }
+        if (result.length) return result;
       }
 
       return [];
@@ -348,17 +335,9 @@ async function extractCategoryTree(page, locators, title) {
     .textContent()
     .catch(() => null);
 
-  if (!analyticsText) {
-    return [];
-  }
+  if (!analyticsText) return [];
 
-  const categoryKeys = [
-    'item_category',
-    'item_category2',
-    'item_category3',
-  ];
-
-  return categoryKeys
+  return ['item_category', 'item_category2', 'item_category3']
     .map((key) => {
       const match = analyticsText.match(
         new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`),
@@ -379,29 +358,35 @@ async function extractCategoryTree(page, locators, title) {
 // Extracts, resolves, filters, and deduplicates product image URLs
 async function extractImages(page, locators) {
   const baseUrl = page.url();
-  const imageUrls = await page.evaluate(({ mainImageSelector, carouselImageSelector }) => {
-    const urls = [];
-    const mainImage = document.querySelector(mainImageSelector);
 
-    if (mainImage) {
-      urls.push(mainImage.currentSrc || mainImage.src);
-    }
+  const rawImages = await page.evaluate(
+    ({ mainSelector, carouselSelector }) => {
+      const main = document.querySelector(mainSelector);
 
-    for (const image of document.querySelectorAll(carouselImageSelector)) {
-      urls.push(image.getAttribute('popup_img') || image.currentSrc || image.src);
-    }
+      const images = [
+        main?.currentSrc || main?.src,
+        ...[...document.querySelectorAll(carouselSelector)].map(
+          (image) =>
+            image.getAttribute('popup_img') ||
+            image.currentSrc ||
+            image.src,
+        ),
+      ];
 
-    return urls.filter(Boolean);
-  }, {
-    mainImageSelector: locators.mainImageSelector(),
-    carouselImageSelector: locators.carouselImageSelector(),
-  });
+      return images.filter(Boolean);
+    },
+    {
+      mainSelector: locators.mainImageSelector(),
+      carouselSelector: locators.carouselImageSelector(),
+    },
+  );
 
   const images = [
     ...new Set(
-      imageUrls
+      rawImages
         .map((value) => {
           const text = cleanText(value);
+
           if (!text || text.startsWith('data:')) return null;
 
           try {
@@ -410,7 +395,11 @@ async function extractImages(page, locators) {
             return null;
           }
         })
-        .filter((url) => url && !/(logo|icon|shipping|warranty|payment)/i.test(url)),
+        .filter(
+          (url) =>
+            url &&
+            !/(logo|icon|shipping|warranty|payment)/i.test(url),
+        ),
     ),
   ];
 
@@ -424,30 +413,31 @@ async function extractImages(page, locators) {
 async function revealSpecifications(locators) {
   const button = locators.specificationButton();
 
-  try {
-    if ((await button.count()) && (await button.isVisible())) {
-      await button.click();
-      return;
-    }
-  } catch (error) {
-    // Specs may already be visible
-    console.error('Failed to reveal specifications using the specification button:', error);
+  if (
+    (await button.count()) &&
+    (await button.isVisible().catch(() => false))
+  ) {
+    await button.click().catch(() => null);
+    return;
   }
 
   const link = locators.specificationLink();
 
-  try {
-    if (!(await link.count()) || !(await link.isVisible())) return;
+  if (
+    !(await link.count()) ||
+    !(await link.isVisible().catch(() => false))
+  ) {
+    return;
+  }
 
-    const href = await link.getAttribute('href');
+  const href = await link.getAttribute('href');
 
-    // Click only tab-like links. Do not navigate away to a separate specifications page
-    if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
-      await link.click();
-    }
-  } catch (error) {
-    // Specs may already be visible or the control may have changed
-    console.error('Failed to reveal specifications using the specification link:', error);
+  if (
+    !href ||
+    href.startsWith('#') ||
+    href.toLowerCase().startsWith('javascript:')
+  ) {
+    await link.click().catch(() => null);
   }
 }
 
@@ -456,7 +446,9 @@ async function extractSpecs(page, locators) {
   await revealSpecifications(locators);
 
   return page.evaluate((selectors) => {
-    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+    const clean = (value) =>
+      String(value ?? '').replace(/\s+/g, ' ').trim();
+
     const result = [];
     const seen = new Set();
 
@@ -468,49 +460,85 @@ async function extractSpecs(page, locators) {
       if (/^(detail )?specification(s)?$/i.test(cleanName)) return;
 
       const key = `${cleanName}\u0000${cleanValue ?? ''}`;
+
       if (seen.has(key)) return;
 
       seen.add(key);
-      result.push({ name: cleanName, value: cleanValue });
+      result.push({
+        name: cleanName,
+        value: cleanValue,
+      });
     };
 
-    const tables = [...document.querySelectorAll(selectors.tables)];
-    const parsedTables = tables.map((table) => {
+    const parseRows = (rows) => {
       const pairs = [];
 
-      for (const row of table.querySelectorAll(selectors.tableRows)) {
-        const cells = [...row.querySelectorAll(selectors.tableCells)];
+      for (const row of rows) {
+        const cells = [
+          ...row.querySelectorAll(selectors.tableCells),
+        ];
+
         if (cells.length < 2) continue;
 
         const name = clean(cells[0].innerText);
-        const value = clean(cells.slice(1).map((cell) => cell.innerText).join(' '));
-        if (name && value) pairs.push({ name, value });
+        const value = clean(
+          cells
+            .slice(1)
+            .map((cell) => cell.innerText)
+            .join(' '),
+        );
+
+        if (name && value) {
+          pairs.push({ name, value });
+        }
       }
 
-      const surroundingText = clean(table.parentElement?.innerText).slice(0, 500).toLowerCase();
-      const specBonus = /detail specification|specifications/.test(surroundingText) ? 20 : 0;
+      return pairs;
+    };
 
-      return {
-        pairs,
-        score: pairs.length + specBonus,
-      };
-    });
+    const tables = [
+      ...document.querySelectorAll(selectors.tables),
+    ]
+      .map((table) => {
+        const pairs = parseRows(
+          table.querySelectorAll(selectors.tableRows),
+        );
 
-    parsedTables.sort((a, b) => b.score - a.score);
+        const surroundingText = clean(
+          table.parentElement?.innerText,
+        )
+          .slice(0, 500)
+          .toLowerCase();
 
-    for (const table of parsedTables) {
-      for (const pair of table.pairs) {
-        add(pair.name, pair.value);
-      }
+        return {
+          pairs,
+          score:
+            pairs.length +
+            (/detail specification|specifications/.test(
+              surroundingText,
+            )
+              ? 20
+              : 0),
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    for (const table of tables) {
+      table.pairs.forEach(({ name, value }) =>
+        add(name, value),
+      );
     }
 
     if (result.length >= 3) return result;
 
-    for (const dl of document.querySelectorAll(selectors.definitionLists)) {
-      const terms = [...dl.querySelectorAll(selectors.definitionTerms)];
-
-      for (const term of terms) {
+    for (const dl of document.querySelectorAll(
+      selectors.definitionLists,
+    )) {
+      for (const term of dl.querySelectorAll(
+        selectors.definitionTerms,
+      )) {
         const description = term.nextElementSibling;
+
         if (description?.tagName === 'DD') {
           add(term.innerText, description.innerText);
         }
@@ -519,18 +547,27 @@ async function extractSpecs(page, locators) {
 
     if (result.length >= 3) return result;
 
-    const sections = [...document.querySelectorAll(selectors.sections)];
+    for (const section of document.querySelectorAll(
+      selectors.sections,
+    )) {
+      for (const row of section.querySelectorAll(
+        selectors.sectionRows,
+      )) {
+        const children = [...row.children].filter((child) =>
+          clean(child.innerText),
+        );
 
-    for (const section of sections) {
-      const rows = section.querySelectorAll(selectors.sectionRows);
+        if (children.length < 2 || children.length > 5) {
+          continue;
+        }
 
-      for (const row of rows) {
-        const children = [...row.children].filter((child) => clean(child.innerText));
-        if (children.length < 2 || children.length > 5) continue;
-
-        const name = clean(children[0].innerText);
-        const value = clean(children.slice(1).map((child) => child.innerText).join(' '));
-        if (name && value) add(name, value);
+        add(
+          children[0].innerText,
+          children
+            .slice(1)
+            .map((child) => child.innerText)
+            .join(' '),
+        );
       }
     }
 
@@ -547,43 +584,40 @@ async function extractItemId(locators) {
       .catch(() => null),
   );
 
-  if (productId) {
-    return productId;
-  }
+  if (productId) return productId;
 
   const bodyText = await locators.body().innerText();
-  const match = bodyText.match(
-    /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i,
-  );
 
-  return cleanText(match?.[1]);
+  return cleanText(
+    bodyText.match(
+      /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i,
+    )?.[1],
+  );
 }
 
 // Extracts the MSI brand name from the page content
 async function extractBrand(locators) {
   const bodyText = await locators.body().innerText();
-  const match = bodyText.match(/\bMSI\b/i);
 
-  return cleanText(match?.[0]);
+  return /\bMSI\b/i.test(bodyText)
+    ? 'MSI'
+    : null;
 }
 
 // Extracts the average star rating and review count when available
 async function extractRating(page, locators) {
-  const ratingText = await firstVisibleText(page, locators.ratingSelectors());
-
-  if (!ratingText) {
-    return {
-      star_rating: null,
-      review_count: null,
-    };
-  }
-
-  const ratingMatch = ratingText.match(/\b([0-5](?:\.\d+)?)\b/);
-  const reviewMatch = ratingText.match(/\((\d+)\)/);
+  const text = await firstVisibleText(
+    page,
+    locators.ratingSelectors(),
+  );
 
   return {
-    star_rating: parsePrice(ratingMatch?.[1]),
-    review_count: parsePrice(reviewMatch?.[1]),
+    star_rating: parsePrice(
+      text?.match(/\b([0-5](?:\.\d+)?)\b/)?.[1],
+    ),
+    review_count: parsePrice(
+      text?.match(/\((\d+)\)/)?.[1],
+    ),
   };
 }
 
@@ -628,18 +662,29 @@ async function extractProduct(page, locators) {
 
 // Warns when expected product fields are missing or incomplete
 function validateResult(product) {
-  const problems = [];
+  const checks = {
+    url: !product.url,
+    title: !product.title,
+    brand: !product.brand,
+    'price/sale_price':
+      product.price === null &&
+      product.sale_price === null,
+    availability: !product.availability,
+    image_url: !product.image_url,
+    'several specs':
+      !Array.isArray(product.specs) ||
+      product.specs.length < 3,
+  };
 
-  if (!product.url) problems.push('url');
-  if (!product.title) problems.push('title');
-  if (!product.brand) problems.push('brand');
-  if (product.price === null && product.sale_price === null) problems.push('price/sale_price');
-  if (!product.availability) problems.push('availability');
-  if (!product.image_url) problems.push('image_url');
-  if (!Array.isArray(product.specs) || product.specs.length < 3) problems.push('several specs');
+  const problems = Object.entries(checks)
+    .filter(([, missing]) => missing)
+    .map(([name]) => name);
 
   if (problems.length) {
-    console.warn('Warning: could not extract expected fields:', problems.join(', '));
+    console.warn(
+      'Warning: could not extract expected fields:',
+      problems.join(', '),
+    );
   }
 }
 
