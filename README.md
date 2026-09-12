@@ -28,7 +28,8 @@ Optional URL override:
 
 npm run scrape $url $isHeadless
 
-E.g.: npm run scrape targetUrl
+# E.g.
+npm run scrape targetUrl
 ```
 
 After the command finishes, `output/product.json` is created or overwritten.
