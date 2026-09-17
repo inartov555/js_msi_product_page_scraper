@@ -4,15 +4,10 @@ import { canonicalizeUrl } from '../../shared/url.js';
 
 function listingUrl(seedUrl, pageNumber) {
   const url = new URL(seedUrl);
-
-  // Не обмежуємо каталог 12/60 товарами.
   url.searchParams.delete('limit');
 
   if (pageNumber > 1) {
-    url.searchParams.set(
-      'page',
-      String(pageNumber)
-    );
+    url.searchParams.set('page', String(pageNumber));
   } else {
     url.searchParams.delete('page');
   }
@@ -46,36 +41,18 @@ export async function discoverMsiProductUrls(
   for (const seedUrl of seedUrls) {
     const seenForSeed = new Set();
     const seenPageFingerprints = new Set();
-
     let pageNumber = 1;
 
     while (true) {
-      const url = listingUrl(
-        seedUrl,
-        pageNumber,
-        pageSize
-      );
-
-      await gotoWithRetry(
-        page,
-        url
-      );
-
-      await acceptCookiesIfPresent(
-        page
-      );
+      const url = listingUrl(seedUrl, pageNumber, pageSize);
+      await gotoWithRetry(page, url);
+      await acceptCookiesIfPresent(page);
 
       const links = await page.evaluate(
         (selectors) => {
           const direct = [
             ...document.querySelectorAll(
-              selectors.join(', ')
-            ),
-          ]
-            .map(
-              (anchor) => anchor.href
-            )
-            .filter(Boolean);
+              selectors.join(', ')),].map((anchor) => anchor.href).filter(Boolean);
 
           if (direct.length) {
             return direct;
@@ -90,155 +67,56 @@ export async function discoverMsiProductUrls(
 
           return candidates
             .filter((anchor) => {
-              let node =
-                anchor.parentElement;
+              let node = anchor.parentElement;
 
-              for (
-                let depth = 0;
-                node && depth < 5;
-                depth += 1,
-                node = node.parentElement
-              ) {
-                const text =
-                  node.innerText || '';
-
-                if (
-                  /\$\s*\d/.test(text) &&
-                  /compare|add to cart|notify me/i.test(
-                    text
-                  )
-                ) {
+              for (let depth = 0; node && depth < 5; depth += 1, node = node.parentElement) {
+                const text = node.innerText || '';
+                if (/\$\s*\d/.test(text) && /compare|add to cart|notify me/i.test(text)) {
                   return true;
                 }
               }
 
               return false;
-            })
-            .map(
-              (anchor) => anchor.href
-            )
-            .filter(Boolean);
+            }).map((anchor) => anchor.href).filter(Boolean);
         },
         msiSelectors.productCardLinks
       );
 
-      const uniqueLinks = [
-        ...new Set(
-          links.map(
-            canonicalizeUrl
-          )
-        ),
-      ].filter(
-        (candidate) =>
-          isSameStoreProductUrl(
-            candidate,
-            seedUrl
-          )
-      );
+      const uniqueLinks = [...new Set(links.map(canonicalizeUrl)),
+      ].filter((candidate) => isSameStoreProductUrl(candidate, seedUrl));
 
-      /*
-       * Якщо сторінка порожня —
-       * pagination завершилась.
-       */
+      // Pagingnation is over when the page is empty
       if (uniqueLinks.length === 0) {
-        onProgress({
-          seedUrl,
-          pageNumber,
-          foundOnPage: 0,
-          added: 0,
-          total:
-            discovered.size,
-          done: true,
-          reason: 'empty-page',
-        });
-
+        onProgress({ seedUrl, pageNumber, foundOnPage: 0, added: 0, total: discovered.size, done: true, reason: 'empty-page', });
         break;
       }
 
-      /*
-       * Захист від ситуації, коли MSI
-       * для page=999 повертає останню
-       * існуючу сторінку ще раз.
-       */
-      const fingerprint =
-        [...uniqueLinks]
-          .sort()
-          .join('\n');
+      // If the service returns the last page one more time
+      const fingerprint = [...uniqueLinks].sort().join('\n');
 
       if (
-        seenPageFingerprints.has(
-          fingerprint
-        )
-      ) {
-        onProgress({
-          seedUrl,
-          pageNumber,
-          foundOnPage:
-            uniqueLinks.length,
-          added: 0,
-          total:
-            discovered.size,
-          done: true,
-          reason:
-            'repeated-page',
-        });
-
+        seenPageFingerprints.has(fingerprint)) {
+        onProgress({ seedUrl, pageNumber, foundOnPage: uniqueLinks.length, added: 0, total: discovered.size, done: true, reason: 'repeated-page', });
         break;
       }
-
-      seenPageFingerprints.add(
-        fingerprint
-      );
+      seenPageFingerprints.add(fingerprint);
 
       let added = 0;
       let newForSeed = 0;
 
-      for (
-        const productUrl of
-        uniqueLinks
-      ) {
-        if (
-          !seenForSeed.has(
-            productUrl
-          )
-        ) {
-          seenForSeed.add(
-            productUrl
-          );
-
+      for (const productUrl of uniqueLinks) {
+        if (!seenForSeed.has(productUrl)) {
+          seenForSeed.add(productUrl);
           newForSeed += 1;
         }
 
-        if (
-          !discovered.has(
-            productUrl
-          )
-        ) {
-          discovered.add(
-            productUrl
-          );
-
+        if (!discovered.has(productUrl)) {
+          discovered.add(productUrl);
           added += 1;
         }
       }
-
-      onProgress({
-        seedUrl,
-        pageNumber,
-        foundOnPage:
-          uniqueLinks.length,
-        added,
-        total:
-          discovered.size,
-      });
-
-      /*
-       * Якщо сторінка не додала жодного
-       * нового product URL для цього seed,
-       * значить ми дійшли до кінця
-       * або сервер почав повторювати
-       * останню сторінку.
-       */
+      onProgress({ seedUrl, pageNumber, foundOnPage: uniqueLinks.length, added, total: discovered.size, });
+      // If no new product added to a page, then it's the last page
       if (newForSeed === 0) {
         break;
       }
@@ -251,7 +129,5 @@ export async function discoverMsiProductUrls(
     }
   }
 
-  return [
-    ...discovered
-  ];
+  return [...discovered];
 }

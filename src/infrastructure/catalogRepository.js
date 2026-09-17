@@ -64,10 +64,7 @@ function normalizedCatalog(catalog = {}) {
 
 function mergeProducts(catalog, products) {
   const map = new Map(
-    catalog.products.map((product) => [
-      productIdentity(product),
-      product,
-    ])
+    catalog.products.map((product) => [productIdentity(product), product,])
   );
 
   for (const product of products) {
@@ -77,10 +74,7 @@ function mergeProducts(catalog, products) {
   return {
     ...catalog,
     updated_at: new Date().toISOString(),
-    products: [...map.values()].sort(
-      (a, b) =>
-        (a.title ?? '').localeCompare(b.title ?? '')
-    ),
+    products: [...map.values()].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')),
   };
 }
 
@@ -99,11 +93,7 @@ export class MemoryCatalogRepository {
   }
 
   async upsertMany(products) {
-    this.catalog = mergeProducts(
-      this.catalog,
-      products
-    );
-
+    this.catalog = mergeProducts(this.catalog, products);
     return this.catalog;
   }
 }

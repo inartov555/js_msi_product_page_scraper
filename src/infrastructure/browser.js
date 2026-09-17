@@ -14,9 +14,7 @@ function parseBoolean(value, fallback = false) {
     return false;
   }
 
-  throw new Error(
-    `Invalid boolean value: ${value}`
-  );
+  throw new Error(`Invalid boolean value: ${value}`);
 }
 
 export function getHeadlessMode(
@@ -26,23 +24,16 @@ export function getHeadlessMode(
     return explicitValue;
   }
 
-  return parseBoolean(
-    process.env.HEADLESS,
-    true
-  );
+  return parseBoolean(process.env.HEADLESS, true);
 }
 
 export async function createBrowserSession({
   headless: explicitHeadless,
 } = {}) {
   const headless =
-    getHeadlessMode(
-      explicitHeadless
-    );
+    getHeadlessMode(explicitHeadless);
 
-  console.log(
-    `Launching Chromium: headless=${headless}`
-  );
+  console.log(`Launching Chromium: headless=${headless}`);
 
   const browser = await chromium.launch({ headless, channel: 'chromium', });
   const context = await browser.newContext({ ...DEFAULT_BROWSER_CONTEXT, });
@@ -59,13 +50,8 @@ export async function createBrowserSession({
     headless,
 
     async close() {
-      await context
-        .close()
-        .catch(() => {});
-
-      await browser
-        .close()
-        .catch(() => {});
+      await context.close().catch(() => {});
+      await browser.close().catch(() => {});
     },
   };
 }

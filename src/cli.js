@@ -93,9 +93,7 @@ async function commandScrape(args) {
   const url = positional[0] || process.env.PRODUCT_URL || DEFAULT_PRODUCT_URL;
 
   if (!url) {
-    throw new Error(
-      'PRODUCT_URL is required. Set PRODUCT_URL or pass the product URL as the first argument.'
-    );
+    throw new Error('PRODUCT_URL is required. Set PRODUCT_URL or pass the product URL as the first argument.');
   }
 
   const headless = booleanFlag(flags, 'headless', process.env.HEADLESS ?? true);
@@ -121,21 +119,9 @@ async function commandScrape(args) {
 
 async function commandCrawl(args) {
   const { flags } = parseArgs(args);
-
-  const repository =
-    createRepository(flags);
-
-  const provider =
-    createProvider(
-      flags,
-      repository
-    );
-
-  const catalog =
-    await provider.getCatalog({
-      refresh: true,
-    });
-
+  const repository = createRepository(flags);
+  const provider = createProvider(flags, repository);
+  const catalog = await provider.getCatalog({ refresh: true, });
   console.log(
     `Catalog analysis complete: ` +
     `${catalog.products.length} products available.`
@@ -176,9 +162,7 @@ async function commandCompare(args) {
   } = parseArgs(args);
 
   if (positional.length < 2) {
-    throw new Error(
-      'Usage: compare <product selector> <product selector> [more selectors]'
-    );
+    throw new Error('Usage: compare <product selector> <product selector> [more selectors]');
   }
 
   const repository =
@@ -190,9 +174,7 @@ async function commandCompare(args) {
   let selected = [];
   const missing = [];
 
-  /*
-   * First try already-loaded products.
-   */
+  // First try already-loaded products.
   for (const selector of positional) {
     try {
       selected.push(
@@ -215,8 +197,6 @@ async function commandCompare(args) {
   }
 
   /*
-   * Important:
-   *
    * Do NOT crawl Laptops, Desktops,
    * Motherboards, etc. simply to compare
    * two known products.
