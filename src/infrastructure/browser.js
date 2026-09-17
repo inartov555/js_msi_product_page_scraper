@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import { DEFAULT_BROWSER_CONTEXT } from '../config.js';
+import { DEFAULT_BROWSER_CONTEXT, DEFAULT_BLOCKED_RESOURCE_TYPES } from '../config.js';
 
 function parseBoolean(value, fallback = false) {
   if (value == null || value === '') {
@@ -37,11 +37,24 @@ export async function createBrowserSession({
 
   const browser = await chromium.launch({ headless, channel: 'chromium', });
   const context = await browser.newContext({ ...DEFAULT_BROWSER_CONTEXT, });
+  const blockedResourceTypes = new Set(DEFAULT_BLOCKED_RESOURCE_TYPES);
+
+  await context.route('**/*', async (route) => {
+    if (blockedResourceTypes.has(route.request().resourceType())) {
+      await route.abort();
+      return;
+    }
+
+    await route.continue();
+  });
 
   context.setDefaultTimeout(15000);
-
-  const page = await context.newPage();
-  console.log('Browser UA:', await page.evaluate(() => navigator.userAgent));
+  try {
+    const page = await context.newPage();
+    console.log('UserAgent:', await page.evaluate(() => navigator.userAgent));
+  } finally {
+    await page.close().catch(() => {});
+  }
 
   return {
     browser,

@@ -6,6 +6,8 @@ import {
   DEFAULT_PRODUCT_URL,
   DEFAULT_SEED_URLS,
   DEFAULT_SINGLE_PRODUCT_FILE,
+  DEFAULT_CRAWL_CONCURRENCY,
+  DEFAULT_CRAWL_DELAY_MS,
 } from './config.js';
 import { JsonCatalogRepository, MemoryCatalogRepository } from './infrastructure/catalogRepository.js';
 import { createAutoCatalog, } from './application/createAutoCatalog.js';
@@ -354,7 +356,7 @@ function createProvider(flags, repository) {
       flags,
       'concurrency',
       Number(
-        process.env.CRAWL_CONCURRENCY || 3
+        process.env.CRAWL_CONCURRENCY || DEFAULT_CRAWL_CONCURRENCY
       )
     ),
 
@@ -362,7 +364,7 @@ function createProvider(flags, repository) {
       flags,
       'delay-ms',
       Number(
-        process.env.CRAWL_DELAY_MS || 300
+        process.env.CRAWL_DELAY_MS || DEFAULT_CRAWL_DELAY_MS
       )
     ),
 
@@ -375,7 +377,7 @@ function createProvider(flags, repository) {
 }
 
 function printHelp() {
-  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency 3] [--delay-ms 300]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency 6] [--delay-ms 100]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
 }
 
 async function main() {

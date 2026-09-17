@@ -4,22 +4,47 @@ import { validateProduct } from '../domain/product.js';
 import { sleep } from '../infrastructure/browser.js';
 import { buildMsiProductUrlCandidates, } from '../adapters/msi/productLocator.js';
 import { normalizeText, } from '../shared/text.js';
+import {
+  DEFAULT_CRAWL_CONCURRENCY,
+  DEFAULT_CRAWL_DELAY_MS,
+} from '../config.js';
 
-async function runPool(items, concurrency, worker) {
+async function runPool(items, concurrency, workerFactory) {
   if (!Number.isInteger(concurrency) || concurrency < 1) {
     throw new Error('concurrency must be a positive integer.');
   }
+
   const results = new Array(items.length);
   let cursor = 0;
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
-    while (true) {
-      const index = cursor;
-      cursor += 1;
-      if (index >= items.length) return;
-      results[index] = await worker(items[index], index);
+  const workerCount = Math.min(concurrency, items.length);
+
+  const workers = Array.from(
+    { length: workerCount },
+    async (_, workerIndex) => {
+      const worker = await workerFactory(workerIndex);
+
+      try {
+        while (true) {
+          const index = cursor;
+          cursor += 1;
+
+          if (index >= items.length) {
+            return;
+          }
+
+          results[index] = await worker.run(
+            items[index],
+            index
+          );
+        }
+      } finally {
+        await worker.close?.();
+      }
     }
-  });
+  );
+
   await Promise.all(workers);
+
   return results;
 }
 
@@ -50,18 +75,31 @@ export class CatalogService {
     this.logger = logger;
   }
 
-  async scrapeOne(url) {
-    const page = await this.context.newPage();
-    try {
-      const product = await extractMsiProduct(page, url);
-      if (!product?.title) throw new Error(`Not a product page: ${url}`);
-      const problems = validateProduct(product);
-      if (problems.length) this.logger.warn(`Incomplete product ${product.title ?? url}: ${problems.join(', ')}`);
-      return product;
-    } finally {
-      await page.close().catch(() => {});
+  async scrapePage(page, url) {
+    const product = await extractMsiProduct(page, url);
+
+    if (!product?.title) {
+      throw new Error(`Not a product page: ${url}`);
     }
+
+    const problems = validateProduct(product);
+
+    if (problems.length) {
+      this.logger.warn(`Incomplete product ${product.title ?? url}: ${problems.join(', ')}`);
+    }
+
+    return product;
   }
+
+async scrapeOne(url) {
+  const page = await this.context.newPage();
+
+  try {
+    return await this.scrapePage(page, url);
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
 
   async discover(seedUrls, options = {}) {
     const page = await this.context.newPage();
@@ -74,8 +112,8 @@ export class CatalogService {
 
   async crawl({
     seedUrls,
-    concurrency = 3,
-    delayMs = 300,
+    concurrency = DEFAULT_CRAWL_CONCURRENCY,
+    delayMs = DEFAULT_CRAWL_DELAY_MS,
   }) {
     const urls = await this.discover(seedUrls, {
       delayMs,
@@ -86,18 +124,49 @@ export class CatalogService {
     this.logger.log(`Discovered ${urls.length} product URLs.`);
     const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
-    const products = (await runPool(urls, concurrency, async (url, index) => {
-      try {
-        await waitForStartSlot();
-        const product = await this.scrapeOne(url);
-        this.logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
-        return product;
-      } catch (error) {
-        errors.push({ url, error: error.message });
-        this.logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
-        return null;
-      }
-    })).filter(Boolean);
+    const products = (
+      await runPool(
+        urls,
+        concurrency,
+        async () => {
+          const page = await this.context.newPage();
+
+          return {
+            run: async (url, index) => {
+              try {
+                await waitForStartSlot();
+
+                const product = await this.scrapePage(
+                  page,
+                  url
+                );
+
+                this.logger.log(
+                  `[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`
+                );
+
+                return product;
+              } catch (error) {
+                errors.push({
+                  url,
+                  error: error.message,
+                });
+
+                this.logger.error(
+                  `[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`
+                );
+
+                return null;
+              }
+            },
+
+            close: async () => {
+              await page.close().catch(() => {});
+            },
+          };
+        }
+      )
+    ).filter(Boolean);
 
     if (errors.length > 0) {
       throw new Error(`Catalog crawl incomplete: ${errors.length} of ${urls.length} product(s) failed. Existing catalog was not overwritten.`);

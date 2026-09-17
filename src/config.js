@@ -4,6 +4,13 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const DEFAULT_BASE_URL = 'https://us-store.msi.com';
+export const DEFAULT_PRODUCT_URL = `${DEFAULT_BASE_URL}/Intel-Platform-Motherboard/MAG-Z890-TOMAHAWK-WIFI`;
+export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.json');
+export const DEFAULT_PRODUCTS_FILE = path.resolve(__dirname, '../output/products.json');
+export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
+export const DEFAULT_CRAWL_CONCURRENCY = 10;
+export const DEFAULT_CRAWL_DELAY_MS = 100;
+export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
 
 // Top-level catalog pages. They can be overridden with repeated --seed arguments.
 export const DEFAULT_SEED_URLS = [
@@ -16,13 +23,6 @@ export const DEFAULT_SEED_URLS = [
   `${DEFAULT_BASE_URL}/Gaming-Gears`,
   `${DEFAULT_BASE_URL}/EV-chargers`,
 ];
-
-export const DEFAULT_PRODUCT_URL =
-  `${DEFAULT_BASE_URL}/Intel-Platform-Motherboard/MAG-Z890-TOMAHAWK-WIFI`;
-
-export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.json');
-export const DEFAULT_PRODUCTS_FILE = path.resolve(__dirname, '../output/products.json');
-export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 
 export const DEFAULT_BROWSER_CONTEXT = {
   userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',

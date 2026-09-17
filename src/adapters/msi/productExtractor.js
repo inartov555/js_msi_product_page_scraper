@@ -22,6 +22,22 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
+async function waitForAnyVisible(page, selector, timeout = 15000) {
+  await page.waitForFunction(
+    (targetSelector) => [...document.querySelectorAll(targetSelector)].some((element) => {
+      const style = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+
+      return style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && rect.width > 0
+        && rect.height > 0;
+    }),
+    selector,
+    { timeout }
+  );
+}
+
 async function extractStructuredProduct(page) {
   return page.evaluate(() => {
     const scripts = [...document.querySelectorAll('script[type="application/ld+json"]')];
@@ -325,12 +341,11 @@ export async function extractMsiProduct(page, url) {
   await gotoWithRetry(page, url);
   await acceptCookiesIfPresent(page);
 
-  await page
-    .locator(msiSelectors.productTitle[0])
-    .waitFor({
-      state: 'visible',
-      timeout: 15000,
-    });
+  await waitForAnyVisible(
+    page,
+    msiSelectors.productTitle[0],
+    15000
+  );
 
   const title = await firstVisibleText(
     page,

@@ -1,11 +1,14 @@
-import { DEFAULT_SEED_URLS } from '../config.js';
+import {
+  DEFAULT_CRAWL_CONCURRENCY,
+  DEFAULT_CRAWL_DELAY_MS,
+  DEFAULT_SEED_URLS, } from '../config.js';
 import { AutoCatalogProvider } from './autoCatalogProvider.js';
 
 export function createAutoCatalog({
   repository,
   seedUrls = DEFAULT_SEED_URLS,
-  concurrency = 3,
-  delayMs = 300,
+  concurrency = DEFAULT_CRAWL_CONCURRENCY,
+  delayMs = DEFAULT_CRAWL_DELAY_MS,
   headless = true,
   logger = console,
 }) {
