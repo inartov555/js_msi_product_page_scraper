@@ -6,8 +6,7 @@ Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript 
 
 ## Requirements
 
-- Node.js 20+
-- npm
+- Docker
 
 Run next commands from below in the project root folder before running tests
 
@@ -21,25 +20,7 @@ npx playwright install chromium
 ### Default
 
 ```bash
-npm run scrape
-```
-
-By default, the scraper runs with URL from below in headless mode, if the URL is headless param were not passed
- - `https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI`
-
-### Optional URL override:
-
-```bash
-# URl to a particular item, you can find some in https://us-store.msi.com
-targetUrl=https://us-store.msi.com/PC-Components/CPU-Coolers/MPG-CORELIQUID-P13-360-WHITE
-
-# url = $targetUrl
-# isHeadless = true/false/not set
-
-npm run scrape $targetUrl $isHeadless
-
-# If only URL needs to be overriden, then pass only URL
-npm run scrape $targetUrl
+docker build -t my-scraper; docker run --rm scraper
 ```
 
 After the command finishes, `output/product.json` is created or overwritten.
