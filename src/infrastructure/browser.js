@@ -30,14 +30,22 @@ export function getHeadlessMode(
 export async function createBrowserSession({
   headless: explicitHeadless,
 } = {}) {
-  const headless =
-    getHeadlessMode(explicitHeadless);
+  const headless = getHeadlessMode(explicitHeadless);
 
   console.log(`Launching Chromium: headless=${headless}`);
 
-  const browser = await chromium.launch({ headless, channel: 'chromium', });
-  const context = await browser.newContext({ ...DEFAULT_BROWSER_CONTEXT, });
-  const blockedResourceTypes = new Set(DEFAULT_BLOCKED_RESOURCE_TYPES);
+  const browser = await chromium.launch({
+    headless,
+    channel: 'chromium',
+  });
+
+  const context = await browser.newContext({
+    ...DEFAULT_BROWSER_CONTEXT,
+  });
+
+  const blockedResourceTypes = new Set(
+    DEFAULT_BLOCKED_RESOURCE_TYPES
+  );
 
   await context.route('**/*', async (route) => {
     if (blockedResourceTypes.has(route.request().resourceType())) {
@@ -49,17 +57,22 @@ export async function createBrowserSession({
   });
 
   context.setDefaultTimeout(15000);
+
+  const uaPage = await context.newPage();
+
   try {
-    const page = await context.newPage();
-    console.log('UserAgent:', await page.evaluate(() => navigator.userAgent));
+    const userAgent = await uaPage.evaluate(
+      () => navigator.userAgent
+    );
+
+    console.log(`Browser UserAgent: ${userAgent}`);
   } finally {
-    await page.close().catch(() => {});
+    await uaPage.close().catch(() => {});
   }
 
   return {
     browser,
     context,
-    page,
     headless,
 
     async close() {

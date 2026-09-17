@@ -4,6 +4,10 @@ const originalConsole = {
   error: console.error.bind(console),
 };
 
-console.log = (...args) => originalConsole.log('[INFO]', ...args);
-console.warn = (...args) => originalConsole.warn('[WARN]', ...args);
-console.error = (...args) => originalConsole.error('[ERROR]', ...args);
+function timestamp() {
+  return new Date().toISOString();
+}
+
+console.log = (...args) => originalConsole.log(`[${timestamp()}] [INFO]`, ...args);
+console.warn = (...args) => originalConsole.warn(`[${timestamp()}] [WARN]`, ...args);
+console.error = (...args) => originalConsole.error(`[${timestamp()}] [ERROR]`, ...args);
