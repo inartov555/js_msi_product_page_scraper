@@ -39,9 +39,7 @@ export class JsonCatalogRepository {
       await this.load(),
       products
     );
-
     await this.save(catalog);
-
     return catalog;
   }
 
