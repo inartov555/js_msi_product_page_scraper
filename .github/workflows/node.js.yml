@@ -20,7 +20,7 @@ defaults:
     working-directory: .
 
 jobs:
-  js_scraper:
+  scraper:
     runs-on: ubuntu-latest
 
     strategy:
