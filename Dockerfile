@@ -1,5 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.57.0-jammy
-RUN npx playwright install --with-deps chromium
+FROM mcr.microsoft.com/playwright:v1.63.0-jammy
 
 WORKDIR /scraper
 
@@ -16,9 +15,6 @@ RUN if [ -f package-lock.json ]; then \
 # Copy the scraper
 COPY . .
 
-# Install Playwright browsers & system deps
-RUN npx playwright install --with-deps
-
 USER root
 
 # Ensure non-root user (provided by the Playwright base image) owns the workspace
@@ -26,4 +22,5 @@ RUN chown -R pwuser:pwuser /scraper
 USER pwuser
 
 # Default behavior: run the scraper suite (with a virtual display)
-CMD bash -lc "npm run scraper --headed $SCRAPER_GREP"
+# CMD bash -lc "npm run scraper --headed $SCRAPER_GREP"
+CMD ["npm", "run", "scraper"]

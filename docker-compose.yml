@@ -10,7 +10,8 @@ services:
     ports: ["8000:8000"]
     volumes:
       - media_data:/app/media
-      - ${HOST_ARTIFACTS}:/scraper/artifacts
+      # - ${HOST_ARTIFACTS}:/scraper/artifacts
+      - ./output:/scraper/output
       - /tmp/.X11-unix:/tmp/.X11-unix
     stop_signal: SIGINT
     stop_grace_period: 5s

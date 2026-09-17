@@ -8,19 +8,11 @@ Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript 
 
 - Docker
 
-Run next commands from below in the project root folder before running tests
-
-```bash
-npm install
-npx playwright install chromium
-```
-
 ## Run
 
-### Default
-
 ```bash
-docker build -t my-scraper; docker run --rm scraper
+docker build -t scraper; docker run --rm scraper
+# docker compose up --build
 ```
 
 After the command finishes, `output/product.json` is created or overwritten.
