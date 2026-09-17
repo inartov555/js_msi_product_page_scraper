@@ -42,46 +42,46 @@ export class JsonCatalogRepository {
     await this.save(catalog);
     return catalog;
   }
+}
 
-  function emptyCatalog() {
-    return {
-      version: 1,
-      updated_at: null,
-      products: [],
-    };
+function emptyCatalog() {
+  return {
+    version: 1,
+    updated_at: null,
+    products: [],
+  };
+}
+
+function normalizedCatalog(catalog = {}) {
+  return {
+    version: catalog.version ?? 1,
+    updated_at: catalog.updated_at ?? null,
+    products: Array.isArray(catalog.products)
+      ? catalog.products
+      : [],
+  };
+}
+
+function mergeProducts(catalog, products) {
+  const map = new Map(
+    catalog.products.map((product) => [
+      productIdentity(product),
+      product,
+    ])
+  );
+
+  for (const product of products) {
+    map.set(productIdentity(product), product);
   }
 
-  function normalizedCatalog(catalog = {}) {
-    return {
-      version: catalog.version ?? 1,
-      updated_at: catalog.updated_at ?? null,
-      products: Array.isArray(catalog.products)
-        ? catalog.products
-        : [],
-    };
-  }
-
-  function mergeProducts(catalog, products) {
-    const map = new Map(
-      catalog.products.map((product) => [
-        productIdentity(product),
-        product,
-      ])
-    );
-
-    for (const product of products) {
-      map.set(productIdentity(product), product);
-    }
-
-    return {
-      ...catalog,
-      updated_at: new Date().toISOString(),
-      products: [...map.values()].sort(
-        (a, b) =>
-          (a.title ?? '').localeCompare(b.title ?? '')
-      ),
-    };
-  }
+  return {
+    ...catalog,
+    updated_at: new Date().toISOString(),
+    products: [...map.values()].sort(
+      (a, b) =>
+        (a.title ?? '').localeCompare(b.title ?? '')
+    ),
+  };
 }
 
 
