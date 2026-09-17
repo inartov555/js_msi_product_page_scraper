@@ -20,7 +20,7 @@ defaults:
     working-directory: .
 
 jobs:
-  js_scrape:
+  js_scraper:
     runs-on: ubuntu-latest
 
     strategy:
@@ -61,7 +61,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Run scrape
+      - name: Run scraper
         if: steps.node_project.outputs.exists == 'true'
         env:
           PRODUCT_URL: ${{ github.event.inputs.url || vars.PRODUCT_URL }}
@@ -71,12 +71,12 @@ jobs:
           echo "Node sees PRODUCT_URL:"
           node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
 
-          echo "Actual scrape code:"
-          grep -n "targetUrl" src/scrape.js
+          echo "Actual scraper code:"
+          grep -n "targetUrl" src/scraper.js
 
           npm install
           npx playwright install --with-deps chromium
-          npm run scrape
+          npm run scraper
 
       - name: Upload coverage artifact
         if: always() && hashFiles('coverage/**') != ''
