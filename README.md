@@ -10,11 +10,19 @@ Node.js + Playwright scraper for the MSI US Store. It supports single-product sc
 ## Commands
 
 ```bash
+# NPM run
+
 npm run scrape
 npm run crawl
 npm run search -- "RTX 5090"
 npm run compare -- "PRODUCT_A" "PRODUCT_B"
 npm test
+```
+
+```bach
+# Docker run
+
+docker compose up --build
 ```
 
 ## Catalog
