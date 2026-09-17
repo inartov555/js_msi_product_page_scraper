@@ -1,0 +1,31 @@
+export const msiSelectors = {
+  productTitle: [
+    '.product-detail h2.crop-text-2.title',
+    '.product-detail h1',
+    'main h1',
+    'main h2',
+  ],
+  description: [
+    '.product-detail h2.crop-text-2.title + div p',
+    '.product-detail .description p',
+    'meta[name="description"]',
+  ],
+  regularPrice: ['#prices-old', '.price-old'],
+  currentPrice: ['#prices-new', '.price-new', '.product-detail .price'],
+  priceWrapper: ['#prices-wrapper', '.product-detail .price'],
+  productQuantity: ['#product_qty'],
+  breadcrumbs: ['ol.breadcrumb', '.breadcrumb'],
+  mainImage: '#imagePopup',
+  carouselImages: '#carouselImages img.product-detail-thumb-bto, .product-detail .thumbnails img',
+  specTables: '.product-detail table.table.table-borderless, .product-detail table, table.table',
+  rating: ['#description-list-average-rating #average-rating-info', '.rating'],
+  productIdInput: '#product_qty input[name="product_id"]',
+  productCardLinks: [
+    '.product-thumb h4 a[href]',
+    '.product-thumb .caption a[href]',
+    '.product-layout h4 a[href]',
+    '.product-grid h4 a[href]',
+    '.product-list h4 a[href]',
+    '[data-product-id] a[href]',
+  ],
+};
