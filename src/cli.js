@@ -79,14 +79,25 @@ function parseSpecFilters(values) {
 }
 
 async function withCatalog(flags, callback) {
-  const repository = new JsonCatalogRepository(flag(flags, 'catalog', DEFAULT_CATALOG_FILE));
-  const catalog = await repository.load();
-  return callback(catalog.products, repository);
+  const repository = createRepository(flags);
+  const provider = createProvider(flags, repository);
+
+  // Automatically crawl MSI if no products are loaded yet.
+  const products = await provider.getProducts();
+
+  return callback(products, repository, provider);
 }
 
 async function commandScrape(args) {
   const { positional, flags } = parseArgs(args);
   const url = positional[0] || process.env.PRODUCT_URL || DEFAULT_PRODUCT_URL;
+
+  if (!url) {
+    throw new Error(
+      'PRODUCT_URL is required. Set PRODUCT_URL or pass the product URL as the first argument.'
+    );
+  }
+
   const headless = booleanFlag(flags, 'headless', process.env.HEADLESS ?? true);
   const output = flag(flags, 'output', DEFAULT_SINGLE_PRODUCT_FILE);
   const [{ createBrowserSession }, { CatalogService }] = await Promise.all([
@@ -95,7 +106,7 @@ async function commandScrape(args) {
   ]);
   const session = await createBrowserSession({ headless });
   try {
-    const repository = new JsonCatalogRepository(flag(flags, 'catalog', DEFAULT_CATALOG_FILE));
+    const repository = createRepository(flags);
     const service = new CatalogService({ context: session.context, repository });
     const product = await service.scrapeOne(url);
     const path = (await import('node:path')).default;
@@ -110,27 +121,25 @@ async function commandScrape(args) {
 
 async function commandCrawl(args) {
   const { flags } = parseArgs(args);
-  const headless = booleanFlag(flags, 'headless', true);
-  const seeds = flagList(flags, 'seed');
-  const repository = new JsonCatalogRepository(flag(flags, 'catalog', DEFAULT_CATALOG_FILE));
-  const [{ createBrowserSession }, { CatalogService }] = await Promise.all([
-    import('./infrastructure/browser.js'),
-    import('./application/catalogService.js'),
-  ]);
-  const session = await createBrowserSession({ headless });
-  try {
-    const service = new CatalogService({ context: session.context, repository });
-    const result = await service.crawl({
-      seedUrls: seeds.length ? seeds : DEFAULT_SEED_URLS,
-      concurrency: numberFlag(flags, 'concurrency', 3),
-      delayMs: numberFlag(flags, 'delay-ms', 300),
-      maxProducts: numberFlag(flags, 'max-products', Number.MAX_SAFE_INTEGER),
-      maxPagesPerSeed: numberFlag(flags, 'max-pages', 100),
+
+  const repository =
+    createRepository(flags);
+
+  const provider =
+    createProvider(
+      flags,
+      repository
+    );
+
+  const catalog =
+    await provider.getCatalog({
+      refresh: true,
     });
-    console.log(`Catalog updated: ${result.scraped}/${result.discovered} products scraped, ${result.failed} failed; ${result.catalog.products.length} total indexed.`);
-  } finally {
-    await session.close();
-  }
+
+  console.log(
+    `Catalog analysis complete: ` +
+    `${catalog.products.length} products available.`
+  );
 }
 
 async function commandSearch(args) {
@@ -191,6 +200,58 @@ function createRepository(flags) {
   return catalogFile
     ? new JsonCatalogRepository(catalogFile)
     : new MemoryCatalogRepository();
+}
+
+function createProvider(flags, repository) {
+  const seeds = flagList(flags, 'seed');
+
+  return createAutoCatalog({
+    repository,
+
+    seedUrls:
+      seeds.length
+        ? seeds
+        : DEFAULT_SEED_URLS,
+
+    concurrency: numberFlag(
+      flags,
+      'concurrency',
+      Number(
+        process.env.CRAWL_CONCURRENCY || 3
+      )
+    ),
+
+    delayMs: numberFlag(
+      flags,
+      'delay-ms',
+      Number(
+        process.env.CRAWL_DELAY_MS || 300
+      )
+    ),
+
+    maxProducts: numberFlag(
+      flags,
+      'max-products',
+      Number(
+        process.env.MAX_PRODUCTS ||
+        Number.MAX_SAFE_INTEGER
+      )
+    ),
+
+    maxPagesPerSeed: numberFlag(
+      flags,
+      'max-pages',
+      Number(
+        process.env.MAX_PAGES_PER_SEED || 100
+      )
+    ),
+
+    headless: booleanFlag(
+      flags,
+      'headless',
+      process.env.HEADLESS ?? true
+    ),
+  });
 }
 
 function printHelp() {
