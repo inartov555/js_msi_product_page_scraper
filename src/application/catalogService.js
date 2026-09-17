@@ -54,6 +54,7 @@ export class CatalogService {
     const page = await this.context.newPage();
     try {
       const product = await extractMsiProduct(page, url);
+      if (!product?.title) throw new Error(`Not a product page: ${url}`);
       const problems = validateProduct(product);
       if (problems.length) this.logger.warn(`Incomplete product ${product.title ?? url}: ${problems.join(', ')}`);
       return product;
@@ -75,13 +76,9 @@ export class CatalogService {
     seedUrls,
     concurrency = 3,
     delayMs = 300,
-    maxProducts = Infinity,
-    maxPagesPerSeed = 100,
   }) {
     const urls = await this.discover(seedUrls, {
       delayMs,
-      maxProducts,
-      maxPagesPerSeed,
       onProgress: ({ seedUrl, pageNumber, added, total }) =>
         this.logger.log(`[discover] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
     });
@@ -102,8 +99,13 @@ export class CatalogService {
       }
     })).filter(Boolean);
 
-    const catalog = await this.repository.upsertMany(products);
-    return { discovered: urls.length, scraped: products.length, failed: errors.length, errors, catalog };
+    if (errors.length > 0) {
+      throw new Error(`Catalog crawl incomplete: ${errors.length} of ${urls.length} product(s) failed. Existing catalog was not overwritten.`);
+    }
+
+    const catalog = await this.repository.replaceAll(products);
+    this.logger.log(`Full catalog saved: ${catalog.products.length} products.`);
+    return { discovered: urls.length, scraped: products.length, failed: 0, errors: [], catalog };
   }
 
   async scrapeSelector(selector) {

@@ -6,8 +6,6 @@ export function createAutoCatalog({
   seedUrls = DEFAULT_SEED_URLS,
   concurrency = 3,
   delayMs = 300,
-  maxProducts = Infinity,
-  maxPagesPerSeed = 100,
   headless = true,
   logger = console,
 }) {
@@ -37,8 +35,6 @@ export function createAutoCatalog({
           seedUrls,
           concurrency,
           delayMs,
-          maxProducts,
-          maxPagesPerSeed,
         });
       } finally {
         await session.close();

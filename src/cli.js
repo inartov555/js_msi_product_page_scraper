@@ -121,11 +121,9 @@ async function commandCrawl(args) {
   const { flags } = parseArgs(args);
   const repository = createRepository(flags);
   const provider = createProvider(flags, repository);
-  const catalog = await provider.getCatalog({ refresh: true, });
-  console.log(
-    `Catalog analysis complete: ` +
-    `${catalog.products.length} products available.`
-  );
+  const refresh = booleanFlag(flags, 'refresh', process.env.REFRESH_CATALOG ?? false);
+  const catalog = await provider.getCatalog({ refresh });
+  console.log(`Catalog analysis complete: ${catalog.products.length} products available.`);
 }
 
 async function commandSearch(args) {
@@ -368,23 +366,6 @@ function createProvider(flags, repository) {
       )
     ),
 
-    maxProducts: numberFlag(
-      flags,
-      'max-products',
-      Number(
-        process.env.MAX_PRODUCTS ||
-        Number.MAX_SAFE_INTEGER
-      )
-    ),
-
-    maxPagesPerSeed: numberFlag(
-      flags,
-      'max-pages',
-      Number(
-        process.env.MAX_PAGES_PER_SEED || 100
-      )
-    ),
-
     headless: booleanFlag(
       flags,
       'headless',
@@ -394,7 +375,7 @@ function createProvider(flags, repository) {
 }
 
 function printHelp() {
-  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--seed url ...] [--concurrency 3] [--delay-ms 300] [--max-products N]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency 3] [--delay-ms 300]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
 }
 
 async function main() {

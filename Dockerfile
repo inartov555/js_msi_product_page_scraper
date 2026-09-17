@@ -28,6 +28,5 @@ USER pwuser
 #  "MAG Z890 TOMAHAWK WIFI" \
 #  "PRO Z890-P WIFI"
 
-# crawl, compare, search, scrape
-
+# scrape, crawl, search, compare, serve
 CMD npm run crawl

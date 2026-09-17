@@ -42,6 +42,17 @@ export class JsonCatalogRepository {
     await this.save(catalog);
     return catalog;
   }
+
+  async replaceAll(products) {
+    const catalog = {
+      version: 1,
+      updated_at: new Date().toISOString(),
+      products: [...products].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')),
+    };
+
+    await this.save(catalog);
+    return catalog;
+  }
 }
 
 function emptyCatalog() {
@@ -94,6 +105,16 @@ export class MemoryCatalogRepository {
 
   async upsertMany(products) {
     this.catalog = mergeProducts(this.catalog, products);
+    return this.catalog;
+  }
+
+  async replaceAll(products) {
+    this.catalog = normalizedCatalog({
+      version: 1,
+      updated_at: new Date().toISOString(),
+      products: [...products].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')),
+    });
+
     return this.catalog;
   }
 }

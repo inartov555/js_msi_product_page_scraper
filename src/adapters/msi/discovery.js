@@ -15,12 +15,30 @@ function listingUrl(seedUrl, pageNumber) {
   return url.href;
 }
 
-function isSameStoreProductUrl(candidate, baseUrl) {
+export function isMsiProductUrl(candidate, baseUrl) {
   try {
     const url = new URL(candidate);
     const base = new URL(baseUrl);
+
     if (url.origin !== base.origin) return false;
-    if (/\b(route=|account|checkout|cart|contact|support|policy|search|compare)\b/i.test(`${url.pathname}${url.search}`)) return false;
+
+    const pathname = url.pathname.replace(/\/+$/, '') || '/';
+    const lowerPath = pathname.toLowerCase();
+
+    if (/\/(account|checkout|cart|contact|support|policy|search)(\/|$)/i.test(pathname)) return false;
+    if (lowerPath === '/product-comparison' || lowerPath === '/microsoft-windows11') return false;
+
+    const params = [...url.searchParams.entries()];
+    if (params.length > 0) {
+      return params.length === 1 && params[0][0] === 'product_id' && Boolean(params[0][1]);
+    }
+
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length < 2) return false;
+
+    const basePath = base.pathname.replace(/\/+$/, '') || '/';
+    if (pathname === basePath) return false;
+
     return true;
   } catch {
     return false;
@@ -31,7 +49,6 @@ export async function discoverMsiProductUrls(
   page,
   seedUrls,
   {
-    pageSize = 60,
     delayMs = 250,
     onProgress = () => {},
   } = {}
@@ -44,7 +61,7 @@ export async function discoverMsiProductUrls(
     let pageNumber = 1;
 
     while (true) {
-      const url = listingUrl(seedUrl, pageNumber, pageSize);
+      const url = listingUrl(seedUrl, pageNumber);
       await gotoWithRetry(page, url);
       await acceptCookiesIfPresent(page);
 
@@ -82,8 +99,8 @@ export async function discoverMsiProductUrls(
         msiSelectors.productCardLinks
       );
 
-      const uniqueLinks = [...new Set(links.map(canonicalizeUrl)),
-      ].filter((candidate) => isSameStoreProductUrl(candidate, seedUrl));
+      const uniqueLinks = [...new Set(links.map(canonicalizeUrl))]
+        .filter((candidate) => isMsiProductUrl(candidate, seedUrl));
 
       // Pagingnation is over when the page is empty
       if (uniqueLinks.length === 0) {

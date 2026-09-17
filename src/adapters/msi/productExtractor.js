@@ -103,123 +103,306 @@ async function extractCategoryTree(page, title) {
     .map((name) => ({ name, url: null }));
 }
 
-async function extractImages(page, structured) {
-  const rawImages = await page.evaluate(({ mainSelector, carouselSelector }) => {
-    const main = document.querySelector(mainSelector);
-    return [
-      main?.currentSrc || main?.src,
-      ...[...document.querySelectorAll(carouselSelector)].map((image) =>
-        image.getAttribute('popup_img') || image.currentSrc || image.src),
-    ].filter(Boolean);
-  }, { mainSelector: msiSelectors.mainImage, carouselSelector: msiSelectors.carouselImages });
-
+async function extractImages(page) {
   const baseUrl = page.url();
-  const candidates = [...(structured?.images ?? []), ...rawImages];
-  const images = [...new Set(candidates.map((value) => {
-    const text = cleanText(value);
-    if (!text || text.startsWith('data:')) return null;
-    try { return new URL(text, baseUrl).href; } catch { return null; }
-  }).filter((url) => url && !/(logo|icon|shipping|warranty|payment)/i.test(url)))];
 
-  return { image_url: images[0] ?? null, additional_image_urls: images.slice(1) };
+  const rawImages = await page.evaluate(
+    ({ mainSelector, carouselSelector }) => {
+      const main = document.querySelector(mainSelector);
+
+      return [
+        main?.currentSrc || main?.src,
+        ...[
+          ...document.querySelectorAll(carouselSelector),
+        ].map((image) =>
+          image.getAttribute('popup_img') ||
+          image.currentSrc ||
+          image.src
+        ),
+      ].filter(Boolean);
+    },
+    {
+      mainSelector: msiSelectors.mainImage,
+      carouselSelector: msiSelectors.carouselImages,
+    }
+  );
+
+  const images = [
+    ...new Set(
+      rawImages
+        .map((value) => {
+          const text = cleanText(value);
+
+          if (!text || text.startsWith('data:')) {
+            return null;
+          }
+
+          try {
+            return new URL(text, baseUrl).href;
+          } catch {
+            return null;
+          }
+        })
+        .filter(
+          (url) =>
+            url &&
+            !/(logo|icon|shipping|warranty|payment)/i.test(url)
+        )
+    ),
+  ];
+
+  return {
+    image_url: images[0] ?? null,
+    additional_image_urls: images.slice(1),
+  };
 }
 
 async function extractSpecs(page) {
-  return page.evaluate((tableSelector) => {
-    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+  return page.evaluate((selectors) => {
+    const clean = (value) =>
+      String(value ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     const result = [];
     const seen = new Set();
-    const tables = [...document.querySelectorAll(tableSelector)];
-    for (const table of tables) {
-      for (const row of table.querySelectorAll('tr')) {
-        const cells = [...row.querySelectorAll(':scope > th, :scope > td')];
-        if (cells.length < 2) continue;
+
+    const add = (name, value) => {
+      const cleanName = clean(name);
+      const cleanValue = clean(value) || null;
+
+      if (!cleanName || cleanName.length > 120) {
+        return;
+      }
+
+      if (/^(detail )?specification(s)?$/i.test(cleanName)) {
+        return;
+      }
+
+      const key = `${cleanName}\u0000${cleanValue ?? ''}`;
+
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+
+      result.push({
+        name: cleanName,
+        value: cleanValue,
+      });
+    };
+
+    const parseRows = (rows) => {
+      const pairs = [];
+
+      for (const row of rows) {
+        const cells = [
+          ...row.querySelectorAll(selectors.tableCells),
+        ];
+
+        if (cells.length < 2) {
+          continue;
+        }
+
         const name = clean(cells[0].innerText);
         const value = clean(cells.slice(1).map((cell) => cell.innerText).join(' '));
-        if (!name || !value || name.length > 120 || /^(detail )?specification(s)?$/i.test(name)) continue;
-        const key = `${name}\u0000${value}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        result.push({ name, value });
+
+        if (name && value) {
+          pairs.push({ name, value, });
+        }
       }
+
+      return pairs;
+    };
+
+    const tables = [
+      ...document.querySelectorAll(selectors.tables),
+    ].map((table) => {
+        const pairs = parseRows(
+          table.querySelectorAll(selectors.tableRows)
+        );
+
+        const surroundingText = clean(
+          table.parentElement?.innerText
+        ).slice(0, 500).toLowerCase();
+
+        return {
+          pairs,
+          score:
+            pairs.length +
+            (
+              /detail specification|specifications/.test(surroundingText)
+                ? 20
+                : 0
+            ),
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    for (const table of tables) {
+      table.pairs.forEach(({ name, value }) => {
+        add(name, value);
+      });
     }
+
     return result;
-  }, msiSelectors.specTables);
+  }, msiSelectors.specification);
 }
 
-async function extractPricePair(page, structured) {
+async function extractPricePair(page) {
   const regularPrice = parseNumber(await firstVisibleText(page, msiSelectors.regularPrice));
   const currentPrice = parseNumber(await firstVisibleText(page, msiSelectors.currentPrice));
-  const structuredPrice = parseNumber(structured?.price);
-  if (regularPrice !== null && currentPrice !== null && regularPrice !== currentPrice) {
-    return { price: regularPrice, sale_price: currentPrice };
+
+  return (regularPrice !== null && currentPrice !== null)
+    ? {
+        price: regularPrice,
+        sale_price: currentPrice,
+      }
+    : {
+        price: currentPrice ?? regularPrice,
+        sale_price: null,
+      };
+}
+
+async function extractAvailability(page) {
+  const texts =
+    await Promise.all([
+      firstVisibleText(page, msiSelectors.priceWrapper),
+      firstVisibleText(page, msiSelectors.productQuantity),
+    ]);
+
+  return normalizeAvailability(texts.filter(Boolean).join(' '));
+}
+
+async function extractItemId(page) {
+  const productId = cleanText(
+    await page
+      .locator(msiSelectors.productIdInput)
+      .first()
+      .inputValue()
+      .catch(() => null)
+  );
+
+  if (productId) {
+    return productId;
   }
-  return { price: currentPrice ?? regularPrice ?? structuredPrice, sale_price: null };
+
+  const bodyText = await page
+    .locator('body')
+    .innerText();
+
+  return cleanText(
+    bodyText.match(
+      /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i
+    )?.[1]
+  );
 }
 
-async function extractAvailability(page, structured) {
-  const textParts = await Promise.all([
-    firstVisibleText(page, msiSelectors.priceWrapper),
-    firstVisibleText(page, msiSelectors.productQuantity),
-  ]);
-  const visibleAvailability = normalizeAvailability(textParts.filter(Boolean).join(' '));
-  return visibleAvailability ?? normalizeAvailability(structured?.availability);
-}
-
-async function extractItemId(page, structured) {
-  const inputValue = cleanText(await page.locator(msiSelectors.productIdInput).first().inputValue().catch(() => null));
-  if (inputValue) return inputValue;
-  if (cleanText(structured?.sku)) return cleanText(structured.sku);
+async function extractBrand(page) {
   const body = await page.locator('body').innerText().catch(() => '');
-  return cleanText(body.match(/\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i)?.[1]);
+  return /\bMSI\b/i.test(body) ? 'MSI' : null;
 }
 
-async function extractRating(page, structured) {
-  const text = await firstVisibleText(page, msiSelectors.rating);
+async function extractRating(page) {
+  const text = await firstVisibleText(
+    page,
+    msiSelectors.rating
+  );
+
   return {
-    star_rating: parseNumber(structured?.rating) ?? parseNumber(text?.match(/\b([0-5](?:\.\d+)?)\b/)?.[1]),
-    review_count: parseNumber(structured?.reviewCount) ?? parseNumber(text?.match(/\((\d+)\)/)?.[1]),
+    star_rating: parseNumber(
+      text?.match(/\b([0-5](?:\.\d+)?)\b/)?.[1]
+    ),
+
+    review_count: parseNumber(
+      text?.match(/\((\d+)\)/)?.[1]
+    ),
   };
 }
 
 export async function extractMsiProduct(page, url) {
   await gotoWithRetry(page, url);
   await acceptCookiesIfPresent(page);
-  await page.locator(msiSelectors.productTitle.join(', ')).first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
 
-  const structured = await extractStructuredProduct(page);
-  const title = cleanText(structured?.name) ?? await firstVisibleText(page, msiSelectors.productTitle);
-  const description = cleanText(structured?.description) ?? await firstVisibleText(page, msiSelectors.description);
-  const [categoryTree, specs, images, prices, rating] = await Promise.all([
-    extractCategoryTree(page, title),
-    extractSpecs(page),
-    extractImages(page, structured),
-    extractPricePair(page, structured),
-    extractRating(page, structured),
-  ]);
+  await page
+    .locator(msiSelectors.productTitle[0])
+    .waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
 
-  const mpn = cleanText(structured?.mpn) ?? findSpecValue(specs, /^(mpn|manufacturer (part|number)|manufacturer number|model number)$/i);
-  const gtin = cleanText(structured?.gtin) ?? findSpecValue(specs, /^(gtin|upc|ean)$/i);
+  const title = await firstVisibleText(
+    page,
+    msiSelectors.productTitle
+  );
+
+  if (!title) {
+    throw new Error(
+      `Not a product page: ${page.url() || url}`
+    );
+  }
+
+  const description = await firstVisibleText(
+    page,
+    msiSelectors.description
+  );
+
+  const categoryTree = await extractCategoryTree(
+    page,
+    title
+  );
+
+  const images = await extractImages(page);
+  const specs = await extractSpecs(page);
+  const prices = await extractPricePair(page);
+  const rating = await extractRating(page);
 
   return {
     url: page.url(),
-    item_id: await extractItemId(page, structured),
+
+    item_id: await extractItemId(page),
+
     title,
-    brand: cleanText(structured?.brand) ?? 'MSI',
-    product_category: categoryTree.length ? categoryTree.map((item) => item.name).join(' > ') : null,
+
+    brand: await extractBrand(page),
+
+    product_category: categoryTree.length
+      ? categoryTree
+          .map((item) => item.name)
+          .join(' > ')
+      : null,
+
     category_tree: categoryTree,
+
     description,
+
     price: prices.price,
+
     sale_price: prices.sale_price,
-    currency: cleanText(structured?.currency) ?? 'USD',
-    availability: await extractAvailability(page, structured),
+
+    availability: await extractAvailability(page),
+
     image_url: images.image_url,
+
     additional_image_urls: images.additional_image_urls,
+
     specs,
+
     star_rating: rating.star_rating,
+
     review_count: rating.review_count,
-    gtin,
-    mpn,
+
+    gtin: findSpecValue(
+      specs,
+      /^(gtin|upc|ean)$/i
+    ),
+
+    mpn: findSpecValue(
+      specs,
+      /^(mpn|manufacturer (part|number))/i
+    ),
+
     scraped_at: new Date().toISOString(),
   };
 }
