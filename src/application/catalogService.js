@@ -1,4 +1,4 @@
-import { discoverMsiProductUrls } from '../adapters/msi/discovery.js';
+import { discoverMsiProductUrls } from '../adapters/discovery.js';
 import { extractMsiProduct } from '../adapters/msi/productExtractor.js';
 import { validateProduct } from '../domain/product.js';
 import { sleep } from '../infrastructure/browser.js';
