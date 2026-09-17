@@ -352,12 +352,13 @@ function createRepository(flags) {
   const catalogFile = flag(
     flags,
     'catalog',
-    process.env.CATALOG_FILE || null
+    process.env.CATALOG_FILE ||
+      DEFAULT_CATALOG_FILE
   );
 
-  return catalogFile
-    ? new JsonCatalogRepository(catalogFile)
-    : new MemoryCatalogRepository();
+  return new JsonCatalogRepository(
+    catalogFile
+  );
 }
 
 function createProvider(flags, repository) {
