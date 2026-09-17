@@ -66,13 +66,11 @@ jobs:
         env:
           PRODUCT_URL: ${{ github.event.inputs.url || vars.PRODUCT_URL }}
         run: |
-          echo "PRODUCT_URL is configured"
-
+          # echo "PRODUCT_URL is configured"
           # echo "Node sees PRODUCT_URL:"
           # node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
-
-          echo "Actual scraper code:"
-          grep -n "targetUrl" src/scraper.js
+          # echo "Actual scraper code:"
+          # grep -n "targetUrl" src/scraper.js
 
           npm install
           npx playwright install --with-deps chromium
