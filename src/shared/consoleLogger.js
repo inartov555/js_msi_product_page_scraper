@@ -8,6 +8,17 @@ function timestamp() {
   return new Date().toISOString();
 }
 
-console.log = (...args) => originalConsole.log(`[${timestamp()}] [INFO]`, ...args);
-console.warn = (...args) => originalConsole.warn(`[${timestamp()}] [WARN]`, ...args);
-console.error = (...args) => originalConsole.error(`[${timestamp()}] [ERROR]`, ...args);
+function write(level, output, args) {
+  const prefix = `[${timestamp()}] [${level}]`;
+
+  if (typeof args[0] === 'string' && args[0].includes('\n')) {
+    output(`${prefix}\n${args[0]}`, ...args.slice(1));
+    return;
+  }
+
+  output(prefix, ...args);
+}
+
+console.log = (...args) => write('INFO', originalConsole.log, args);
+console.warn = (...args) => write('WARN', originalConsole.warn, args);
+console.error = (...args) => write('ERROR', originalConsole.error, args);

@@ -164,9 +164,10 @@ async function commandSearch(args) {
       limit: numberFlag(flags, 'limit', 20),
     });
     if (booleanFlag(flags, 'json', false)) {
-      console.log(JSON.stringify(results, null, 2));
+      console.log(`Search results:\n${JSON.stringify(results, null, 2)}`);
       return;
     }
+    console.log('Search results table:');
     console.table(results.map((product) => ({
       id: product.item_id ?? product.mpn ?? '',
       title: product.title,

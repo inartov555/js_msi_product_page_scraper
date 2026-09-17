@@ -31,4 +31,5 @@ USER pwuser
 # compare: CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 # serve: CMD npm run serve # if you need a scrapper service
 
-CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+# CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+CMD npm run search 'A520M-A PRO'
