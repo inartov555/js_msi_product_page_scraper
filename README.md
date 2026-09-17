@@ -10,19 +10,11 @@ Node.js + Playwright scraper for the MSI US Store. It supports single-product sc
 ## Commands
 
 ```bash
-# NPM run
-
 npm run scrape
 npm run crawl
 npm run search -- "RTX 5090"
 npm run compare -- "PRODUCT_A" "PRODUCT_B"
 npm test
-```
-
-```bach
-# Docker run
-
-docker compose up --build
 ```
 
 ## Catalog
@@ -58,8 +50,7 @@ The default crawl settings are concurrency `10` and a `100 ms` minimum delay bet
 ## Docker
 
 ```bash
-docker compose build
-docker compose run --rm scraper npm run crawl
+docker compose build; docker compose run --rm scraper npm run crawl
 ```
 
 The `output` directory is mounted into the container so the catalog persists between runs.
