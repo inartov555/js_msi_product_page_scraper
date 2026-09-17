@@ -1,5 +1,3 @@
-## Version #2 in progress...
-
 ## MSI Product Page Scraper
 
 Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript + Playwright**, runs Chromium in headless mode, normalizes the requested fields, and writes the result to `output/product.json`.
