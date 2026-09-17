@@ -2,10 +2,11 @@
 import './shared/consoleLogger.js';
 import fs from 'node:fs/promises';
 import {
-  DEFAULT_CATALOG_FILE,
   DEFAULT_PRODUCT_URL,
   DEFAULT_SEED_URLS,
+  DEFAULT_CATALOG_FILE,
   DEFAULT_SINGLE_PRODUCT_FILE,
+  DEFAULT_COMPARISON_FILE,
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
 } from './config.js';
@@ -70,6 +71,31 @@ function booleanFlag(flags, key, fallback) {
   if (/^(true|1|yes)$/i.test(String(value))) return true;
   if (/^(false|0|no)$/i.test(String(value))) return false;
   throw new Error(`--${key} must be true or false.`);
+}
+
+function csvValue(value) {
+  if (value === null || value === undefined) return '';
+
+  const text = String(value);
+
+  return /[",\r\n]/.test(text)
+    ? `"${text.replace(/"/g, '""')}"`
+    : text;
+}
+
+function comparisonCsv(tableRows, productTitles) {
+  const header = ['parameter', ...productTitles];
+  const lines = [header.map(csvValue).join(',')];
+
+  for (const row of tableRows) {
+    lines.push(
+      header
+        .map((column) => csvValue(row[column]))
+        .join(',')
+    );
+  }
+
+  return `${lines.join('\n')}\n`;
 }
 
 function parseSpecFilters(values) {
@@ -275,6 +301,40 @@ async function commandCompare(args) {
       }
     );
 
+  const tableRows =
+    rows.map((row) => ({
+      parameter: row.parameter, ...Object.fromEntries(
+        selected.map(
+          (product, index) => [
+            product.title,
+            row.values[index],
+          ]
+        )
+      ),
+    }));
+
+  const output = flag(
+    flags,
+    'output',
+    DEFAULT_COMPARISON_FILE
+  );
+
+  const path = (await import('node:path')).default;
+
+  await fs.mkdir(
+    path.dirname(output),
+    { recursive: true }
+  );
+
+  await fs.writeFile(
+    output,
+    comparisonCsv(
+      tableRows,
+      selected.map((product) => product.title)
+    ),
+    'utf8'
+  );
+
   if (
     booleanFlag(
       flags,
@@ -303,25 +363,12 @@ async function commandCompare(args) {
       )
     );
 
+    console.log(`Saved comparison table to ${output}`);
     return;
   }
 
-  const tableRows =
-    rows.map((row) => ({
-      parameter:
-        row.parameter,
-
-      ...Object.fromEntries(
-        selected.map(
-          (product, index) => [
-            product.title,
-            row.values[index],
-          ]
-        )
-      ),
-    }));
-
   console.table(tableRows);
+  console.log(`Saved comparison table to ${output}`);
 }
 
 function createRepository(flags) {
@@ -373,7 +420,7 @@ function createProvider(flags, repository) {
 }
 
 function printHelp() {
-  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all] [--output file]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
 }
 
 async function main() {

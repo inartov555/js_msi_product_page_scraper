@@ -13,6 +13,8 @@ Node.js + Playwright scraper for the MSI US Store. It supports single-product sc
 npm run scrape
 npm run crawl
 npm run search -- "RTX 5090"
+# Comparison tables are saved to `output/comparison.csv` by default.
+# Use `--output <file>` to override the path.
 npm run compare -- "PRODUCT_A" "PRODUCT_B"
 npm test
 ```
