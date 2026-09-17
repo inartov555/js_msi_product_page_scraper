@@ -7,7 +7,8 @@ import {
   DEFAULT_SEED_URLS,
   DEFAULT_SINGLE_PRODUCT_FILE,
 } from './config.js';
-import { JsonCatalogRepository } from './infrastructure/catalogRepository.js';
+import { JsonCatalogRepository, MemoryCatalogRepository } from './infrastructure/catalogRepository.js';
+import { createAutoCatalog, } from './application/createAutoCatalog.js';
 import { searchProducts } from './application/searchService.js';
 import { compareProducts, resolveProduct } from './application/compareService.js';
 
@@ -178,6 +179,18 @@ async function commandCompare(args) {
     }));
     console.table(tableRows);
   });
+}
+
+function createRepository(flags) {
+  const catalogFile = flag(
+    flags,
+    'catalog',
+    process.env.CATALOG_FILE || null
+  );
+
+  return catalogFile
+    ? new JsonCatalogRepository(catalogFile)
+    : new MemoryCatalogRepository();
 }
 
 function printHelp() {

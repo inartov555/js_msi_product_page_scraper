@@ -35,11 +35,13 @@ export class JsonCatalogRepository {
   }
 
   async upsertMany(products) {
-    const catalog = await this.load();
-    const map = new Map(catalog.products.map((product) => [productIdentity(product), product]));
-    for (const product of products) map.set(productIdentity(product), product);
-    catalog.products = [...map.values()].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''));
+    const catalog = mergeProducts(
+      await this.load(),
+      products
+    );
+
     await this.save(catalog);
+
     return catalog;
   }
 
