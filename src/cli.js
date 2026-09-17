@@ -326,12 +326,14 @@ async function commandCompare(args) {
     { recursive: true }
   );
 
+  const csv = comparisonCsv(
+    tableRows,
+    selected.map((product) => product.title)
+  );
+
   await fs.writeFile(
     output,
-    comparisonCsv(
-      tableRows,
-      selected.map((product) => product.title)
-    ),
+    csv,
     'utf8'
   );
 
