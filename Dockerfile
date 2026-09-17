@@ -24,9 +24,11 @@ USER pwuser
 # Default behavior: run the scraper suite (with a virtual display)
 # CMD bash -lc "npm run scraper --headed $SCRAPER_GREP"
 # CMD ["npm", "run", "scraper"]
-# CMD npm run compare -- \
-#  "MAG Z890 TOMAHAWK WIFI" \
-#  "PRO Z890-P WIFI"
 
-# scrape, crawl, search, compare, serve
-CMD npm run crawl
+# scrape: CMD npm run scrape
+# crawl: CMD npm run crawl
+# search: CMD npm run search 'A520M-A PRO'
+# compare: CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+# serve: CMD npm run serve # if you need a scrapper service
+
+CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"

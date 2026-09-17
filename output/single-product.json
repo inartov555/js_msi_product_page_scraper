@@ -11,9 +11,8 @@
     }
   ],
   "description": "The MAG Z890 TOMAHAWK WIFI Intel LGA 1851 gaming motherboard delivers cutting-edge connectivity, including Wi-Fi 7, 5G LAN, Thunderbolt 4, PCIe 5.0, and M.2 Gen5. Designed for AI-PCs and EZ DIY, it’s an ideal Z890 ATX motherboard for Intel Core Ultra CPU.",
-  "price": 229.99,
-  "sale_price": 259.99,
-  "currency": "USD",
+  "price": 259.99,
+  "sale_price": null,
   "availability": "in_stock",
   "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2024/Z890TOMAHAWKWIFI/Z890TOMAHAWKWIFI-1-1024x1024.png",
   "additional_image_urls": [
@@ -122,9 +121,9 @@
       "value": "3 Year"
     }
   ],
-  "star_rating": null,
-  "review_count": null,
+  "star_rating": 4.7,
+  "review_count": 3,
   "gtin": null,
   "mpn": "MAG Z890 TOMAHAWK WIFI",
-  "scraped_at": "2026-09-17T14:51:11.873Z"
+  "scraped_at": "2026-09-17T17:20:37.234Z"
 }
