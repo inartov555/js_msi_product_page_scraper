@@ -1,22 +1,71 @@
 import { chromium } from 'playwright';
 import { DEFAULT_BROWSER_CONTEXT } from '../config.js';
 
-export async function createBrowserSession({ headless = true } = {}) {
-  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
-  const channel = !executablePath ? process.env.PLAYWRIGHT_BROWSER_CHANNEL || undefined : undefined;
-  const browser = await chromium.launch({
-    headless,
-    ...(executablePath ? { executablePath } : {}),
-    ...(channel ? { channel } : {}),
-  });
-  const context = await browser.newContext(DEFAULT_BROWSER_CONTEXT);
+function parseBoolean(value, fallback = false) {
+  if (value == null || value === '') {
+    return fallback;
+  }
+
+  if (/^(true|1|yes)$/i.test(String(value))) {
+    return true;
+  }
+
+  if (/^(false|0|no)$/i.test(String(value))) {
+    return false;
+  }
+
+  throw new Error(
+    `Invalid boolean value: ${value}`
+  );
+}
+
+export function getHeadlessMode(
+  explicitValue = undefined
+) {
+  if (typeof explicitValue === 'boolean') {
+    return explicitValue;
+  }
+
+  return parseBoolean(
+    process.env.HEADLESS,
+    true
+  );
+}
+
+export async function createBrowserSession({
+  headless: explicitHeadless,
+} = {}) {
+  const headless =
+    getHeadlessMode(
+      explicitHeadless
+    );
+
+  console.log(
+    `Launching Chromium: headless=${headless}`
+  );
+
+  const browser = await chromium.launch({ headless, channel: 'chromium', });
+  const context = await browser.newContext({ ...DEFAULT_BROWSER_CONTEXT, });
+
   context.setDefaultTimeout(15000);
+
+  const page = await context.newPage();
+  console.log('Browser UA:', await page.evaluate(() => navigator.userAgent));
+
   return {
     browser,
     context,
+    page,
+    headless,
+
     async close() {
-      await context.close().catch(() => {});
-      await browser.close().catch(() => {});
+      await context
+        .close()
+        .catch(() => {});
+
+      await browser
+        .close()
+        .catch(() => {});
     },
   };
 }
