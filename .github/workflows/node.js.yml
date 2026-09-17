@@ -74,7 +74,7 @@ jobs:
 
           npm install
           npx playwright install --with-deps chromium
-          CMD npm run crawl
+          npm run crawl
 
       - name: Upload coverage artifact
         if: always() && hashFiles('coverage/**') != ''
