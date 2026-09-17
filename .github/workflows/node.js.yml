@@ -76,9 +76,7 @@ jobs:
 
           npm install
           npx playwright install --with-deps chromium
-          npm run compare -- \
-            "MAG Z890 TOMAHAWK WIFI" \
-            "PRO Z890-P WIFI"
+          CMD npm run crawl
 
       - name: Upload coverage artifact
         if: always() && hashFiles('coverage/**') != ''
