@@ -26,11 +26,12 @@ USER pwuser
 # CMD ["npm", "run", "scraper"]
 
 # scrape: CMD npm run scrape
-# crawl: CMD npm run crawl
+# crawl: CMD npm run crawl -- --refresh false
 # search: CMD npm run search 'A520M-A PRO'
 # compare: CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 # serve: CMD npm run serve # if you need a scrapper service
 
 # CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 # CMD npm run search 'A520M-A PRO'
-CMD npm run scrape
+# CMD npm run crawl -- --refresh false
+CMD npm run test
