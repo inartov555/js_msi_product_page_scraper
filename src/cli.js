@@ -170,24 +170,182 @@ async function commandSearch(args) {
 }
 
 async function commandCompare(args) {
-  const { positional, flags } = parseArgs(args);
-  if (positional.length < 2) throw new Error('Usage: compare <product selector> <product selector> [more selectors]');
-  await withCatalog(flags, async (products) => {
-    const selected = positional.map((selector) => resolveProduct(products, selector));
-    const rows = compareProducts(selected, {
-      includeEqual: booleanFlag(flags, 'all', false),
-      fields: flagList(flags, 'field'),
-    });
-    if (booleanFlag(flags, 'json', false)) {
-      console.log(JSON.stringify({ products: selected.map((product) => ({ id: product.item_id, title: product.title })), rows }, null, 2));
-      return;
+  const {
+    positional,
+    flags,
+  } = parseArgs(args);
+
+  if (positional.length < 2) {
+    throw new Error(
+      'Usage: compare <product selector> <product selector> [more selectors]'
+    );
+  }
+
+  const repository =
+    createRepository(flags);
+
+  let catalog =
+    await repository.load();
+
+  let selected = [];
+  const missing = [];
+
+  /*
+   * First try already-loaded products.
+   */
+  for (const selector of positional) {
+    try {
+      selected.push(
+        resolveProduct(
+          catalog.products,
+          selector
+        )
+      );
+    } catch (error) {
+      if (
+        !/^No product matches/.test(
+          error.message
+        )
+      ) {
+        throw error;
+      }
+
+      missing.push(selector);
     }
-    const tableRows = rows.map((row) => ({
-      parameter: row.parameter,
-      ...Object.fromEntries(selected.map((product, index) => [product.title, row.values[index]])),
+  }
+
+  /*
+   * Important:
+   *
+   * Do NOT crawl Laptops, Desktops,
+   * Motherboards, etc. simply to compare
+   * two known products.
+   */
+  if (missing.length) {
+    console.log(
+      `Resolving ${missing.length} missing comparison product(s) directly from MSI...`
+    );
+
+    const [
+      { createBrowserSession },
+      { CatalogService },
+    ] = await Promise.all([
+      import(
+        './infrastructure/browser.js'
+      ),
+
+      import(
+        './application/catalogService.js'
+      ),
+    ]);
+
+    const headless =
+      booleanFlag(
+        flags,
+        'headless',
+        process.env.HEADLESS ?? true
+      );
+
+    const session =
+      await createBrowserSession({
+        headless,
+      });
+
+    try {
+      const service =
+        new CatalogService({
+          context:
+            session.context,
+
+          repository,
+        });
+
+      await service.scrapeSelectors(
+        missing
+      );
+    } finally {
+      await session.close();
+    }
+
+    catalog =
+      await repository.load();
+
+    selected =
+      positional.map(
+        (selector) =>
+          resolveProduct(
+            catalog.products,
+            selector
+          )
+      );
+  }
+
+  const rows =
+    compareProducts(
+      selected,
+      {
+        includeEqual:
+          booleanFlag(
+            flags,
+            'all',
+            false
+          ),
+
+        fields:
+          flagList(
+            flags,
+            'field'
+          ),
+      }
+    );
+
+  if (
+    booleanFlag(
+      flags,
+      'json',
+      false
+    )
+  ) {
+    console.log(
+      JSON.stringify(
+        {
+          products:
+            selected.map(
+              (product) => ({
+                id:
+                  product.item_id,
+
+                title:
+                  product.title,
+              })
+            ),
+
+          rows,
+        },
+        null,
+        2
+      )
+    );
+
+    return;
+  }
+
+  const tableRows =
+    rows.map((row) => ({
+      parameter:
+        row.parameter,
+
+      ...Object.fromEntries(
+        selected.map(
+          (product, index) => [
+            product.title,
+            row.values[index],
+          ]
+        )
+      ),
     }));
-    console.table(tableRows);
-  });
+
+  console.table(tableRows);
 }
 
 function createRepository(flags) {

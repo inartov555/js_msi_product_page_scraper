@@ -2,6 +2,8 @@ import { discoverMsiProductUrls } from '../adapters/msi/discovery.js';
 import { extractMsiProduct } from '../adapters/msi/productExtractor.js';
 import { validateProduct } from '../domain/product.js';
 import { sleep } from '../infrastructure/browser.js';
+import { buildMsiProductUrlCandidates, } from '../adapters/msi/productLocator.js';
+import { normalizeText, } from '../shared/text.js';
 
 async function runPool(items, concurrency, worker) {
   if (!Number.isInteger(concurrency) || concurrency < 1) {
@@ -102,5 +104,49 @@ export class CatalogService {
 
     const catalog = await this.repository.upsertMany(products);
     return { discovered: urls.length, scraped: products.length, failed: errors.length, errors, catalog };
+  }
+
+  async scrapeSelector(selector) {
+    const candidates = buildMsiProductUrlCandidates(selector);
+    const expected = normalizeText(selector);
+    const errors = [];
+
+    for (const url of candidates) {
+      try {
+        const product = await this.scrapeOne(url);
+        const actual = normalizeText(product.title);
+
+        // Prevent a redirect to a generic page
+        // from being accepted as the product.
+        if (!actual || (!actual.includes(expected) && !expected.includes(actual))) {
+          errors.push(`${url}: resolved to "${product.title ?? 'unknown'}"`);
+          continue;
+        }
+
+        await this.repository.upsertMany([product, ]);
+
+        return product;
+      } catch (error) {
+        errors.push(`${url}: ${error.message}`);
+      }
+    }
+
+    throw new Error(
+      `Unable to resolve product "${selector}" directly from MSI. ` +
+      `Tried ${candidates.length} candidate URL(s). ` +
+      errors.slice(-3).join(' | ')
+    );
+  }
+
+  async scrapeSelectors(selectors) {
+    const products = [];
+
+    for (const selector of selectors) {
+      const product = await this.scrapeSelector(selector);
+      products.push(product);
+      this.logger.log(`[direct] ${selector} -> ${product.title}`);
+    }
+
+    return products;
   }
 }
