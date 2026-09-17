@@ -1,5 +1,5 @@
 import { discoverMsiProductUrls } from '../adapters/discovery.js';
-import { extractMsiProduct } from '../adapters/msi/productExtractor.js';
+import { extractMsiProduct } from '../adapters/productExtractor.js';
 import { validateProduct } from '../domain/product.js';
 import { sleep } from '../infrastructure/browser.js';
 import { buildMsiProductUrlCandidates, } from '../adapters/productLocator.js';
