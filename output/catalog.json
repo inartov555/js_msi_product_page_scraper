@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-09-17T13:05:55.632Z",
+  "updated_at": "2026-09-17T13:09:55.133Z",
   "products": [
     {
       "url": "https://us-store.msi.com/MAG-Z890-TOMAHAWK-WIFI",
@@ -125,7 +125,7 @@
       "review_count": null,
       "gtin": null,
       "mpn": "MAG Z890 TOMAHAWK WIFI",
-      "scraped_at": "2026-09-17T13:05:38.232Z"
+      "scraped_at": "2026-09-17T13:09:38.158Z"
     },
     {
       "url": "https://us-store.msi.com/PRO-Z890-P-WIFI",
@@ -250,7 +250,7 @@
       "review_count": 4,
       "gtin": null,
       "mpn": "PRO Z890-P WIFI",
-      "scraped_at": "2026-09-17T13:05:55.604Z"
+      "scraped_at": "2026-09-17T13:09:55.108Z"
     }
   ]
 }
