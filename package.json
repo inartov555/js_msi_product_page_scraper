@@ -4,7 +4,7 @@
   "description": "Small production-style Playwright scraper for one MSI product",
   "type": "module",
   "scripts": {
-    "scrape": "node src/scraper.js"
+    "scraper": "node src/scraper.js"
   },
   "engines": {
     "node": ">=20"
