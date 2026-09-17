@@ -17,7 +17,7 @@ function parseBoolean(value, fallback = false) {
   throw new Error(`Invalid boolean value: ${value}`);
 }
 
-export function getHeadlessMode(
+function getHeadlessMode(
   explicitValue = undefined
 ) {
   if (typeof explicitValue === 'boolean') {

@@ -19,9 +19,6 @@ export const msiSelectors = {
     '#prices-wrapper',
   ],
 
-  priceWrapperSelector:
-    '#prices-wrapper',
-
   productQuantity: [
     '#product_qty',
   ],

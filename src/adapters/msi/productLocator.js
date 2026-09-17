@@ -17,7 +17,7 @@ function isHttpUrl(value) {
   );
 }
 
-export function productSlug(selector) {
+function productSlug(selector) {
   return String(selector ?? '')
     .trim()
     .normalize('NFKD')

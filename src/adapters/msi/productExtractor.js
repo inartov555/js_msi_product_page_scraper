@@ -5,11 +5,6 @@ import { acceptCookiesIfPresent, gotoWithRetry } from '../../infrastructure/brow
 
 async function firstVisibleText(page, selectors) {
   for (const selector of selectors) {
-    if (selector.startsWith('meta[')) {
-      const content = cleanText(await page.locator(selector).first().getAttribute('content').catch(() => null));
-      if (content) return content;
-      continue;
-    }
     const locator = page.locator(selector);
     const count = Math.min(await locator.count(), 8);
     for (let index = 0; index < count; index += 1) {
@@ -36,50 +31,6 @@ async function waitForAnyVisible(page, selector, timeout = 15000) {
     selector,
     { timeout }
   );
-}
-
-async function extractStructuredProduct(page) {
-  return page.evaluate(() => {
-    const scripts = [...document.querySelectorAll('script[type="application/ld+json"]')];
-    const nodes = [];
-    for (const script of scripts) {
-      try {
-        const value = JSON.parse(script.textContent || 'null');
-        const stack = Array.isArray(value) ? [...value] : [value];
-        while (stack.length) {
-          const item = stack.shift();
-          if (!item || typeof item !== 'object') continue;
-          nodes.push(item);
-          if (Array.isArray(item['@graph'])) stack.push(...item['@graph']);
-        }
-      } catch {
-        // Ignore invalid third-party JSON-LD blocks.
-      }
-    }
-    const product = nodes.find((item) => {
-      const type = item?.['@type'];
-      return type === 'Product' || (Array.isArray(type) && type.includes('Product'));
-    });
-    if (!product) return null;
-    const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
-    const rating = product.aggregateRating || null;
-    const brand = typeof product.brand === 'string' ? product.brand : product.brand?.name;
-    const image = Array.isArray(product.image) ? product.image : product.image ? [product.image] : [];
-    return {
-      name: product.name ?? null,
-      description: product.description ?? null,
-      sku: product.sku ?? product.productID ?? null,
-      mpn: product.mpn ?? null,
-      gtin: product.gtin13 ?? product.gtin12 ?? product.gtin14 ?? product.gtin ?? null,
-      brand: brand ?? null,
-      images: image,
-      price: offer?.price ?? offer?.lowPrice ?? null,
-      currency: offer?.priceCurrency ?? null,
-      availability: offer?.availability ?? null,
-      rating: rating?.ratingValue ?? null,
-      reviewCount: rating?.reviewCount ?? rating?.ratingCount ?? null,
-    };
-  });
 }
 
 async function extractCategoryTree(page, title) {

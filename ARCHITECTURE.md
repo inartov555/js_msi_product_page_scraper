@@ -31,7 +31,7 @@ Product discovery -----> product URLs
 
 ## Boundaries
 
-- `src/adapters/msi/`: website-specific selectors, pagination discovery, JSON-LD/DOM extraction.
+- `src/adapters/msi/`: website-specific selectors, pagination discovery, and DOM extraction.
 - `src/domain/`: normalized product model helpers and specification identity rules.
 - `src/application/`: use cases. No Playwright selectors here.
 - `src/infrastructure/`: browser/session and persistence implementations.
@@ -45,10 +45,10 @@ This separation matters because a website redesign should mostly affect `adapter
 2. Request listings with `limit=60` and advance `page=N` until a page produces no new products.
 3. Deduplicate canonical product URLs across categories.
 4. Scrape detail pages through a bounded worker pool.
-5. Prefer Product JSON-LD when available and use MSI DOM selectors as fallback.
-6. Normalize specs into name/value pairs and upsert products into a catalog.
+5. Extract product data from the verified MSI DOM selectors.
+6. Normalize specs into name/value pairs and replace the full catalog snapshot after a successful crawl.
 
-The crawler defaults are intentionally conservative: concurrency 3 and a 300 ms minimum delay between detail-page starts, enforced by a shared rate gate. Tune these only after observing the site's behavior and applicable crawling rules.
+The crawler defaults are concurrency 10 and a 100 ms minimum delay between detail-page starts, enforced by a shared rate gate. Tune these only after observing the site's behavior and applicable crawling rules.
 
 ## Search
 
@@ -68,7 +68,7 @@ Comparison resolves products by product ID, MPN, full/partial title, or URL. It 
 
 - Page loads use bounded retries with backoff.
 - Access-denied/HTTP-error pages fail explicitly rather than being indexed as products.
-- One bad product does not abort a full crawl.
+- A failed product prevents the full catalog snapshot from being overwritten, preserving the previous complete catalog.
 - Catalog writes are atomic (`.tmp` then rename).
 - Incomplete extracted products produce warnings.
 

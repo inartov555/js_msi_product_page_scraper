@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "scrape": "node src/cli.js scrape",
-    "scraper": "node src/cli.js scrape",
     "crawl": "node src/cli.js crawl",
     "search": "node src/cli.js search",
     "compare": "node src/cli.js compare",

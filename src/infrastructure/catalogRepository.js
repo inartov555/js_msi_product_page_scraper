@@ -55,23 +55,6 @@ export class JsonCatalogRepository {
   }
 }
 
-function emptyCatalog() {
-  return {
-    version: 1,
-    updated_at: null,
-    products: [],
-  };
-}
-
-function normalizedCatalog(catalog = {}) {
-  return {
-    version: catalog.version ?? 1,
-    updated_at: catalog.updated_at ?? null,
-    products: Array.isArray(catalog.products)
-      ? catalog.products
-      : [],
-  };
-}
 
 function mergeProducts(catalog, products) {
   const map = new Map(
@@ -89,32 +72,3 @@ function mergeProducts(catalog, products) {
   };
 }
 
-
-export class MemoryCatalogRepository {
-  constructor(initialCatalog = emptyCatalog()) {
-    this.catalog = normalizedCatalog(initialCatalog);
-  }
-
-  async load() {
-    return this.catalog;
-  }
-
-  async save(catalog) {
-    this.catalog = normalizedCatalog(catalog);
-  }
-
-  async upsertMany(products) {
-    this.catalog = mergeProducts(this.catalog, products);
-    return this.catalog;
-  }
-
-  async replaceAll(products) {
-    this.catalog = normalizedCatalog({
-      version: 1,
-      updated_at: new Date().toISOString(),
-      products: [...products].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')),
-    });
-
-    return this.catalog;
-  }
-}

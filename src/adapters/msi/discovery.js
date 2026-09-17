@@ -15,7 +15,7 @@ function listingUrl(seedUrl, pageNumber) {
   return url.href;
 }
 
-export function isMsiProductUrl(candidate, baseUrl) {
+function isMsiProductUrl(candidate, baseUrl) {
   try {
     const url = new URL(candidate);
     const base = new URL(baseUrl);

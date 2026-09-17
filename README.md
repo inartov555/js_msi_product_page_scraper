@@ -1,22 +1,67 @@
-## Version #2 in progress...
+# MSI Catalog Scraper
 
-## MSI Product Page Scraper
-
-Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript + Playwright**, runs Chromium in headless mode, normalizes the requested fields, and writes the result to `output/product.json`.
+Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
 
 ## Requirements
 
-- Docker
+- Node.js 20+
+- Docker (optional)
 
-## Run
+## Commands
 
 ```bash
-docker build -t scraper; docker run --rm scraper
-# docker compose up --build
+npm run scrape
+npm run crawl
+npm run search -- "RTX 5090"
+npm run compare -- "PRODUCT_A" "PRODUCT_B"
+npm test
 ```
 
-After the command finishes, `output/product.json` is created or overwritten.
+## Catalog
 
-## Output
+The full catalog is stored in:
 
-A sample `output/product.json` is included in the repository as requested. Live values such as price, availability, images, and product data may change when the scraper is run again.
+```text
+output/catalog.json
+```
+
+A single scraped product is stored by default in:
+
+```text
+output/single-product.json
+```
+
+## Crawl
+
+Use the saved catalog when available:
+
+```bash
+npm run crawl
+```
+
+Force a full refresh:
+
+```bash
+npm run crawl -- --refresh true
+```
+
+The default crawl settings are concurrency `10` and a `100 ms` minimum delay between detail-page starts. They can be overridden with CLI flags or environment variables.
+
+## Docker
+
+```bash
+docker compose build
+docker compose run --rm scraper npm run crawl
+```
+
+The `output` directory is mounted into the container so the catalog persists between runs.
+
+## Optional HTTP API
+
+The project still includes the optional catalog API:
+
+```bash
+npm run serve
+```
+
+It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.

@@ -6,7 +6,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_BASE_URL = 'https://us-store.msi.com';
 export const DEFAULT_PRODUCT_URL = `${DEFAULT_BASE_URL}/Intel-Platform-Motherboard/MAG-Z890-TOMAHAWK-WIFI`;
 export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.json');
-export const DEFAULT_PRODUCTS_FILE = path.resolve(__dirname, '../output/products.json');
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_CRAWL_CONCURRENCY = 10;
 export const DEFAULT_CRAWL_DELAY_MS = 100;

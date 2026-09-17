@@ -12,17 +12,6 @@ export class AutoCatalogProvider {
     this.buildPromise = null;
   }
 
-  async status() {
-    const catalog = await this.repository.load();
-
-    return {
-      loaded: catalog.products.length > 0,
-      products: catalog.products.length,
-      updated_at: catalog.updated_at ?? null,
-      analyzing: Boolean(this.buildPromise),
-    };
-  }
-
   async getCatalog({ refresh = false } = {}) {
     const current = await this.repository.load();
 

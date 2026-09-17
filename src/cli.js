@@ -9,7 +9,7 @@ import {
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
 } from './config.js';
-import { JsonCatalogRepository, MemoryCatalogRepository } from './infrastructure/catalogRepository.js';
+import { JsonCatalogRepository } from './infrastructure/catalogRepository.js';
 import { createAutoCatalog, } from './application/createAutoCatalog.js';
 import { searchProducts } from './application/searchService.js';
 import { compareProducts, resolveProduct } from './application/compareService.js';
@@ -87,16 +87,12 @@ async function withCatalog(flags, callback) {
   // Automatically crawl MSI if no products are loaded yet.
   const products = await provider.getProducts();
 
-  return callback(products, repository, provider);
+  return callback(products);
 }
 
 async function commandScrape(args) {
   const { positional, flags } = parseArgs(args);
   const url = positional[0] || process.env.PRODUCT_URL || DEFAULT_PRODUCT_URL;
-
-  if (!url) {
-    throw new Error('PRODUCT_URL is required. Set PRODUCT_URL or pass the product URL as the first argument.');
-  }
 
   const headless = booleanFlag(flags, 'headless', process.env.HEADLESS ?? true);
   const output = flag(flags, 'output', DEFAULT_SINGLE_PRODUCT_FILE);
@@ -377,7 +373,7 @@ function createProvider(flags, repository) {
 }
 
 function printHelp() {
-  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency 6] [--delay-ms 100]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
 }
 
 async function main() {
