@@ -68,8 +68,8 @@ jobs:
         run: |
           echo "PRODUCT_URL is configured"
 
-          echo "Node sees PRODUCT_URL:"
-          node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
+          # echo "Node sees PRODUCT_URL:"
+          # node -e 'console.log(Boolean(process.env.PRODUCT_URL))'
 
           echo "Actual scraper code:"
           grep -n "targetUrl" src/scraper.js
