@@ -2,7 +2,7 @@ import { discoverMsiProductUrls } from '../adapters/discovery.js';
 import { extractMsiProduct } from '../adapters/msi/productExtractor.js';
 import { validateProduct } from '../domain/product.js';
 import { sleep } from '../infrastructure/browser.js';
-import { buildMsiProductUrlCandidates, } from '../adapters/msi/productLocator.js';
+import { buildMsiProductUrlCandidates, } from '../adapters/productLocator.js';
 import { normalizeText, } from '../shared/text.js';
 import {
   DEFAULT_CRAWL_CONCURRENCY,

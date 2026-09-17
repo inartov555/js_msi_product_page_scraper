@@ -1,6 +1,6 @@
 import { msiSelectors } from './selectors.js';
-import { acceptCookiesIfPresent, gotoWithRetry, sleep } from '../../infrastructure/browser.js';
-import { canonicalizeUrl } from '../../shared/url.js';
+import { acceptCookiesIfPresent, gotoWithRetry, sleep } from '../infrastructure/browser.js';
+import { canonicalizeUrl } from '../shared/url.js';
 
 function listingUrl(seedUrl, pageNumber) {
   const url = new URL(seedUrl);

@@ -1,7 +1,7 @@
 import { msiSelectors } from './selectors.js';
-import { cleanText, parseNumber } from '../../shared/text.js';
-import { findSpecValue, normalizeAvailability } from '../../domain/product.js';
-import { acceptCookiesIfPresent, gotoWithRetry } from '../../infrastructure/browser.js';
+import { cleanText, parseNumber } from '../shared/text.js';
+import { findSpecValue, normalizeAvailability } from '../domain/product.js';
+import { acceptCookiesIfPresent, gotoWithRetry } from '../infrastructure/browser.js';
 
 async function firstVisibleText(page, selectors) {
   for (const selector of selectors) {

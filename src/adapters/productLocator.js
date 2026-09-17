@@ -1,4 +1,4 @@
-import { DEFAULT_BASE_URL } from '../../config.js';
+import { DEFAULT_BASE_URL } from '../config.js';
 
 const PRODUCT_PREFIXES = [
   '',
