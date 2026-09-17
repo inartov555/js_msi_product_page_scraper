@@ -369,8 +369,9 @@ async function commandCompare(args) {
     return;
   }
 
-  console.table(tableRows);
-  console.log(`Saved comparison table to ${output}`);
+  // console.table(tableRows);
+  console.log(`Saved comparison table to a file`);
+  process.stdout.write(csv);
 }
 
 function createRepository(flags) {
