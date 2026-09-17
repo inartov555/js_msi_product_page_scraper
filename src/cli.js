@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './shared/consoleLogger.js';
 import fs from 'node:fs/promises';
 import {
   DEFAULT_CATALOG_FILE,

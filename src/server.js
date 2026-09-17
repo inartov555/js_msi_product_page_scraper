@@ -1,3 +1,4 @@
+import './shared/consoleLogger.js';
 import http from 'node:http';
 import { DEFAULT_CATALOG_FILE } from './config.js';
 import { JsonCatalogRepository } from './infrastructure/catalogRepository.js';

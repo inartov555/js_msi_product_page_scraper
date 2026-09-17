@@ -1,10 +1,15 @@
 {
-  "name": "msi-product-scraper",
-  "version": "1.0.0",
-  "description": "Small production-style Playwright scraper for one MSI product",
+  "name": "msi-catalog-scraper",
+  "version": "2.0.0",
+  "description": "MSI store crawler, normalized product catalog, search and parameter comparison",
   "type": "module",
   "scripts": {
-    "scraper": "node src/scraper.js"
+    "scraper": "node src/cli.js scraper",
+    "crawl": "node src/cli.js crawl",
+    "search": "node src/cli.js search",
+    "compare": "node src/cli.js compare",
+    "serve": "node src/server.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
