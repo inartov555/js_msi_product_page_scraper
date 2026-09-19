@@ -115,24 +115,99 @@ export async function createBrowserSession({
   }
 }
 
-export async function gotoWithRetry(page, url, { attempts = 3, timeout = 45000 } = {}) {
+function parseRetryAfterMs(value) {
+  if (!value) return null;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return null;
+  return Math.max(0, timestamp - Date.now());
+}
+
+function retryDelayMs(error, attempt) {
+  if (Number.isFinite(error?.retryAfterMs)) {
+    return Math.min(Math.max(error.retryAfterMs, 1000), 60000);
+  }
+
+  if (error?.accessDenied || error?.status === 403 || error?.status === 429) {
+    return Math.min(5000 * (2 ** (attempt - 1)), 30000);
+  }
+
+  if (error?.status >= 500) {
+    return Math.min(1500 * (2 ** (attempt - 1)), 10000);
+  }
+
+  return Math.min(1000 * (2 ** (attempt - 1)), 8000);
+}
+
+function isRetryableNavigationError(error) {
+  if (error?.accessDenied) return true;
+  if (error?.status === 408 || error?.status === 429) return true;
+  if (error?.status >= 500) return true;
+  if (error?.status >= 400) return false;
+  return true;
+}
+
+export async function gotoWithRetry(
+  page,
+  url,
+  {
+    attempts = 4,
+    timeout = 45000,
+    sleepFn = sleep,
+    random = Math.random,
+  } = {}
+) {
   let lastError;
+
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
+      const response = await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout,
+      });
+
       const status = response?.status();
+      const headers = response?.headers?.() ?? {};
       const title = await page.title().catch(() => '');
       const body = await page.locator('body').innerText().catch(() => '');
-      if ((status && status >= 400) || /access denied|forbidden|request blocked/i.test(`${title}\n${body}`)) {
-        throw new Error(`HTTP ${status ?? 'unknown'} / access denied`);
+      const accessDenied = /access denied|forbidden|request blocked/i.test(`${title}\n${body}`);
+
+      if ((status && status >= 400) || accessDenied) {
+        const error = new Error(
+          accessDenied
+            ? `HTTP ${status ?? 'unknown'} / access denied`
+            : `HTTP ${status}`
+        );
+        error.status = status ?? null;
+        error.accessDenied = accessDenied || status === 403 || status === 429;
+        error.retryAfterMs = parseRetryAfterMs(headers['retry-after']);
+        throw error;
       }
+
       return response;
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) await sleep(500 * 2 ** (attempt - 1));
+
+      if (attempt >= attempts || !isRetryableNavigationError(error)) {
+        break;
+      }
+
+      const baseDelay = retryDelayMs(error, attempt);
+      // Small jitter prevents all concurrent workers from retrying together.
+      const jitter = 0.85 + (Math.max(0, Math.min(1, random())) * 0.30);
+      await sleepFn(Math.round(baseDelay * jitter));
     }
   }
-  throw new Error(`Failed to load ${url}: ${lastError?.message ?? lastError}`);
+
+  throw new Error(
+    `Failed to load ${url}: ${lastError?.message ?? lastError}`,
+    { cause: lastError }
+  );
 }
 
 export async function acceptCookiesIfPresent(page) {
