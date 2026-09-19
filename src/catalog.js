@@ -130,16 +130,12 @@ export function createCatalogService({
 
   async function discover(context) {
     const { discoverMsiProductUrls } = await loadScraperModules();
-    const page = await context.newPage();
-    try {
-      return await discoverMsiProductUrls(page, seedUrls, {
-        delayMs,
-        onProgress: ({ seedUrl, pageNumber, added, total }) =>
-          logger.log(`[discover] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
-      });
-    } finally {
-      await page.close().catch(() => {});
-    }
+    return discoverMsiProductUrls(context, seedUrls, {
+      delayMs,
+      concurrency,
+      onProgress: ({ seedUrl, pageNumber, added, total }) =>
+        logger.log(`[discover] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
+    });
   }
 
   async function crawl(context) {

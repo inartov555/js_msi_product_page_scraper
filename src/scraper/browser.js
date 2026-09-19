@@ -1,4 +1,3 @@
-import { chromium } from 'playwright';
 import { DEFAULT_BROWSER_CONTEXT, DEFAULT_BLOCKED_RESOURCE_TYPES } from '../config.js';
 
 function parseBoolean(value, fallback = false) {
@@ -30,6 +29,7 @@ function getHeadlessMode(
 export async function createBrowserSession({
   headless: explicitHeadless,
 } = {}) {
+  const { chromium } = await import('playwright');
   const headless = getHeadlessMode(explicitHeadless);
   let browser = null;
   let context = null;
