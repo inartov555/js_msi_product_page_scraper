@@ -6,6 +6,7 @@ services:
     dns: [8.8.8.8, 1.1.1.1]
     environment:
       DISPLAY: $DISPLAY
+      SCRAPER_COMMAND: "${SCRAPER_COMMAND:-test}"
     volumes:
       - ./output:/scraper/output
       - /tmp/.X11-unix:/tmp/.X11-unix

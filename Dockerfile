@@ -31,4 +31,4 @@ USER pwuser
 # CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 # CMD npm run search 'A520M-A PRO'
 # CMD npm run crawl -- --refresh false
-CMD ["bash", "-lc", "npm run ${SCRAPER_COMMAND:-test}"]
+CMD ["bash", "-lc", "npm run ${SCRAPER_COMMAND}"]

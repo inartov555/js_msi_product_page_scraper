@@ -25,6 +25,7 @@ echo "Setting the exit function..."
 trap cleanup EXIT HUP ERR SIGINT SIGTERM
 
 echo "Starting the service"
+echo "Command: npm run $command_to_run"
 SCRAPER_COMMAND="$command_to_run" docker compose up --build
 
 
