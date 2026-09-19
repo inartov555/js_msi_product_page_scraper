@@ -253,3 +253,164 @@ test('discovery reports and refills fast slots without waiting for the slowest r
   );
   assert.equal(closedPages, createdPages);
 });
+
+test('discovery retries a transient 403 on a fresh page without aborting other categories', async () => {
+  let createdPages = 0;
+  let closedPages = 0;
+  let blockedOnce = false;
+  const progress = [];
+
+  const context = {
+    async newPage() {
+      createdPages += 1;
+      let currentUrl = '';
+
+      return {
+        async goto(url) {
+          currentUrl = url;
+          const parsed = new URL(url);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+
+          if (category === 'PC-Components' && pageNumber === 1 && !blockedOnce) {
+            blockedOnce = true;
+            return {
+              status: () => 403,
+              headers: () => ({}),
+            };
+          }
+
+          return {
+            status: () => 200,
+            headers: () => ({}),
+          };
+        },
+        async title() { return ''; },
+        locator() { return { innerText: async () => '' }; },
+        getByRole() {
+          return {
+            first() {
+              return { isVisible: async () => false };
+            },
+          };
+        },
+        async evaluate() {
+          const parsed = new URL(currentUrl);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+          if (pageNumber > 1) return [];
+          return [`${parsed.origin}/${category}/Product-1`];
+        },
+        async close() { closedPages += 1; },
+      };
+    },
+  };
+
+  const urls = await discoverMsiProductUrls(
+    context,
+    [
+      'https://us-store.msi.com/PC-Components',
+      'https://us-store.msi.com/Laptops',
+    ],
+    {
+      concurrency: 4,
+      delayMs: 0,
+      discoveryAttempts: 3,
+      retryBaseDelayMs: 0,
+      accessDeniedPauseMs: 0,
+      navigationAttempts: 1,
+      random: () => 0.5,
+      onProgress: (entry) => progress.push(entry),
+    }
+  );
+
+  assert.equal(blockedOnce, true);
+  assert.ok(
+    progress.some((entry) => entry.seedUrl.endsWith('/Laptops')),
+    'unrelated category should continue while the blocked page is retried'
+  );
+  assert.deepEqual(
+    [...urls].sort(),
+    [
+      'https://us-store.msi.com/Laptops/Product-1',
+      'https://us-store.msi.com/PC-Components/Product-1',
+    ]
+  );
+  assert.equal(closedPages, createdPages);
+});
+
+test('permanent discovery failure is reported only after other categories finish', async () => {
+  const progress = [];
+
+  const context = {
+    async newPage() {
+      let currentUrl = '';
+
+      return {
+        async goto(url) {
+          currentUrl = url;
+          const parsed = new URL(url);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+
+          if (category === 'PC-Components') {
+            return {
+              status: () => 403,
+              headers: () => ({}),
+            };
+          }
+
+          return {
+            status: () => 200,
+            headers: () => ({}),
+          };
+        },
+        async title() { return ''; },
+        locator() { return { innerText: async () => '' }; },
+        getByRole() {
+          return {
+            first() {
+              return { isVisible: async () => false };
+            },
+          };
+        },
+        async evaluate() {
+          const parsed = new URL(currentUrl);
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+          if (pageNumber > 1) return [];
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          return [`${parsed.origin}/${category}/Product-1`];
+        },
+        async close() {},
+      };
+    },
+  };
+
+  await assert.rejects(
+    discoverMsiProductUrls(
+      context,
+      [
+        'https://us-store.msi.com/PC-Components',
+        'https://us-store.msi.com/Laptops',
+      ],
+      {
+        concurrency: 4,
+        delayMs: 0,
+        discoveryAttempts: 2,
+        retryBaseDelayMs: 0,
+        accessDeniedPauseMs: 0,
+        navigationAttempts: 1,
+        random: () => 0.5,
+        onProgress: (entry) => progress.push(entry),
+      }
+    ),
+    (error) => {
+      assert.match(error.message, /Discovery failed for 1 listing page/);
+      return true;
+    }
+  );
+
+  assert.ok(
+    progress.some((entry) => entry.seedUrl.endsWith('/Laptops')),
+    'healthy categories should finish before the aggregate error is raised'
+  );
+});
