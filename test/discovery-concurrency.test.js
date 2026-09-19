@@ -83,8 +83,8 @@ test('discovery applies its concurrency limit to listing-page requests globally'
   const stats = context.stats();
   assert.equal(urls.length, 8);
   assert.equal(stats.maxActiveRequests, 2);
-  assert.equal(stats.createdPages, 8);
-  assert.equal(stats.closedPages, 8);
+  assert.ok(stats.createdPages >= 8);
+  assert.equal(stats.closedPages, stats.createdPages);
 });
 
 test('discovery can use all 50 request slots with only eight category seeds', async () => {
@@ -161,4 +161,95 @@ test('speculative pages after the first empty page are discarded', async () => {
 
   assert.deepEqual(urls, ['https://us-store.msi.com/Laptops/Product-1']);
   assert.equal(currentRequests, 0);
+});
+
+
+test('discovery reports and refills fast slots without waiting for the slowest request', async () => {
+  let createdPages = 0;
+  let closedPages = 0;
+  let releaseSlow;
+  let markSlowStarted;
+  const slowStarted = new Promise((resolve) => { markSlowStarted = resolve; });
+  const slowGate = new Promise((resolve) => { releaseSlow = resolve; });
+  const progress = [];
+
+  const context = {
+    async newPage() {
+      createdPages += 1;
+      let currentUrl = '';
+
+      return {
+        async goto(url) {
+          currentUrl = url;
+          const parsed = new URL(url);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+
+          if (category === 'Laptops' && pageNumber === 2) {
+            markSlowStarted();
+            await slowGate;
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 5));
+          }
+
+          return { status: () => 200 };
+        },
+        async title() { return ''; },
+        locator() { return { innerText: async () => '' }; },
+        getByRole() {
+          return {
+            first() {
+              return { isVisible: async () => false };
+            },
+          };
+        },
+        async evaluate() {
+          const parsed = new URL(currentUrl);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+
+          if (pageNumber > 1) return [];
+          return [`${parsed.origin}/${category}/Product-1`];
+        },
+        async close() {
+          closedPages += 1;
+        },
+      };
+    },
+  };
+
+  const discovery = discoverMsiProductUrls(
+    context,
+    [
+      'https://us-store.msi.com/Laptops',
+      'https://us-store.msi.com/Desktops',
+    ],
+    {
+      concurrency: 4,
+      delayMs: 0,
+      onProgress: (entry) => progress.push(entry),
+    }
+  );
+
+  await slowStarted;
+
+  const deadline = Date.now() + 500;
+  while ((progress.length === 0 || createdPages <= 4) && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+
+  assert.ok(progress.length > 0, 'progress should be emitted while another request is still blocked');
+  assert.ok(createdPages > 4, 'a freed slot should be refilled before the slow request finishes');
+
+  releaseSlow();
+  const urls = await discovery;
+
+  assert.deepEqual(
+    [...urls].sort(),
+    [
+      'https://us-store.msi.com/Desktops/Product-1',
+      'https://us-store.msi.com/Laptops/Product-1',
+    ]
+  );
+  assert.equal(closedPages, createdPages);
 });

@@ -124,45 +124,48 @@ function createSeedState(seedUrl) {
   return {
     seedUrl,
     nextPageToSchedule: 1,
+    nextPageToCommit: 1,
     done: false,
     seenForSeed: new Set(),
     seenPageFingerprints: new Set(),
+    inFlightPages: new Set(),
+    completedPages: new Map(),
   };
 }
 
-function buildRequestBatch(states, concurrency, cursor) {
-  const jobs = [];
+function outstandingPageCount(state) {
+  return state.inFlightPages.size + state.completedPages.size;
+}
+
+function perSeedLookahead(states, concurrency) {
+  const openSeeds = states.filter((state) => !state.done).length;
+  return Math.max(1, Math.ceil(concurrency / Math.max(1, openSeeds)));
+}
+
+function takeNextJob(states, concurrency, cursor) {
+  if (states.length === 0) return { job: null, cursor };
+
+  const lookahead = perSeedLookahead(states, concurrency);
   let nextCursor = cursor;
 
-  if (states.length === 0) {
-    return { jobs, cursor: nextCursor };
+  for (let checked = 0; checked < states.length; checked += 1) {
+    const stateIndex = nextCursor % states.length;
+    nextCursor = (nextCursor + 1) % states.length;
+    const state = states[stateIndex];
+
+    if (state.done || outstandingPageCount(state) >= lookahead) continue;
+
+    const pageNumber = state.nextPageToSchedule;
+    state.nextPageToSchedule += 1;
+    state.inFlightPages.add(pageNumber);
+
+    return {
+      job: { state, seedUrl: state.seedUrl, pageNumber },
+      cursor: nextCursor,
+    };
   }
 
-  while (jobs.length < concurrency) {
-    let selected = null;
-
-    for (let checked = 0; checked < states.length; checked += 1) {
-      const stateIndex = nextCursor % states.length;
-      nextCursor = (nextCursor + 1) % states.length;
-      const state = states[stateIndex];
-
-      if (!state.done) {
-        selected = state;
-        break;
-      }
-    }
-
-    if (!selected) break;
-
-    jobs.push({
-      state: selected,
-      seedUrl: selected.seedUrl,
-      pageNumber: selected.nextPageToSchedule,
-    });
-    selected.nextPageToSchedule += 1;
-  }
-
-  return { jobs, cursor: nextCursor };
+  return { job: null, cursor: nextCursor };
 }
 
 function commitListingPage(state, result, discovered, onProgress) {
@@ -192,7 +195,7 @@ function commitListingPage(state, result, discovered, onProgress) {
   }
 
   // Some stores return the last page again for page numbers past the end.
-  const fingerprint = [...uniqueLinks].sort().join('\n');
+  const fingerprint = [...uniqueLinks].sort().join('\\n');
   if (state.seenPageFingerprints.has(fingerprint)) {
     state.done = true;
     onProgress({
@@ -237,6 +240,23 @@ function commitListingPage(state, result, discovered, onProgress) {
   }
 }
 
+function commitReadyPages(state, discovered, onProgress) {
+  while (!state.done && state.completedPages.has(state.nextPageToCommit)) {
+    const pageNumber = state.nextPageToCommit;
+    const result = state.completedPages.get(pageNumber);
+    state.completedPages.delete(pageNumber);
+    state.nextPageToCommit += 1;
+
+    commitListingPage(state, result, discovered, onProgress);
+  }
+
+  if (state.done) {
+    // Results for pages beyond the terminal page may already have completed
+    // because pagination is prefetched. They are intentionally discarded.
+    state.completedPages.clear();
+  }
+}
+
 /**
  * Discover product URLs with one global listing-request concurrency limit.
  *
@@ -261,43 +281,93 @@ export async function discoverMsiProductUrls(
 
   const discovered = new Set();
   const states = seedUrls.map(createSeedState);
+  const events = new Set();
   let schedulingCursor = 0;
+  let fatalError = null;
 
-  while (states.some((state) => !state.done)) {
-    const batch = buildRequestBatch(states, concurrency, schedulingCursor);
-    schedulingCursor = batch.cursor;
-
-    if (batch.jobs.length === 0) break;
-
-    const settled = await Promise.allSettled(
-      batch.jobs.map(async (job) => ({
-        ...job,
-        result: await fetchListingPage(context, job.seedUrl, job.pageNumber),
-      }))
+  function launchRequest(job) {
+    let event;
+    event = fetchListingPage(context, job.seedUrl, job.pageNumber).then(
+      (result) => ({ type: 'request', event, job, result }),
+      (error) => ({ type: 'request', event, job, error })
     );
+    events.add(event);
+  }
 
-    const rejected = settled.find((entry) => entry.status === 'rejected');
-    if (rejected) {
-      throw rejected.reason;
+  function launchCooldown() {
+    if (!(delayMs > 0)) return false;
+
+    let event;
+    event = sleep(delayMs).then(() => ({ type: 'cooldown', event }));
+    events.add(event);
+    return true;
+  }
+
+  function fillAvailableSlots() {
+    let scheduled = 0;
+
+    while (!fatalError && events.size < concurrency) {
+      const selection = takeNextJob(states, concurrency, schedulingCursor);
+      schedulingCursor = selection.cursor;
+      if (!selection.job) break;
+
+      launchRequest(selection.job);
+      scheduled += 1;
     }
 
-    const completed = settled.map((entry) => entry.value);
+    return scheduled;
+  }
 
-    for (const state of states) {
-      const stateResults = completed
-        .filter((entry) => entry.state === state)
-        .sort((left, right) => left.pageNumber - right.pageNumber);
+  fillAvailableSlots();
 
-      for (const entry of stateResults) {
-        commitListingPage(state, entry.result, discovered, onProgress);
-        if (state.done) break;
-      }
+  while (events.size > 0 || states.some((state) => !state.done)) {
+    if (events.size === 0) {
+      if (fillAvailableSlots() === 0) break;
     }
 
-    if (delayMs > 0 && states.some((state) => !state.done)) {
-      await sleep(delayMs);
+    const outcome = await Promise.race(events);
+    events.delete(outcome.event);
+
+    if (outcome.type === 'cooldown') {
+      fillAvailableSlots();
+      continue;
     }
+
+    const { job } = outcome;
+    job.state.inFlightPages.delete(job.pageNumber);
+
+    if (outcome.error) {
+      fatalError = outcome.error;
+      break;
+    }
+
+    if (!job.state.done && job.pageNumber >= job.state.nextPageToCommit) {
+      job.state.completedPages.set(job.pageNumber, outcome.result);
+      commitReadyPages(job.state, discovered, onProgress);
+    }
+
+    // A completed request frees one worker slot. Preserve the configured
+    // inter-request delay without blocking progress processing for other
+    // completed requests: the slot cools down independently, then refills.
+    if (!fatalError && states.some((state) => !state.done)) {
+      if (!launchCooldown()) fillAvailableSlots();
+    }
+  }
+
+  if (fatalError) {
+    // Stop scheduling new work, but allow already-running requests to finish so
+    // every Playwright page reaches fetchListingPage()'s finally/close path.
+    await Promise.allSettled([...events]);
+    throw fatalError;
+  }
+
+  // Terminal pages can be discovered while later speculative requests are
+  // still running. Drain them before returning so no pages/resources escape
+  // the lifetime of this discovery operation.
+  if (events.size > 0) {
+    await Promise.allSettled([...events]);
   }
 
   return [...discovered];
 }
+

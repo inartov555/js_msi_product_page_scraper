@@ -33,7 +33,7 @@ Comparison tables are saved to `output/comparison.csv` by default. Use `--output
 
 ### Crawl concurrency
 
-`--concurrency` / `CRAWL_CONCURRENCY` is a global limit for both catalog discovery and product-detail scraping. During discovery, pagination pages are prefetched across categories so a value such as `50` can produce up to 50 listing-page requests in flight even though the default catalog has only eight top-level category seeds. Results are committed in page order per category; speculative pages after the first empty/repeated page are discarded.
+`--concurrency` / `CRAWL_CONCURRENCY` is a global limit for both catalog discovery and product-detail scraping. Discovery uses a rolling request pool: a value such as `50` can keep up to 50 listing-page slots active even though the default catalog has only eight top-level category seeds, and a completed request is processed immediately instead of waiting for the slowest request in a batch. Results are buffered and committed in page order per category; speculative pages after the first empty/repeated page are discarded.
 
 ## Catalog
 
