@@ -9,6 +9,18 @@ Node.js + Playwright scraper for the MSI US Store. It supports single-product sc
 
 ## Commands
 
+Start with Docker
+
+```bash
+./run_sraper.sh "scrape"
+./run_sraper.sh "crawl -- --refresh false"
+./run_sraper.sh "search -- 'A520M-A PRO'"
+./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
+./run_sraper.sh "test"
+```
+
+Start with NPM
+
 ```bash
 npm run scrape
 npm run crawl
@@ -31,18 +43,6 @@ A single scraped product is stored by default in:
 
 ```text
 output/single-product.json
-```
-
-The application defaults to crawl concurrency `30` and a `100 ms` minimum delay between detail-page starts. Environment variables or CLI flags can override these values; the supplied Docker environment example uses concurrency `10`.
-
-The project wrapper keeps the same one-string interface:
-
-```bash
-./run_sraper.sh "scrape"
-./run_sraper.sh "crawl -- --refresh false"
-./run_sraper.sh "search -- 'A520M-A PRO'"
-./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
-./run_sraper.sh "test"
 ```
 
 The `output` directory is mounted into the container so the catalog persists between runs.

@@ -8,7 +8,7 @@ export const DEFAULT_PRODUCT_URL = `${DEFAULT_BASE_URL}/Intel-Platform-Motherboa
 export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.json');
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
-export const DEFAULT_CRAWL_CONCURRENCY = 30;
+export const DEFAULT_CRAWL_CONCURRENCY = 35;
 export const DEFAULT_CRAWL_DELAY_MS = 100;
 export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
 
@@ -26,12 +26,8 @@ export const DEFAULT_SEED_URLS = [
 
 export const DEFAULT_BROWSER_CONTEXT = {
   userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
-  // locale: 'en-US',
-  // timezoneId: 'America/Los_Angeles',
   viewport: { width: 1440, height: 1000 },
   screen: { width: 1440, height: 1000 },
-  colorScheme: 'light',
-  deviceScaleFactor: 1,
   isMobile: false,
   hasTouch: false,
 };
