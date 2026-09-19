@@ -33,26 +33,20 @@ A single scraped product is stored by default in:
 output/single-product.json
 ```
 
-## Crawl
-
-Use the saved catalog when available:
-
-```bash
-npm run crawl
-```
-
-Force a full refresh:
-
-```bash
-npm run crawl -- --refresh true
-```
-
 The default crawl settings are concurrency `10` and a `100 ms` minimum delay between detail-page starts. They can be overridden with CLI flags or environment variables.
 
 ## Docker
 
 ```bash
-docker compose build; docker compose run --rm scraper npm run crawl
+# command_to_run, e.g.:
+#          "scrape"
+#          "crawl -- --refresh false"
+#          "search A520M-A PRO"
+#          "compare -- MAG Z890 TOMAHAWK WIFI PRO Z890-P WIFI"
+#          "serve" # if you need a scrapper service
+#          "test"
+
+SCRAPER_COMMAND="$command_to_run" docker compose up --build
 ```
 
 The `output` directory is mounted into the container so the catalog persists between runs.
