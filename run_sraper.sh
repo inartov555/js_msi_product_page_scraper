@@ -12,7 +12,7 @@
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
-command_to_run="${1:-false}"
+command_to_run="${1:-test}"
 
 set -Eeuo pipefail
 
@@ -25,6 +25,6 @@ echo "Setting the exit function..."
 trap cleanup EXIT HUP ERR SIGINT SIGTERM
 
 echo "Starting the service"
-SCRAPER_COMMAND="crawl -- --refresh false" docker compose up --build
+SCRAPER_COMMAND="$command_to_run" docker compose up --build
 
 
