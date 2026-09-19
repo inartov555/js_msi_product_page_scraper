@@ -3,29 +3,15 @@
 # Input parameters:
 #
 #     Data clearing when exiting
-#   - $1 - true - delete the DB data after stopping the service;
-#          false - preserve the DB data after stopping the service;
-#          default = false
-#
-#     Clearing cache before starting service
-#   - $2 - true - starting service WITHOUT cached data (allows to start the service faster);
-#          false - starting the service WITH cache (cache is cleared)
-#          default = false
-#
-#     !!! Clearing Docker data (ALL Docker images, Docker network settings, etc.), and restarting the Docker service
-#   - $3 - true - clearing all docker data (network, images, etc.)
-#          false - Docker starts with new data
-#          default = false
-#
-# Exported variables in the setup.sh file: HOST_ARTIFACTS, ROOT_VENV, TEST_VENV, COPIED_PROJECT_PATH
+#   - $1 - command to run, e.g.:
+#          "scrape"
+#          "crawl -- --refresh false"
+#          "search A520M-A PRO"
+#          "compare -- MAG Z890 TOMAHAWK WIFI PRO Z890-P WIFI"
+#          "serve" # if you need a scrapper service
+#          "test"
 
-clean_data_at_exit="${1:-false}"
-clear_cache="${2:-false}"
-clear_docker_data_and_restart="${3:-false}"
-
-SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
-SUPERUSER_EMAIL="${DJANGO_SUPERUSER_EMAIL:-admin@example.com}"
-SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-changeme123}"
+command_to_run="${1:-false}"
 
 set -Eeuo pipefail
 
@@ -121,10 +107,4 @@ PY
 echo "Starting the service"
 docker compose up
 
-# If you need to start the website as a daemon and be independent of the terminal closing
-# echo "Starting Postgres..."
-# docker compose up -d db
 
-# echo "Starting backend & frontend..."
-# docker compose up -d backend
-# docker compose up -d frontend
