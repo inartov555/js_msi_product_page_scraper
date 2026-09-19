@@ -1,4 +1,4 @@
-import { msiSelectors } from './selectors.js';
+import { msiLocators } from './locators.js';
 import { cleanText, parseNumber } from '../shared/text.js';
 import { findSpecValue, normalizeAvailability } from '../product.js';
 import { acceptCookiesIfPresent, gotoWithRetry } from './browser.js';
@@ -34,20 +34,20 @@ async function waitForAnyVisible(page, selector, timeout = 15000) {
 }
 
 async function extractCategoryTree(page, title) {
-  const breadcrumbTree = await page.evaluate(({ selectors, currentTitle }) => {
+  const breadcrumbTree = await page.evaluate(({ locators, currentTitle }) => {
     const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
     const current = clean(currentTitle).toLowerCase();
-    for (const selector of selectors) {
+    for (const selector of locators.containers) {
       const container = document.querySelector(selector);
       if (!container) continue;
-      const nodes = [...container.querySelectorAll('li')];
-      const elements = nodes.length >= 2 ? nodes : [...container.querySelectorAll('a')];
+      const nodes = [...container.querySelectorAll(locators.items)];
+      const elements = nodes.length >= 2 ? nodes : [...container.querySelectorAll(locators.links)];
       const result = [];
       const seen = new Set();
       for (const element of elements) {
         const name = clean(element.innerText);
         if (!name || /^(home|store)$/i.test(name) || (current && name.toLowerCase() === current)) continue;
-        const anchor = element.matches('a') ? element : element.querySelector('a');
+        const anchor = element.matches(locators.links) ? element : element.querySelector(locators.links);
         const item = { name, url: anchor?.href || null };
         const key = `${item.name}|${item.url ?? ''}`;
         if (!seen.has(key)) {
@@ -58,11 +58,11 @@ async function extractCategoryTree(page, title) {
       if (result.length) return result;
     }
     return [];
-  }, { selectors: msiSelectors.breadcrumbs, currentTitle: title });
+  }, { locators: msiLocators.breadcrumbs, currentTitle: title });
 
   if (breadcrumbTree.length) return breadcrumbTree;
 
-  const analyticsText = await page.locator('script').filter({ hasText: /gtag\("event",\s*"view_item"/ }).first().textContent().catch(() => null);
+  const analyticsText = await page.locator(msiLocators.analytics.scripts).filter({ hasText: msiLocators.analytics.viewItemText }).first().textContent().catch(() => null);
   if (!analyticsText) return [];
   return ['item_category', 'item_category2', 'item_category3']
     .map((key) => cleanText(analyticsText.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`))?.[1]))
@@ -89,8 +89,8 @@ async function extractImages(page) {
       ].filter(Boolean);
     },
     {
-      mainSelector: msiSelectors.mainImage,
-      carouselSelector: msiSelectors.carouselImages,
+      mainSelector: msiLocators.mainImage,
+      carouselSelector: msiLocators.carouselImages,
     }
   );
 
@@ -214,12 +214,12 @@ async function extractSpecs(page) {
     }
 
     return result;
-  }, msiSelectors.specification);
+  }, msiLocators.specification);
 }
 
 async function extractPricePair(page) {
-  const regularPrice = parseNumber(await firstVisibleText(page, msiSelectors.regularPrice));
-  const currentPrice = parseNumber(await firstVisibleText(page, msiSelectors.currentPrice));
+  const regularPrice = parseNumber(await firstVisibleText(page, msiLocators.regularPrice));
+  const currentPrice = parseNumber(await firstVisibleText(page, msiLocators.currentPrice));
 
   return (regularPrice !== null && currentPrice !== null)
     ? {
@@ -235,8 +235,8 @@ async function extractPricePair(page) {
 async function extractAvailability(page) {
   const texts =
     await Promise.all([
-      firstVisibleText(page, msiSelectors.priceWrapper),
-      firstVisibleText(page, msiSelectors.productQuantity),
+      firstVisibleText(page, msiLocators.priceWrapper),
+      firstVisibleText(page, msiLocators.productQuantity),
     ]);
 
   return normalizeAvailability(texts.filter(Boolean).join(' '));
@@ -245,7 +245,7 @@ async function extractAvailability(page) {
 async function extractItemId(page) {
   const productId = cleanText(
     await page
-      .locator(msiSelectors.productIdInput)
+      .locator(msiLocators.productIdInput)
       .first()
       .inputValue()
       .catch(() => null)
@@ -256,7 +256,7 @@ async function extractItemId(page) {
   }
 
   const bodyText = await page
-    .locator('body')
+    .locator(msiLocators.body)
     .innerText();
 
   return cleanText(
@@ -267,14 +267,14 @@ async function extractItemId(page) {
 }
 
 async function extractBrand(page) {
-  const body = await page.locator('body').innerText().catch(() => '');
+  const body = await page.locator(msiLocators.body).innerText().catch(() => '');
   return /\bMSI\b/i.test(body) ? 'MSI' : null;
 }
 
 async function extractRating(page) {
   const text = await firstVisibleText(
     page,
-    msiSelectors.rating
+    msiLocators.rating
   );
 
   return {
@@ -294,13 +294,13 @@ export async function extractMsiProduct(page, url) {
 
   await waitForAnyVisible(
     page,
-    msiSelectors.productTitle[0],
+    msiLocators.productTitle[0],
     15000
   );
 
   const title = await firstVisibleText(
     page,
-    msiSelectors.productTitle
+    msiLocators.productTitle
   );
 
   if (!title) {
@@ -311,7 +311,7 @@ export async function extractMsiProduct(page, url) {
 
   const description = await firstVisibleText(
     page,
-    msiSelectors.description
+    msiLocators.description
   );
 
   const categoryTree = await extractCategoryTree(

@@ -15,7 +15,7 @@ HTTP API --> repository |--> search / compare
           repository          scraper/
                                   |
                        browser / discovery /
-                       extractor / locator
+                       extractor / locators
 ```
 
 ## Modules
@@ -26,7 +26,7 @@ HTTP API --> repository |--> search / compare
 - `src/search.js` — pure product search/filtering.
 - `src/compare.js` — product resolution and comparison rows.
 - `src/product.js` — product normalization and validation helpers.
-- `src/scraper/` — MSI/Playwright-specific browser, discovery, extraction, URL-location, and selector code.
+- `src/scraper/` — MSI/Playwright-specific browser, discovery, extraction, product URL building, and centralized locator code.
 - `src/shared/consoleLogger.js` — process-wide timestamped console logging.
 - `src/server.js` — optional read-only HTTP API over the saved catalog.
 

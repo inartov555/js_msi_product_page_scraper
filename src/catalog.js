@@ -15,11 +15,11 @@ async function loadScraperModules() {
     scraperModulesPromise = Promise.all([
       import('./scraper/discovery.js'),
       import('./scraper/extractor.js'),
-      import('./scraper/locator.js'),
-    ]).then(([discovery, extractor, locator]) => ({
+      import('./scraper/productUrl.js'),
+    ]).then(([discovery, extractor, productUrl]) => ({
       discoverMsiProductUrls: discovery.discoverMsiProductUrls,
       extractMsiProduct: extractor.extractMsiProduct,
-      buildMsiProductUrlCandidates: locator.buildMsiProductUrlCandidates,
+      buildMsiProductUrlCandidates: productUrl.buildMsiProductUrlCandidates,
     }));
   }
 

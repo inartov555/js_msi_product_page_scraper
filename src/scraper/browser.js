@@ -1,4 +1,5 @@
 import { DEFAULT_BROWSER_CONTEXT, DEFAULT_BLOCKED_RESOURCE_TYPES } from '../config.js';
+import { msiLocators } from './locators.js';
 
 function parseBoolean(value, fallback = false) {
   if (value == null || value === '') {
@@ -174,7 +175,7 @@ export async function gotoWithRetry(
       const status = response?.status();
       const headers = response?.headers?.() ?? {};
       const title = await page.title().catch(() => '');
-      const body = await page.locator('body').innerText().catch(() => '');
+      const body = await page.locator(msiLocators.body).innerText().catch(() => '');
       const accessDenied = /access denied|forbidden|request blocked/i.test(`${title}\n${body}`);
 
       if ((status && status >= 400) || accessDenied) {
@@ -211,7 +212,7 @@ export async function gotoWithRetry(
 }
 
 export async function acceptCookiesIfPresent(page) {
-  const button = page.getByRole('button', { name: /^(accept|accept all|allow all)$/i }).first();
+  const button = page.getByRole(msiLocators.cookieConsent.role, { name: msiLocators.cookieConsent.name }).first();
   if (await button.isVisible().catch(() => false)) {
     await button.click().catch(() => {});
   }

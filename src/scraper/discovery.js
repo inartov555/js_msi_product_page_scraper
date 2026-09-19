@@ -1,4 +1,4 @@
-import { msiSelectors } from './selectors.js';
+import { msiLocators } from './locators.js';
 import { acceptCookiesIfPresent, gotoWithRetry, sleep } from './browser.js';
 
 
@@ -61,9 +61,9 @@ function isMsiProductUrl(candidate, baseUrl) {
 
 async function extractListingLinks(page) {
   return page.evaluate(
-    (selectors) => {
+    (locators) => {
       const direct = [
-        ...document.querySelectorAll(selectors.join(', ')),
+        ...document.querySelectorAll(locators.productCardLinks.join(', ')),
       ].map((anchor) => anchor.href).filter(Boolean);
 
       if (direct.length) {
@@ -72,7 +72,7 @@ async function extractListingLinks(page) {
 
       // Fallback for MSI layout changes.
       const candidates = [
-        ...document.querySelectorAll('#content a[href], main a[href]'),
+        ...document.querySelectorAll(locators.discoveryFallbackLinks),
       ];
 
       return candidates
@@ -91,7 +91,10 @@ async function extractListingLinks(page) {
         .map((anchor) => anchor.href)
         .filter(Boolean);
     },
-    msiSelectors.productCardLinks
+    {
+      productCardLinks: msiLocators.productCardLinks,
+      discoveryFallbackLinks: msiLocators.discoveryFallbackLinks,
+    }
   );
 }
 

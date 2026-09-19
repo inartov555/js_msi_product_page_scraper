@@ -1,6 +1,6 @@
 # MSI Catalog Scraper
 
-Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
+JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
 
 ## Requirements
 
@@ -71,8 +71,8 @@ src/
 │   ├── browser.js
 │   ├── discovery.js
 │   ├── extractor.js
-│   ├── locator.js
-│   └── selectors.js
+│   ├── locators.js
+│   └── productUrl.js
 └── shared/
     ├── consoleLogger.js
     └── text.js
