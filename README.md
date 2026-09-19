@@ -1,6 +1,6 @@
 # MSI Catalog Scraper
 
-JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
+Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
 
 ## Requirements
 
@@ -30,6 +30,10 @@ npm test
 ```
 
 Comparison tables are saved to `output/comparison.csv` by default. Use `--output <file>` to override the path.
+
+### Crawl concurrency
+
+`--concurrency` / `CRAWL_CONCURRENCY` is a global limit for both catalog discovery and product-detail scraping. During discovery, pagination pages are prefetched across categories so a value such as `50` can produce up to 50 listing-page requests in flight even though the default catalog has only eight top-level category seeds. Results are committed in page order per category; speculative pages after the first empty/repeated page are discarded.
 
 ## Catalog
 

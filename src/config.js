@@ -25,9 +25,22 @@ export const DEFAULT_SEED_URLS = [
 ];
 
 export const DEFAULT_BROWSER_CONTEXT = {
-  userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+  userAgent:
+    'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0',
+
   viewport: { width: 1440, height: 1000 },
   screen: { width: 1440, height: 1000 },
   isMobile: false,
   hasTouch: false,
+
+  extraHTTPHeaders: {
+    Accept: 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br, zstd',
+    Origin: 'https://us-store.msi.com',
+    Referer: 'https://us-store.msi.com/',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'cross-site',
+  },
 };

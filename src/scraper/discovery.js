@@ -98,12 +98,10 @@ async function extractListingLinks(page) {
   );
 }
 
-async function discoverSeed(page, seedUrl, discovered, { delayMs, onProgress }) {
-  const seenForSeed = new Set();
-  const seenPageFingerprints = new Set();
-  let pageNumber = 1;
+async function fetchListingPage(context, seedUrl, pageNumber) {
+  const page = await context.newPage();
 
-  while (true) {
+  try {
     const url = listingUrl(seedUrl, pageNumber);
     await gotoWithRetry(page, url);
     await acceptCookiesIfPresent(page);
@@ -112,74 +110,141 @@ async function discoverSeed(page, seedUrl, discovered, { delayMs, onProgress }) 
     const uniqueLinks = [...new Set(links.map(canonicalizeUrl))]
       .filter((candidate) => isMsiProductUrl(candidate, seedUrl));
 
-    // Pagination is over when the page is empty.
-    if (uniqueLinks.length === 0) {
-      onProgress({
-        seedUrl,
-        pageNumber,
-        foundOnPage: 0,
-        added: 0,
-        total: discovered.size,
-        done: true,
-        reason: 'empty-page',
-      });
-      return;
-    }
+    return {
+      seedUrl,
+      pageNumber,
+      uniqueLinks,
+    };
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
 
-    // Some stores return the last page again for page numbers past the end.
-    const fingerprint = [...uniqueLinks].sort().join('\n');
-    if (seenPageFingerprints.has(fingerprint)) {
-      onProgress({
-        seedUrl,
-        pageNumber,
-        foundOnPage: uniqueLinks.length,
-        added: 0,
-        total: discovered.size,
-        done: true,
-        reason: 'repeated-page',
-      });
-      return;
-    }
-    seenPageFingerprints.add(fingerprint);
+function createSeedState(seedUrl) {
+  return {
+    seedUrl,
+    nextPageToSchedule: 1,
+    done: false,
+    seenForSeed: new Set(),
+    seenPageFingerprints: new Set(),
+  };
+}
 
-    let added = 0;
-    let newForSeed = 0;
+function buildRequestBatch(states, concurrency, cursor) {
+  const jobs = [];
+  let nextCursor = cursor;
 
-    for (const productUrl of uniqueLinks) {
-      if (!seenForSeed.has(productUrl)) {
-        seenForSeed.add(productUrl);
-        newForSeed += 1;
-      }
+  if (states.length === 0) {
+    return { jobs, cursor: nextCursor };
+  }
 
-      if (!discovered.has(productUrl)) {
-        discovered.add(productUrl);
-        added += 1;
+  while (jobs.length < concurrency) {
+    let selected = null;
+
+    for (let checked = 0; checked < states.length; checked += 1) {
+      const stateIndex = nextCursor % states.length;
+      nextCursor = (nextCursor + 1) % states.length;
+      const state = states[stateIndex];
+
+      if (!state.done) {
+        selected = state;
+        break;
       }
     }
 
+    if (!selected) break;
+
+    jobs.push({
+      state: selected,
+      seedUrl: selected.seedUrl,
+      pageNumber: selected.nextPageToSchedule,
+    });
+    selected.nextPageToSchedule += 1;
+  }
+
+  return { jobs, cursor: nextCursor };
+}
+
+function commitListingPage(state, result, discovered, onProgress) {
+  if (state.done) return;
+
+  const {
+    seedUrl,
+    pageNumber,
+    uniqueLinks,
+  } = result;
+
+  // Pagination is over when the page is empty. Other pages for this seed may
+  // already be in flight because discovery deliberately prefetches pages to use
+  // the full concurrency budget; those later results are ignored when committed.
+  if (uniqueLinks.length === 0) {
+    state.done = true;
+    onProgress({
+      seedUrl,
+      pageNumber,
+      foundOnPage: 0,
+      added: 0,
+      total: discovered.size,
+      done: true,
+      reason: 'empty-page',
+    });
+    return;
+  }
+
+  // Some stores return the last page again for page numbers past the end.
+  const fingerprint = [...uniqueLinks].sort().join('\n');
+  if (state.seenPageFingerprints.has(fingerprint)) {
+    state.done = true;
     onProgress({
       seedUrl,
       pageNumber,
       foundOnPage: uniqueLinks.length,
-      added,
+      added: 0,
       total: discovered.size,
+      done: true,
+      reason: 'repeated-page',
     });
+    return;
+  }
+  state.seenPageFingerprints.add(fingerprint);
 
-    // No new product for this category means pagination has wrapped/repeated.
-    if (newForSeed === 0) return;
+  let added = 0;
+  let newForSeed = 0;
 
-    pageNumber += 1;
-    if (delayMs > 0) await sleep(delayMs);
+  for (const productUrl of uniqueLinks) {
+    if (!state.seenForSeed.has(productUrl)) {
+      state.seenForSeed.add(productUrl);
+      newForSeed += 1;
+    }
+
+    if (!discovered.has(productUrl)) {
+      discovered.add(productUrl);
+      added += 1;
+    }
+  }
+
+  onProgress({
+    seedUrl,
+    pageNumber,
+    foundOnPage: uniqueLinks.length,
+    added,
+    total: discovered.size,
+  });
+
+  // No new product for this category means pagination has wrapped/repeated.
+  if (newForSeed === 0) {
+    state.done = true;
   }
 }
 
 /**
- * Discover product URLs with bounded category concurrency.
+ * Discover product URLs with one global listing-request concurrency limit.
  *
- * Pagination inside one category remains sequential because page N determines
- * whether page N+1 exists. Independent categories are processed concurrently,
- * which avoids speculative requests beyond the end of a category while still
- * removing the global serial bottleneck.
+ * To make a value such as concurrency=50 meaningful even when there are only
+ * eight category seeds, pages are prefetched speculatively across categories.
+ * Up to `concurrency` listing pages are therefore in flight at once. Results are
+ * still committed in page order per category, and once an empty/repeated page is
+ * reached, any already-fetched later pages for that category are discarded.
  */
 export async function discoverMsiProductUrls(
   context,
@@ -195,28 +260,44 @@ export async function discoverMsiProductUrls(
   }
 
   const discovered = new Set();
-  const workerCount = Math.min(concurrency, seedUrls.length);
-  let cursor = 0;
+  const states = seedUrls.map(createSeedState);
+  let schedulingCursor = 0;
 
-  const workers = Array.from({ length: workerCount }, async () => {
-    const page = await context.newPage();
+  while (states.some((state) => !state.done)) {
+    const batch = buildRequestBatch(states, concurrency, schedulingCursor);
+    schedulingCursor = batch.cursor;
 
-    try {
-      while (true) {
-        const seedIndex = cursor;
-        cursor += 1;
-        if (seedIndex >= seedUrls.length) return;
+    if (batch.jobs.length === 0) break;
 
-        await discoverSeed(page, seedUrls[seedIndex], discovered, {
-          delayMs,
-          onProgress,
-        });
-      }
-    } finally {
-      await page.close().catch(() => {});
+    const settled = await Promise.allSettled(
+      batch.jobs.map(async (job) => ({
+        ...job,
+        result: await fetchListingPage(context, job.seedUrl, job.pageNumber),
+      }))
+    );
+
+    const rejected = settled.find((entry) => entry.status === 'rejected');
+    if (rejected) {
+      throw rejected.reason;
     }
-  });
 
-  await Promise.all(workers);
+    const completed = settled.map((entry) => entry.value);
+
+    for (const state of states) {
+      const stateResults = completed
+        .filter((entry) => entry.state === state)
+        .sort((left, right) => left.pageNumber - right.pageNumber);
+
+      for (const entry of stateResults) {
+        commitListingPage(state, entry.result, discovered, onProgress);
+        if (state.done) break;
+      }
+    }
+
+    if (delayMs > 0 && states.some((state) => !state.done)) {
+      await sleep(delayMs);
+    }
+  }
+
   return [...discovered];
 }
