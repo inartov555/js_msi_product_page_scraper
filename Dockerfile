@@ -28,9 +28,4 @@ USER pwuser
 # serve: CMD npm run serve # if you need a scrapper service
 # test: CMD npm run test # if you need to run tests to check whether project is working well
 
-# CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
-# CMD npm run search 'A520M-A PRO'
-# CMD npm run crawl -- --refresh false
 CMD ["bash", "-lc", "eval \"npm run ${SCRAPER_COMMAND}\""]
-# CMD ["bash", "-lc", "npm run compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"]
-# CMD npm run ${SCRAPER_COMMAND}
