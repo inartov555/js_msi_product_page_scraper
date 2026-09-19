@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { searchProducts } from '../src/application/searchService.js';
-import { compareProducts, resolveProduct } from '../src/application/compareService.js';
+import { searchProducts } from '../src/search.js';
+import { compareProducts, resolveProduct } from '../src/compare.js';
 
 const products = [
   {

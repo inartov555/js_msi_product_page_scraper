@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { productIdentity } from '../domain/product.js';
+import { productIdentity } from './product.js';
 
 export class JsonCatalogRepository {
   constructor(filePath) {

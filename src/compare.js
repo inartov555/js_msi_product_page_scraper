@@ -1,5 +1,5 @@
-import { buildSpecMap } from '../domain/product.js';
-import { normalizeText } from '../shared/text.js';
+import { buildSpecMap } from './product.js';
+import { normalizeText } from './shared/text.js';
 
 const CORE_FIELDS = [
   ['Price', (product) => product.price],

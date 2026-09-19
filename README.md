@@ -13,11 +13,11 @@ Node.js + Playwright scraper for the MSI US Store. It supports single-product sc
 npm run scrape
 npm run crawl
 npm run search -- "RTX 5090"
-# Comparison tables are saved to `output/comparison.csv` by default.
-# Use `--output <file>` to override the path.
-npm run compare -- "PRODUCT_A" "PRODUCT_B"
+npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 npm test
 ```
+
+Comparison tables are saved to `output/comparison.csv` by default. Use `--output <file>` to override the path.
 
 ## Catalog
 
@@ -33,30 +33,57 @@ A single scraped product is stored by default in:
 output/single-product.json
 ```
 
-The default crawl settings are concurrency `10` and a `100 ms` minimum delay between detail-page starts. They can be overridden with CLI flags or environment variables.
+The application defaults to crawl concurrency `20` and a `100 ms` minimum delay between detail-page starts. Environment variables or CLI flags can override these values; the supplied Docker environment example uses concurrency `10`.
 
 ## Docker
 
-```bash
-# command_to_run, e.g.:
-#          "scrape"
-#          "crawl -- --refresh false"
-#          "search A520M-A PRO"
-#          "compare -- MAG Z890 TOMAHAWK WIFI PRO Z890-P WIFI"
-#          "serve" # if you need a scrapper service
-#          "test"
+The existing Docker setup accepts one command string through `SCRAPER_COMMAND`:
 
-SCRAPER_COMMAND="$command_to_run" docker compose up --build
+```bash
+SCRAPER_COMMAND="crawl -- --refresh false" docker compose up --build
+```
+
+The project wrapper keeps the same one-string interface:
+
+```bash
+./run_sraper.sh "scrape"
+./run_sraper.sh "crawl -- --refresh false"
+./run_sraper.sh "search -- 'A520M-A PRO'"
+./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
+./run_sraper.sh "test"
 ```
 
 The `output` directory is mounted into the container so the catalog persists between runs.
 
 ## Optional HTTP API
 
-The project still includes the optional catalog API:
-
 ```bash
 npm run serve
 ```
 
 It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
+
+## Source layout
+
+```text
+src/
+├── cli.js
+├── catalog.js
+├── compare.js
+├── config.js
+├── product.js
+├── repository.js
+├── search.js
+├── server.js
+├── scraper/
+│   ├── browser.js
+│   ├── discovery.js
+│   ├── extractor.js
+│   ├── locator.js
+│   └── selectors.js
+└── shared/
+    ├── consoleLogger.js
+    └── text.js
+```
+
+See `ARCHITECTURE.md` for module responsibilities.

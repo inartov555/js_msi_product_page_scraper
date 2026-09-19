@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSpecMap, normalizeAvailability } from '../src/domain/product.js';
+import { buildSpecMap, normalizeAvailability } from '../src/product.js';
 
 
 test('availability normalization recognizes store states', () => {

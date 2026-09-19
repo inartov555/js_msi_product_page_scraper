@@ -1,9 +1,9 @@
 import './shared/consoleLogger.js';
 import http from 'node:http';
 import { DEFAULT_CATALOG_FILE } from './config.js';
-import { JsonCatalogRepository } from './infrastructure/catalogRepository.js';
-import { searchProducts } from './application/searchService.js';
-import { compareProducts, resolveProduct } from './application/compareService.js';
+import { JsonCatalogRepository } from './repository.js';
+import { searchProducts } from './search.js';
+import { compareProducts, resolveProduct } from './compare.js';
 
 const port = Number(process.env.PORT || 3000);
 const repository = new JsonCatalogRepository(process.env.CATALOG_FILE || DEFAULT_CATALOG_FILE);

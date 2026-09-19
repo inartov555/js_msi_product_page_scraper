@@ -1,4 +1,4 @@
-import { canonicalSpecKey, cleanText } from '../shared/text.js';
+import { canonicalSpecKey, cleanText } from './shared/text.js';
 
 export function normalizeAvailability(value) {
   const text = cleanText(value)?.toLowerCase();

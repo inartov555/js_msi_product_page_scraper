@@ -1,5 +1,5 @@
-import { buildSpecMap } from '../domain/product.js';
-import { canonicalSpecKey, normalizeText } from '../shared/text.js';
+import { buildSpecMap } from './product.js';
+import { canonicalSpecKey, normalizeText } from './shared/text.js';
 
 function searchableText(product) {
   return normalizeText([

@@ -1,28 +1,33 @@
 # Architecture
 
-Turn the one-page MSI scraper into an ingestion/search system:
+The project is a small modular monolith. The CLI and optional HTTP server are entry points; catalog orchestration owns browser-backed operations; search and comparison remain pure application logic.
 
 ```text
-MSI category pages
-      |
-      v
-Product discovery -----> product URLs
-      |                       |
-      |                       v
-      |                 detail extractor
-      |                       |
-      |                       v
-      +----------------> normalized Product
-                              |
-                              v
-                       CatalogRepository
-                              |
-                +-------------+-------------+
-                |                           |
-                v                           v
-           SearchService               CompareService
-                |                           |
-                +-------------+-------------+
-                              |
-                         CLI / HTTP API
+CLI --------------------+
+                        |
+HTTP API --> repository |--> search / compare
+                        |
+                        v
+                   catalog.js
+                        |
+              +---------+---------+
+              |                   |
+          repository          scraper/
+                                  |
+                       browser / discovery /
+                       extractor / locator
 ```
+
+## Modules
+
+- `src/cli.js` — command parsing, output formatting, and command dispatch.
+- `src/catalog.js` — catalog lifecycle and scraping orchestration: load/build catalog, scrape one product, and resolve missing comparison products.
+- `src/repository.js` — JSON catalog persistence.
+- `src/search.js` — pure product search/filtering.
+- `src/compare.js` — product resolution and comparison rows.
+- `src/product.js` — product normalization and validation helpers.
+- `src/scraper/` — MSI/Playwright-specific browser, discovery, extraction, URL-location, and selector code.
+- `src/shared/consoleLogger.js` — process-wide timestamped console logging.
+- `src/server.js` — optional read-only HTTP API over the saved catalog.
+
+The scraper-specific code is isolated from search/comparison logic so MSI page changes do not leak into the rest of the application.
