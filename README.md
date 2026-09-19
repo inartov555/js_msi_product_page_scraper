@@ -33,15 +33,7 @@ A single scraped product is stored by default in:
 output/single-product.json
 ```
 
-The application defaults to crawl concurrency `20` and a `100 ms` minimum delay between detail-page starts. Environment variables or CLI flags can override these values; the supplied Docker environment example uses concurrency `10`.
-
-## Docker
-
-The existing Docker setup accepts one command string through `SCRAPER_COMMAND`:
-
-```bash
-SCRAPER_COMMAND="crawl -- --refresh false" docker compose up --build
-```
+The application defaults to crawl concurrency `30` and a `100 ms` minimum delay between detail-page starts. Environment variables or CLI flags can override these values; the supplied Docker environment example uses concurrency `10`.
 
 The project wrapper keeps the same one-string interface:
 

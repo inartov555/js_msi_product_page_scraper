@@ -1,6 +1,6 @@
 # Architecture
 
-The project is a small modular monolith. The CLI and optional HTTP server are entry points; catalog orchestration owns browser-backed operations; search and comparison remain pure application logic.
+The project is a small modular monolith.
 
 ```text
 CLI --------------------+

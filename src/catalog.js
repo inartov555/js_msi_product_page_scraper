@@ -6,9 +6,25 @@ import {
 import { resolveProduct } from './compare.js';
 import { validateProduct } from './product.js';
 import { normalizeText } from './shared/text.js';
-import { discoverMsiProductUrls } from './scraper/discovery.js';
-import { extractMsiProduct } from './scraper/extractor.js';
-import { buildMsiProductUrlCandidates } from './scraper/locator.js';
+
+
+let scraperModulesPromise = null;
+
+async function loadScraperModules() {
+  if (!scraperModulesPromise) {
+    scraperModulesPromise = Promise.all([
+      import('./scraper/discovery.js'),
+      import('./scraper/extractor.js'),
+      import('./scraper/locator.js'),
+    ]).then(([discovery, extractor, locator]) => ({
+      discoverMsiProductUrls: discovery.discoverMsiProductUrls,
+      extractMsiProduct: extractor.extractMsiProduct,
+      buildMsiProductUrlCandidates: locator.buildMsiProductUrlCandidates,
+    }));
+  }
+
+  return scraperModulesPromise;
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,6 +107,7 @@ export function createCatalogService({
   }
 
   async function scrapePage(page, url) {
+    const { extractMsiProduct } = await loadScraperModules();
     const product = await extractMsiProduct(page, url);
     if (!product?.title) throw new Error(`Not a product page: ${url}`);
 
@@ -112,6 +129,7 @@ export function createCatalogService({
   }
 
   async function discover(context) {
+    const { discoverMsiProductUrls } = await loadScraperModules();
     const page = await context.newPage();
     try {
       return await discoverMsiProductUrls(page, seedUrls, {
@@ -131,25 +149,27 @@ export function createCatalogService({
     const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
     const products = (
-      await runPool(urls, concurrency, async () => {
-        const page = await context.newPage();
+      await runPool(urls, concurrency, async () => ({
+        run: async (url, index) => {
+          // A fresh page per product gives every scrape task a deterministic
+          // lifetime. Closing it in finally releases its DOM/JS heap instead of
+          // retaining page state for the lifetime of a worker.
+          const page = await context.newPage();
 
-        return {
-          run: async (url, index) => {
-            try {
-              await waitForStartSlot();
-              const product = await scrapePage(page, url);
-              logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
-              return product;
-            } catch (error) {
-              errors.push({ url, error: error.message });
-              logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
-              return null;
-            }
-          },
-          close: async () => page.close().catch(() => {}),
-        };
-      })
+          try {
+            await waitForStartSlot();
+            const product = await scrapePage(page, url);
+            logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
+            return product;
+          } catch (error) {
+            errors.push({ url, error: error.message });
+            logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
+            return null;
+          } finally {
+            await page.close().catch(() => {});
+          }
+        },
+      }))
     ).filter(Boolean);
 
     if (errors.length) {
@@ -165,6 +185,7 @@ export function createCatalogService({
   }
 
   async function scrapeSelectorInContext(context, selector) {
+    const { buildMsiProductUrlCandidates } = await loadScraperModules();
     const candidates = buildMsiProductUrlCandidates(selector);
     const expected = normalizeText(selector);
     const errors = [];
