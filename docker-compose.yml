@@ -1,7 +1,7 @@
 services:
 
   scraper:
-    build: { context: ., dockerfile: Dockerfile }
+    build: { context: ., dockerfile: Dockerfile, args: SCRAPER_COMMAND: ${SCRAPER_COMMAND:-test} }
     env_file: .env
     dns: [8.8.8.8, 1.1.1.1]
     environment:

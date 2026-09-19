@@ -21,10 +21,6 @@ USER root
 RUN chown -R pwuser:pwuser /scraper
 USER pwuser
 
-# Default behavior: run the scraper suite (with a virtual display)
-# CMD bash -lc "npm run scraper --headed $SCRAPER_GREP"
-# CMD ["npm", "run", "scraper"]
-
 # scrape: CMD npm run scrape
 # crawl: CMD npm run crawl -- --refresh false
 # search: CMD npm run search 'A520M-A PRO'
@@ -34,4 +30,4 @@ USER pwuser
 # CMD npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 # CMD npm run search 'A520M-A PRO'
 # CMD npm run crawl -- --refresh false
-CMD npm run test
+# CMD npm run $SCRAPER_COMMAND
