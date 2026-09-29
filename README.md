@@ -19,14 +19,17 @@ Start with Docker
 ./run_sraper.sh test
 ```
 
-Comparison tables are saved to `output/comparison.csv` by default. Use `--output <file>` to override the path.
-
 ## Catalog
 
 The full catalog is stored in:
 
 ```text
 output/catalog.json
+```
+
+Comparison tables are saved to:
+```text
+output/comparison.csv
 ```
 
 A single scraped product is stored by default in:
