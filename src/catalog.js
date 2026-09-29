@@ -145,32 +145,27 @@ export function createCatalogService({
     const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
     const products = (
-      await runPool(urls, concurrency, async () => {
-        // Keep exactly one page per logical worker. At concurrency=50 this
-        // remains 50-way parallel, but avoids creating/destroying hundreds of
-        // renderer/page objects during a long crawl. Navigation replaces the
-        // previous document before the next product is extracted.
-        let page = await context.newPage();
+      await runPool(urls, concurrency, async () => ({
+        run: async (url, index) => {
+          // A fresh page per product gives every scrape task a deterministic
+          // lifetime. Closing it in finally releases its DOM/JS heap instead of
+          // retaining page state for the lifetime of a worker.
+          const page = await context.newPage();
 
-        return {
-          run: async (url, index) => {
-            try {
-              if (page.isClosed()) page = await context.newPage();
-              await waitForStartSlot();
-              const product = await scrapePage(page, url);
-              logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
-              return product;
-            } catch (error) {
-              errors.push({ url, error: error.message });
-              logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
-              return null;
-            }
-          },
-          close: async () => {
+          try {
+            await waitForStartSlot();
+            const product = await scrapePage(page, url);
+            logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
+            return product;
+          } catch (error) {
+            errors.push({ url, error: error.message });
+            logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
+            return null;
+          } finally {
             await page.close().catch(() => {});
-          },
-        };
-      })
+          }
+        },
+      }))
     ).filter(Boolean);
 
     if (errors.length) {

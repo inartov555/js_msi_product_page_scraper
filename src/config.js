@@ -10,15 +10,7 @@ export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/si
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
 export const DEFAULT_CRAWL_CONCURRENCY = 50;
 export const DEFAULT_CRAWL_DELAY_MS = 300;
-export const DEFAULT_BLOCKED_RESOURCE_TYPES = [
-  'image',
-  'media',
-  'font',
-  'texttrack',
-  'eventsource',
-  'websocket',
-  'manifest',
-];
+export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
 
 // Top-level catalog pages. They can be overridden with repeated --seed arguments.
 export const DEFAULT_SEED_URLS = [

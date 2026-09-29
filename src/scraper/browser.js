@@ -42,25 +42,10 @@ export async function createBrowserSession({
     browser = await chromium.launch({
       headless,
       channel: 'chromium',
-      args: [
-        // Keep background browser features from consuming memory/network for a
-        // short-lived scraping workload. These do not change page JavaScript.
-        '--disable-background-networking',
-        '--disable-component-update',
-        '--disable-default-apps',
-        '--disable-features=BackForwardCache,MediaRouter,Prerender2,SpeculationRulesPrefetch',
-        '--disable-sync',
-        '--metrics-recording-only',
-        '--no-first-run',
-      ],
     });
 
     context = await browser.newContext({
       ...DEFAULT_BROWSER_CONTEXT,
-      // Service workers can keep extra script/runtime state alive and can also
-      // bypass context.route(). The scraper does not need them.
-      serviceWorkers: 'block',
-      acceptDownloads: false,
     });
 
     const blockedResourceTypes = new Set(
@@ -189,21 +174,9 @@ export async function gotoWithRetry(
 
       const status = response?.status();
       const headers = response?.headers?.() ?? {};
-      const bodyLocator = page.locator(msiLocators.body);
-      const accessDenied = typeof bodyLocator.evaluate === 'function'
-        ? await bodyLocator.evaluate((body) => {
-            // Return only a boolean across the Playwright boundary. The previous
-            // implementation copied the entire body text into Node for every page,
-            // which multiplied transient memory at high concurrency.
-            const text = body?.textContent || '';
-            return /access denied|forbidden|request blocked/i.test(
-              `${document.title || ''}\n${text}`
-            );
-          }).catch(() => false)
-        : /access denied|forbidden|request blocked/i.test(
-            `${await page.title().catch(() => '')}\n${await bodyLocator.innerText().catch(() => '')}`
-          );
-
+      const title = await page.title().catch(() => '');
+      const body = await page.locator(msiLocators.body).innerText().catch(() => '');
+      const accessDenied = /access denied|forbidden|request blocked/i.test(`${title}\n${body}`);
 
       if ((status && status >= 400) || accessDenied) {
         const error = new Error(
