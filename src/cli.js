@@ -201,6 +201,7 @@ async function commandSearch(args) {
     availability: product.availability,
     category: product.product_category,
   })));
+  console.log(`Saved search table to ${output}`);
 }
 
 async function commandCompare(args) {
@@ -220,6 +221,7 @@ async function commandCompare(args) {
 
   await writeFile(output, csv);
 
+  /*
   if (booleanFlag(flags, 'json', false)) {
     console.log(JSON.stringify({
       products: selected.map((product) => ({ id: product.item_id, title: product.title })),
@@ -228,6 +230,7 @@ async function commandCompare(args) {
     console.log(`Saved comparison table to ${output}`);
     return;
   }
+  */
 
   console.log('Saved comparison table to a file');
   process.stdout.write(csv);
