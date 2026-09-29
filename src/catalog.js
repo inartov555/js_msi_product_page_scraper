@@ -106,9 +106,16 @@ export function createCatalogService({
     }
   }
 
-  async function scrapePage(page, url) {
+  async function scrapePage(
+    page,
+    url,
+    { navigationAttempts = 4, navigationTimeout = 45000 } = {}
+  ) {
     const { extractMsiProduct } = await loadScraperModules();
-    const product = await extractMsiProduct(page, url);
+    const product = await extractMsiProduct(page, url, {
+      navigationAttempts,
+      navigationTimeout,
+    });
     if (!product?.title) throw new Error(`Not a product page: ${url}`);
 
     const problems = validateProduct(product);
@@ -119,13 +126,67 @@ export function createCatalogService({
     return product;
   }
 
-  async function scrapeOneInContext(context, url) {
-    const page = await context.newPage();
-    try {
-      return await scrapePage(page, url);
-    } finally {
-      await page.close().catch(() => {});
+  function isRetryableProductError(error) {
+    let current = error;
+
+    for (let depth = 0; current && depth < 6; depth += 1) {
+      if (current?.accessDenied) return true;
+      if (current?.status === 408 || current?.status === 429) return true;
+      if (current?.status >= 500) return true;
+      if (current?.status >= 400) return false;
+
+      const message = String(current?.message ?? current);
+      if (/Not a product page|HTTP 404|HTTP 410/i.test(message)) return false;
+      if (/Timeout .*exceeded|page\.goto|net::|Target page, context or browser has been closed/i.test(message)) {
+        return true;
+      }
+
+      current = current?.cause;
     }
+
+    // Extraction can fail transiently if the storefront returns an incomplete
+    // document. One fresh-page retry is safer than treating that as permanent.
+    return true;
+  }
+
+  function productRetryDelayMs(attempt) {
+    return Math.min(1000 * (2 ** (attempt - 1)), 5000);
+  }
+
+  async function scrapeOneInContext(
+    context,
+    url,
+    { attempts = 3, waitForStartSlot = null } = {}
+  ) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      // Wait before allocating a Playwright page so workers blocked by the
+      // global rate gate do not consume renderer memory while idle.
+      if (waitForStartSlot) await waitForStartSlot();
+
+      const page = await context.newPage();
+      try {
+        // Product-level retries recreate the page. A single navigation attempt
+        // here avoids spending several 45s timeouts on one stalled renderer.
+        return await scrapePage(page, url, { navigationAttempts: 1 });
+      } catch (error) {
+        lastError = error;
+
+        if (attempt >= attempts || !isRetryableProductError(error)) {
+          throw error;
+        }
+
+        logger.warn(
+          `[retry ${attempt + 1}/${attempts}] ${url}: ${error.message}`
+        );
+        await sleep(productRetryDelayMs(attempt));
+      } finally {
+        await page.close().catch(() => {});
+      }
+    }
+
+    throw lastError;
   }
 
   async function discover(context) {
@@ -147,22 +208,17 @@ export function createCatalogService({
     const products = (
       await runPool(urls, concurrency, async () => ({
         run: async (url, index) => {
-          // A fresh page per product gives every scrape task a deterministic
-          // lifetime. Closing it in finally releases its DOM/JS heap instead of
-          // retaining page state for the lifetime of a worker.
-          const page = await context.newPage();
-
           try {
-            await waitForStartSlot();
-            const product = await scrapePage(page, url);
+            const product = await scrapeOneInContext(context, url, {
+              attempts: 3,
+              waitForStartSlot,
+            });
             logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
             return product;
           } catch (error) {
             errors.push({ url, error: error.message });
             logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
             return null;
-          } finally {
-            await page.close().catch(() => {});
           }
         },
       }))

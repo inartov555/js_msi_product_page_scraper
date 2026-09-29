@@ -288,8 +288,15 @@ async function extractRating(page) {
   };
 }
 
-export async function extractMsiProduct(page, url) {
-  await gotoWithRetry(page, url);
+export async function extractMsiProduct(
+  page,
+  url,
+  { navigationAttempts = 4, navigationTimeout = 45000 } = {}
+) {
+  await gotoWithRetry(page, url, {
+    attempts: navigationAttempts,
+    timeout: navigationTimeout,
+  });
   await acceptCookiesIfPresent(page);
 
   await waitForAnyVisible(
