@@ -62,12 +62,23 @@ async function extractCategoryTree(page, title) {
 
   if (breadcrumbTree.length) return breadcrumbTree;
 
-  const analyticsText = await page.locator(msiLocators.analytics.scripts).filter({ hasText: msiLocators.analytics.viewItemText }).first().textContent().catch(() => null);
-  if (!analyticsText) return [];
-  return ['item_category', 'item_category2', 'item_category3']
-    .map((key) => cleanText(analyticsText.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`))?.[1]))
-    .filter(Boolean)
-    .map((name) => ({ name, url: null }));
+  return page.evaluate(({ scriptsSelector, marker }) => {
+    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+    const script = [...document.querySelectorAll(scriptsSelector)]
+      .find((node) => node.textContent?.includes(marker));
+    if (!script?.textContent) return [];
+
+    return ['item_category', 'item_category2', 'item_category3']
+      .map((key) => {
+        const match = script.textContent.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
+        return clean(match?.[1]);
+      })
+      .filter(Boolean)
+      .map((name) => ({ name, url: null }));
+  }, {
+    scriptsSelector: msiLocators.analytics.scripts,
+    marker: msiLocators.analytics.viewItemText,
+  });
 }
 
 async function extractImages(page) {
@@ -255,20 +266,21 @@ async function extractItemId(page) {
     return productId;
   }
 
-  const bodyText = await page
-    .locator(msiLocators.body)
-    .innerText();
-
-  return cleanText(
-    bodyText.match(
+  return page.evaluate(() => {
+    // Extract the tiny value in the renderer instead of copying the complete
+    // document body into Node.js.
+    const text = document.body?.textContent || '';
+    return text.match(
       /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i
-    )?.[1]
-  );
+    )?.[1] || null;
+  }).then(cleanText);
 }
 
 async function extractBrand(page) {
-  const body = await page.locator(msiLocators.body).innerText().catch(() => '');
-  return /\bMSI\b/i.test(body) ? 'MSI' : null;
+  const isMsi = await page.evaluate(() =>
+    /\bMSI\b/i.test(document.body?.textContent || '')
+  ).catch(() => false);
+  return isMsi ? 'MSI' : null;
 }
 
 async function extractRating(page) {
