@@ -28,8 +28,15 @@ output/catalog.json
 ```
 
 Comparison tables are saved to:
+
 ```text
 output/comparison.csv
+```
+
+Search results are saved to:
+
+```text
+output/search.csv
 ```
 
 A single scraped product is stored by default in:
