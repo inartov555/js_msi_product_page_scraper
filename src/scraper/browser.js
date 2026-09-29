@@ -173,7 +173,7 @@ export async function gotoWithRetry(
   url,
   {
     attempts = 4,
-    timeout = 30000,
+    timeout = 45000,
     sleepFn = sleep,
     random = Math.random,
   } = {}

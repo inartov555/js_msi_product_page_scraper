@@ -64,14 +64,27 @@ async function runPool(items, concurrency, workerFactory) {
   return results;
 }
 
-function workerStartDelayMs(delayMs, workerIndex, workerCount) {
-  if (!(delayMs > 0) || workerCount < 2) return 0;
-  // Spread only the initial wave across one configured delay window. This
-  // avoids a perfectly synchronized 50-request burst without serializing the
-  // whole pool behind a single global 300 ms gate.
-  return Math.floor((delayMs * workerIndex) / workerCount);
-}
+function createStartRateGate(delayMs) {
+  if (!(delayMs > 0)) return async () => {};
 
+  let nextStartAt = 0;
+  let tail = Promise.resolve();
+
+  return async () => {
+    const previous = tail;
+    let release;
+    tail = new Promise((resolve) => { release = resolve; });
+    await previous;
+
+    try {
+      const waitMs = Math.max(0, nextStartAt - Date.now());
+      if (waitMs > 0) await sleep(waitMs);
+      nextStartAt = Date.now() + delayMs;
+    } finally {
+      release();
+    }
+  };
+}
 
 export function createCatalogService({
   repository,
@@ -129,28 +142,21 @@ export function createCatalogService({
     const urls = await discover(context);
     logger.log(`Discovered ${urls.length} product URLs.`);
 
+    const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
-    const workerCount = Math.min(concurrency, urls.length);
     const products = (
-      await runPool(urls, concurrency, async (workerIndex) => {
+      await runPool(urls, concurrency, async () => {
         // Keep exactly one page per logical worker. At concurrency=50 this
         // remains 50-way parallel, but avoids creating/destroying hundreds of
         // renderer/page objects during a long crawl. Navigation replaces the
         // previous document before the next product is extracted.
         let page = await context.newPage();
-        let firstRun = true;
 
         return {
           run: async (url, index) => {
             try {
               if (page.isClosed()) page = await context.newPage();
-
-              if (firstRun) {
-                firstRun = false;
-                const staggerMs = workerStartDelayMs(delayMs, workerIndex, workerCount);
-                if (staggerMs > 0) await sleep(staggerMs);
-              }
-
+              await waitForStartSlot();
               const product = await scrapePage(page, url);
               logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
               return product;
@@ -158,10 +164,6 @@ export function createCatalogService({
               errors.push({ url, error: error.message });
               logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
               return null;
-            } finally {
-              // Pace each worker independently. A 300 ms delay therefore no
-              // longer serializes all 50 workers into one request every 300 ms.
-              if (delayMs > 0) await sleep(delayMs);
             }
           },
           close: async () => {
