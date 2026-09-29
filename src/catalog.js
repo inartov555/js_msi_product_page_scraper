@@ -1,6 +1,7 @@
 import {
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
+  DEFAULT_PRODUCT_RETRY_ATTEMPTS,
   DEFAULT_SEED_URLS,
 } from './config.js';
 import { resolveProduct } from './compare.js';
@@ -91,6 +92,7 @@ export function createCatalogService({
   seedUrls = DEFAULT_SEED_URLS,
   concurrency = DEFAULT_CRAWL_CONCURRENCY,
   delayMs = DEFAULT_CRAWL_DELAY_MS,
+  productRetryAttempts = DEFAULT_PRODUCT_RETRY_ATTEMPTS,
   headless = true,
   logger = console,
 }) {
@@ -156,7 +158,7 @@ export function createCatalogService({
   async function scrapeOneInContext(
     context,
     url,
-    { attempts = 3, waitForStartSlot = null } = {}
+    { attempts = productRetryAttempts, waitForStartSlot = null } = {}
   ) {
     let lastError;
 
@@ -210,7 +212,7 @@ export function createCatalogService({
         run: async (url, index) => {
           try {
             const product = await scrapeOneInContext(context, url, {
-              attempts: 3,
+              attempts: productRetryAttempts,
               waitForStartSlot,
             });
             logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
