@@ -128,32 +128,17 @@ async function fetchListingPage(
 function createSeedState(seedUrl) {
   return {
     seedUrl,
-    nextPageToSchedule: 1,
-    nextPageToCommit: 1,
+    nextPage: 1,
+    active: false,
     done: false,
     seenForSeed: new Set(),
     seenPageFingerprints: new Set(),
-    inFlightPages: new Set(),
-    completedPages: new Map(),
   };
 }
 
-function outstandingPageCount(state) {
-  return state.inFlightPages.size + state.completedPages.size;
-}
-
-function perSeedLookahead() {
-  // Pagination within a category is intentionally sequential. Scheduling page
-  // N+1 before page N has completed creates a burst of speculative requests
-  // (for example pages 5-11 at once) and MSI responds to that pattern with
-  // HTTP 403. Global concurrency is still used across independent categories.
-  return 1;
-}
-
-function takeNextJob(states, concurrency, cursor) {
+function takeNextJob(states, cursor) {
   if (states.length === 0) return { job: null, cursor };
 
-  const lookahead = perSeedLookahead(states, concurrency);
   let nextCursor = cursor;
 
   for (let checked = 0; checked < states.length; checked += 1) {
@@ -161,11 +146,13 @@ function takeNextJob(states, concurrency, cursor) {
     nextCursor = (nextCursor + 1) % states.length;
     const state = states[stateIndex];
 
-    if (state.done || outstandingPageCount(state) >= lookahead) continue;
+    // One active page per category keeps pagination strictly sequential while
+    // allowing independent categories to consume the global concurrency budget.
+    if (state.done || state.active) continue;
 
-    const pageNumber = state.nextPageToSchedule;
-    state.nextPageToSchedule += 1;
-    state.inFlightPages.add(pageNumber);
+    const pageNumber = state.nextPage;
+    state.nextPage += 1;
+    state.active = true;
 
     return {
       job: { state, seedUrl: state.seedUrl, pageNumber },
@@ -185,9 +172,8 @@ function commitListingPage(state, result, discovered, onProgress) {
     uniqueLinks,
   } = result;
 
-  // Pagination is over when the page is empty. Other pages for this seed may
-  // already be in flight because discovery deliberately prefetches pages to use
-  // the full concurrency budget; those later results are ignored when committed.
+  // Pagination is over when the page is empty. Pagination for a category is
+  // sequential, so no later page for this seed can already be in flight.
   if (uniqueLinks.length === 0) {
     state.done = true;
     onProgress({
@@ -245,23 +231,6 @@ function commitListingPage(state, result, discovered, onProgress) {
   // No new product for this category means pagination has wrapped/repeated.
   if (newForSeed === 0) {
     state.done = true;
-  }
-}
-
-function commitReadyPages(state, discovered, onProgress) {
-  while (!state.done && state.completedPages.has(state.nextPageToCommit)) {
-    const pageNumber = state.nextPageToCommit;
-    const result = state.completedPages.get(pageNumber);
-    state.completedPages.delete(pageNumber);
-    state.nextPageToCommit += 1;
-
-    commitListingPage(state, result, discovered, onProgress);
-  }
-
-  if (state.done) {
-    // Results for pages beyond the terminal page may already have completed
-    // because pagination is prefetched. They are intentionally discarded.
-    state.completedPages.clear();
   }
 }
 
@@ -414,7 +383,7 @@ export async function discoverMsiProductUrls(
     }
 
     while (events.size < concurrency) {
-      const selection = takeNextJob(states, concurrency, schedulingCursor);
+      const selection = takeNextJob(states, schedulingCursor);
       schedulingCursor = selection.cursor;
       if (!selection.job) break;
 
@@ -458,7 +427,7 @@ export async function discoverMsiProductUrls(
       const { job } = outcome;
 
       if (job.state.done) {
-        job.state.inFlightPages.delete(job.pageNumber);
+        job.state.active = false;
         fillAvailableSlots();
       } else {
         launchRequest(job);
@@ -476,16 +445,14 @@ export async function discoverMsiProductUrls(
         job.discoveryAttempt < discoveryAttempts &&
         isRetryableDiscoveryError(outcome.error)
       ) {
-        // Keep this page reserved in inFlightPages while it cools down. That
-        // prevents speculative look-ahead for this category from growing just
-        // because its required page is being retried.
+        // Keep the category active while this required page cools down so the
+        // scheduler cannot advance its pagination during the retry window.
         launchRetry(job, outcome.error);
         continue;
       }
 
-      job.state.inFlightPages.delete(job.pageNumber);
+      job.state.active = false;
       job.state.done = true;
-      job.state.completedPages.clear();
 
       failures.push({
         seedUrl: job.seedUrl,
@@ -502,11 +469,10 @@ export async function discoverMsiProductUrls(
       continue;
     }
 
-    job.state.inFlightPages.delete(job.pageNumber);
+    job.state.active = false;
 
-    if (!job.state.done && job.pageNumber >= job.state.nextPageToCommit) {
-      job.state.completedPages.set(job.pageNumber, outcome.result);
-      commitReadyPages(job.state, discovered, onProgress);
+    if (!job.state.done) {
+      commitListingPage(job.state, outcome.result, discovered, onProgress);
     }
 
     // A completed request frees one worker slot. Preserve the configured
@@ -517,8 +483,8 @@ export async function discoverMsiProductUrls(
     }
   }
 
-  // Terminal/failed categories can still have speculative requests or retry
-  // timers outstanding. Drain them so no page/timer escapes this operation.
+  // Retry/cooldown timers can still be outstanding when all categories have
+  // become terminal. Drain them so no asynchronous work escapes this operation.
   if (events.size > 0) {
     await Promise.allSettled([...events]);
   }

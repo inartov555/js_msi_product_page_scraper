@@ -63,18 +63,6 @@ export async function createBrowserSession({
 
     context.setDefaultTimeout(15000);
 
-    const uaPage = await context.newPage();
-
-    try {
-      const userAgent = await uaPage.evaluate(
-        () => navigator.userAgent
-      );
-
-      console.log(`Browser UserAgent: ${userAgent}`);
-    } finally {
-      await uaPage.close().catch(() => {});
-    }
-
     return {
       get browser() {
         return browser;

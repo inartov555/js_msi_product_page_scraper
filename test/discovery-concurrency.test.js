@@ -115,7 +115,7 @@ test('discovery keeps pagination sequential per seed even with concurrency=50', 
   assert.equal(stats.closedPages, stats.createdPages);
 });
 
-test('speculative pages after the first empty page are discarded', async () => {
+test('discovery does not schedule another page after the first empty page', async () => {
   let currentRequests = 0;
 
   const context = {
