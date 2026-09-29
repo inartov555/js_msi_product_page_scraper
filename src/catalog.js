@@ -214,7 +214,7 @@ export function createCatalogService({
     }
 
     const catalog = await repository.replaceAll(products);
-    logger.log(`Full catalog saved: ${catalog.products.length} products.`);
+    logger.log(`Crawling is completed`);
     return catalog;
   }
 
@@ -277,7 +277,7 @@ export function createCatalogService({
             : 'Catalog data requested; analyzing MSI catalog automatically...'
         );
         const catalog = await withBrowser(crawl);
-        logger.log(`Catalog analysis complete: ${catalog.products.length} products available.`);
+        logger.debug('Catalog is refreshed');
         return catalog;
       })().finally(() => {
         buildPromise = null;

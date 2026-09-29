@@ -87,7 +87,7 @@ function csvValue(value) {
 
 function comparisonCsv(rows, products) {
   const titles = products.map((product) => product.title);
-  const header = ['parameter', ...titles];
+  const header = ['Parameter', ...titles];
   const lines = [header.map(csvValue).join(',')];
 
   for (const row of rows) {
@@ -101,7 +101,7 @@ function comparisonCsv(rows, products) {
 }
 
 function searchCsv(products) {
-  const header = ['id', 'title', 'price', 'availability', 'category'];
+  const header = ['ID', 'Title', 'Price', 'Availability', 'Category'];
   const lines = [header.map(csvValue).join(',')];
 
   for (const product of products) {
@@ -171,6 +171,7 @@ async function commandCrawl(args) {
 }
 
 async function commandSearch(args) {
+  console.debug('Art Zaragoza');
   const { positional, flags } = parseArgs(args);
   const { catalog } = createRuntime(flags);
   const products = await catalog.getProducts();
@@ -232,7 +233,7 @@ async function commandCompare(args) {
   }
   */
 
-  console.log('Saved comparison table to a file');
+  console.log(`Saved comparison table to ${output}`);
   process.stdout.write(csv);
 }
 
