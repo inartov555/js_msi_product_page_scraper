@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# RUNNING SCRAPER WITH DOCKER
+
 # Input parameters:
 #
 #   - $1 - command to run, e.g.:
@@ -27,5 +29,3 @@ trap cleanup EXIT HUP ERR SIGINT SIGTERM
 echo "Starting the service"
 echo "Command: npm run $command_to_run"
 SCRAPER_COMMAND="$command_to_run" docker compose up --build
-
-
