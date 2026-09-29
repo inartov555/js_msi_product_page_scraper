@@ -31,7 +31,7 @@ export const DEFAULT_BROWSER_CONTEXT = {
   isMobile: false,
   hasTouch: false,
   extraHTTPHeaders: {
-    'Host': 'apikeys.civiccomputing.com',
+    // 'Host': 'apikeys.civiccomputing.com',
     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0',
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.9',

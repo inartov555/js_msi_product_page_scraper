@@ -13,19 +13,19 @@ Start with Docker
 
 ```bash
 ./run_sraper.sh "crawl -- --refresh false"
+./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
 ./run_sraper.sh "scrape"
 ./run_sraper.sh "search -- 'A520M-A PRO'"
-./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
 ./run_sraper.sh "test"
 ```
 
 Start with NPM
 
 ```bash
-npm run crawl
+npm run crawl -- --refresh false"
+npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 npm run scrape
 npm run search -- "RTX 5090"
-npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 npm test
 ```
 
