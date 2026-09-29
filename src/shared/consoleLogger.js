@@ -1,5 +1,8 @@
+// console.log == console.info
+
 const originalConsole = {
   log: console.log.bind(console),
+  info: console.log.bind(console),
   warn: console.warn.bind(console),
   error: console.error.bind(console),
   debug: console.debug.bind(console),
@@ -21,6 +24,7 @@ function write(level, output, args) {
 }
 
 console.log = (...args) => write('INFO', originalConsole.log, args);
+console.info = (...args) => write('INFO', originalConsole.info, args);
 console.warn = (...args) => write('WARN', originalConsole.warn, args);
 console.error = (...args) => write('ERROR', originalConsole.error, args);
 console.debug = (...args) => write('DEBUG', originalConsole.debug, args);
