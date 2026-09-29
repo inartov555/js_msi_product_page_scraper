@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const DEFAULT_BASE_URL = 'https://us-store.msi.com';
-export const DEFAULT_PRODUCT_URL = `${DEFAULT_BASE_URL}/Intel-Platform-Motherboard/MAG-Z890-TOMAHAWK-WIFI`;
 export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.json');
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
@@ -26,7 +25,7 @@ export const DEFAULT_SEED_URLS = [
 ];
 
 export const DEFAULT_BROWSER_CONTEXT = {
-  // userAgent: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0',
+  userAgent: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0',
   viewport: { width: 1440, height: 1000 },
   screen: { width: 1440, height: 1000 },
   isMobile: false,

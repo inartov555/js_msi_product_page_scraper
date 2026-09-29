@@ -7,7 +7,6 @@ import {
   DEFAULT_COMPARISON_FILE,
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
-  DEFAULT_PRODUCT_URL,
   DEFAULT_SEED_URLS,
   DEFAULT_SINGLE_PRODUCT_FILE,
 } from './config.js';
@@ -169,7 +168,10 @@ function createRuntime(flags) {
 async function commandScrape(args) {
   const { positional, flags } = parseArgs(args);
   const { repository, catalog } = createRuntime(flags);
-  const url = positional[0] || process.env.PRODUCT_URL || DEFAULT_PRODUCT_URL;
+  const url = positional[0] || process.env.PRODUCT_URL;
+  if (!url) {
+    throw new Error('Product URL is required. Pass it as an argument or set PRODUCT_URL.');
+  }
   const output = flag(flags, 'output', DEFAULT_SINGLE_PRODUCT_FILE);
   const product = await catalog.scrapeOne(url);
 
