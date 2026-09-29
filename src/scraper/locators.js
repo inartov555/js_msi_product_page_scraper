@@ -56,7 +56,23 @@ export const msiLocators = {
 
   rating: [
     '#description-list-average-rating #average-rating-info',
+    '.pr-snippet-rating-decimal',
+    '.pr-review-snapshot-snippets',
+    '.pr-review-snapshot-block',
+    '#pr-reviewdisplay',
   ],
+
+  structuredProductData: {
+    jsonLd: 'script[type="application/ld+json"]',
+    gtin: [
+      '[itemprop="gtin"]',
+      '[itemprop="gtin8"]',
+      '[itemprop="gtin12"]',
+      '[itemprop="gtin13"]',
+      '[itemprop="gtin14"]',
+      '[itemprop="sku"]',
+    ],
+  },
 
   productIdInput: '#product_qty input[name="product_id"]',
 

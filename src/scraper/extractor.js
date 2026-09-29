@@ -278,15 +278,94 @@ async function extractRating(page) {
     msiLocators.rating
   );
 
-  return {
-    star_rating: parseNumber(
-      text?.match(/\b([0-5](?:\.\d+)?)\b/)?.[1]
-    ),
+  const bodyFallback = text || cleanText(
+    await page.locator(msiLocators.body).innerText().catch(() => null)
+  );
 
-    review_count: parseNumber(
-      text?.match(/\((\d+)\)/)?.[1]
-    ),
+  const ratingMatch = bodyFallback?.match(
+    /Average Customer Rating[\s\S]{0,250}?Overall[\s★☆]*([0-5](?:\.\d+)?)/i
+  ) || bodyFallback?.match(/\b([0-5](?:\.\d+)?)\s*\((\d+)\)/);
+
+  const reviewMatch = bodyFallback?.match(
+    /Average Customer Rating[\s\S]{0,300}?Overall[\s★☆]*[0-5](?:\.\d+)?\s*\((\d+)\)/i
+  ) || bodyFallback?.match(/\((\d+)\)/);
+
+  return {
+    star_rating: parseNumber(ratingMatch?.[1]),
+    review_count: parseNumber(reviewMatch?.[1] || ratingMatch?.[2]),
   };
+}
+
+function findProductNode(value) {
+  if (!value || typeof value !== 'object') return null;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findProductNode(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const type = value['@type'];
+  if (type === 'Product' || (Array.isArray(type) && type.includes('Product'))) {
+    return value;
+  }
+
+  if (value['@graph']) {
+    const found = findProductNode(value['@graph']);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+async function extractStructuredProductData(page) {
+  const scripts = await page
+    .locator(msiLocators.structuredProductData.jsonLd)
+    .allTextContents()
+    .catch(() => []);
+
+  for (const text of scripts) {
+    try {
+      const node = findProductNode(JSON.parse(text));
+      if (node) return node;
+    } catch {
+      // Ignore malformed/non-JSON structured-data blocks.
+    }
+  }
+
+  return null;
+}
+
+async function extractGtin(page, specs, structuredProduct) {
+  const fromSpecs = findSpecValue(specs, /^(gtin(?:-?\d+)?|upc|ean|ucc14)$/i);
+  if (fromSpecs) return fromSpecs;
+
+  const structuredCandidates = [
+    structuredProduct?.gtin,
+    structuredProduct?.gtin8,
+    structuredProduct?.gtin12,
+    structuredProduct?.gtin13,
+    structuredProduct?.gtin14,
+  ];
+
+  for (const candidate of structuredCandidates) {
+    const value = cleanText(candidate);
+    if (value) return value;
+  }
+
+  for (const selector of msiLocators.structuredProductData.gtin) {
+    const locator = page.locator(selector).first();
+    const value = cleanText(
+      await locator.getAttribute('content').catch(() => null)
+      || await locator.getAttribute('value').catch(() => null)
+      || await locator.innerText().catch(() => null)
+    );
+    if (value) return value;
+  }
+
+  return null;
 }
 
 export async function extractMsiProduct(
@@ -331,6 +410,7 @@ export async function extractMsiProduct(
   const specs = await extractSpecs(page);
   const prices = await extractPricePair(page);
   const rating = await extractRating(page);
+  const structuredProduct = await extractStructuredProductData(page);
 
   return {
     url: page.url(),
@@ -367,10 +447,7 @@ export async function extractMsiProduct(
 
     review_count: rating.review_count,
 
-    gtin: findSpecValue(
-      specs,
-      /^(gtin|upc|ean)$/i
-    ),
+    gtin: await extractGtin(page, specs, structuredProduct),
 
     mpn: findSpecValue(
       specs,
