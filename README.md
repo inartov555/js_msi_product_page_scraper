@@ -4,8 +4,7 @@ JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports sing
 
 ## Requirements
 
-- Node.js 20+
-- Docker (optional)
+- Docker
 
 ## Commands
 
@@ -16,17 +15,8 @@ Start with Docker
 ./run_sraper.sh scrape -- https://us-store.msi.com/PC-Components/MAG-A650BN
 ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 ./run_sraper.sh search "A520M-A PRO"
+./run_sraper.sh serve
 ./run_sraper.sh test
-```
-
-Start with NPM
-
-```bash
-npm run crawl -- --refresh false
-npm run scrape -- "https://us-store.msi.com/PC-Components/MAG-A650BN"
-npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
-npm run search -- "RTX 5090"
-npm test
 ```
 
 Comparison tables are saved to `output/comparison.csv` by default. Use `--output <file>` to override the path.
@@ -46,12 +36,6 @@ output/single-product.json
 ```
 
 The `output` directory is mounted into the container so the catalog persists between runs.
-
-## Optional HTTP API
-
-```bash
-npm run serve
-```
 
 It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
 

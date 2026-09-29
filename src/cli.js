@@ -15,43 +15,7 @@ import { compareProducts } from './compare.js';
 import { JsonCatalogRepository } from './repository.js';
 import { searchProducts } from './search.js';
 
-function normalizeQuotedArgs(args) {
-  const normalized = [];
-  let quote = null;
-  let parts = [];
-
-  for (const token of args) {
-    if (!quote) {
-      const first = token[0];
-      if ((first === "'" || first === '"') && token.length > 1) {
-        if (token.endsWith(first)) {
-          normalized.push(token.slice(1, -1));
-        } else {
-          quote = first;
-          parts = [token.slice(1)];
-        }
-      } else {
-        normalized.push(token);
-      }
-      continue;
-    }
-
-    if (token.endsWith(quote)) {
-      parts.push(token.slice(0, -1));
-      normalized.push(parts.join(' '));
-      quote = null;
-      parts = [];
-    } else {
-      parts.push(token);
-    }
-  }
-
-  if (quote) throw new Error(`Unterminated ${quote} quote in command arguments.`);
-  return normalized;
-}
-
 function parseArgs(args) {
-  args = normalizeQuotedArgs(args);
   const positional = [];
   const flags = new Map();
 
