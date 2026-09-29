@@ -22,10 +22,10 @@ Start with Docker
 Start with NPM
 
 ```bash
-npm run crawl --refresh false
+npm run crawl -- --refresh false
 npm run scrape -- "https://us-store.msi.com/PC-Components/MAG-A650BN"
-npm run search -- "RTX 5090"
 npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+npm run search -- "RTX 5090"
 npm test
 ```
 
