@@ -14,7 +14,8 @@
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
-command_to_run="${1:-test}"
+# command_to_run="${1:-test}"
+command_to_run="${*:-test}"
 
 set -Eeuo pipefail
 
