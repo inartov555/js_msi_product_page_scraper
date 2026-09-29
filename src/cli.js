@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
   DEFAULT_CATALOG_FILE,
   DEFAULT_COMPARISON_FILE,
+  DEFAULT_SEARCH_FILE,
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
   DEFAULT_SEED_URLS,
@@ -165,6 +166,10 @@ async function commandSearch(args) {
     specs: parseSpecFilters(flagList(flags, 'spec')),
     limit: numberFlag(flags, 'limit', 20),
   });
+
+  const output = flag(flags, 'output', DEFAULT_SEARCH_FILE);
+  const csv = comparisonCsv(rows, selected);
+  await writeFile(output, csv);
 
   if (booleanFlag(flags, 'json', false)) {
     console.log(`Search results:\n${JSON.stringify(results, null, 2)}`);
