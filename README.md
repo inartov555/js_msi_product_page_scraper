@@ -1,49 +1,75 @@
-## Version #2 in progress...
+# MSI Catalog Scraper
 
-## MSI Product Page Scraper
-
-Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript + Playwright**, runs Chromium in headless mode, normalizes the requested fields, and writes the result to `output/product.json`.
+JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
 
 ## Requirements
 
-- Node.js 20+
-- npm
+- Docker
 
-Run next commands from below in the project root folder before running tests
+## Commands
 
-```bash
-npm install
-npx playwright install chromium
-```
-
-## Run
-
-### Default
+Start with Docker
 
 ```bash
-npm run scrape
+./run_sraper.sh crawl -- --refresh false
+./run_sraper.sh scrape -- https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+./run_sraper.sh search "A520M-A PRO"
+./run_sraper.sh serve
+./run_sraper.sh test
 ```
 
-By default, the scraper runs with URL from below in headless mode, if the URL is headless param were not passed
- - `https://us-store.msi.com/Motherboards/Intel-Platform-Motherboard/INTEL-Z890/MAG-Z890-TOMAHAWK-WIFI`
+## Catalog
 
-### Optional URL override:
+The full catalog is stored in:
 
-```bash
-# URl to a particular item, you can find some in https://us-store.msi.com
-targetUrl=https://us-store.msi.com/PC-Components/CPU-Coolers/MPG-CORELIQUID-P13-360-WHITE
-
-# url = $targetUrl
-# isHeadless = true/false/not set
-
-npm run scrape $targetUrl $isHeadless
-
-# If only URL needs to be overriden, then pass only URL
-npm run scrape $targetUrl
+```text
+output/catalog.json
 ```
 
-After the command finishes, `output/product.json` is created or overwritten.
+Comparison tables are saved to:
 
-## Output
+```text
+output/comparison.csv
+```
 
-A sample `output/product.json` is included in the repository as requested. Live values such as price, availability, images, and product data may change when the scraper is run again.
+Search results are saved to:
+
+```text
+output/search.csv
+```
+
+A single scraped product is stored by default in:
+
+```text
+output/single-product.json
+```
+
+The `output` directory is mounted into the container so the catalog persists between runs.
+
+It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
+
+## Source layout
+
+```text
+src/
+├── cli.js
+├── catalog.js
+├── compare.js
+├── config.js
+├── product.js
+├── repository.js
+├── search.js
+├── server.js
+├── scraper/
+│   ├── browser.js
+│   ├── discovery.js
+│   ├── extractor.js
+│   ├── locators.js
+│   └── productUrl.js
+└── shared/
+    ├── consoleLogger.js
+    └── text.js
+```
+
+See `ARCHITECTURE.md` for module responsibilities.

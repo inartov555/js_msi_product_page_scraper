@@ -1,0 +1,479 @@
+import { DEFAULT_NAVIGATION_TIMEOUT_MS } from '../config.js';
+import { msiLocators } from './locators.js';
+import { cleanText, parseNumber } from '../shared/text.js';
+import { findSpecValue, normalizeAvailability } from '../product.js';
+import { acceptCookiesIfPresent, gotoWithRetry } from './browser.js';
+
+async function firstVisibleText(page, selectors) {
+  for (const selector of selectors) {
+    const locator = page.locator(selector);
+    const count = Math.min(await locator.count(), 8);
+    for (let index = 0; index < count; index += 1) {
+      const candidate = locator.nth(index);
+      if (!(await candidate.isVisible().catch(() => false))) continue;
+      const text = cleanText(await candidate.innerText().catch(() => null));
+      if (text) return text;
+    }
+  }
+  return null;
+}
+
+async function waitForAnyVisible(page, selector, timeout = 15000) {
+  await page.waitForFunction(
+    (targetSelector) => [...document.querySelectorAll(targetSelector)].some((element) => {
+      const style = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+
+      return style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && rect.width > 0
+        && rect.height > 0;
+    }),
+    selector,
+    { timeout }
+  );
+}
+
+async function extractCategoryTree(page, title) {
+  const breadcrumbTree = await page.evaluate(({ locators, currentTitle }) => {
+    const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+    const current = clean(currentTitle).toLowerCase();
+    for (const selector of locators.containers) {
+      const container = document.querySelector(selector);
+      if (!container) continue;
+      const nodes = [...container.querySelectorAll(locators.items)];
+      const elements = nodes.length >= 2 ? nodes : [...container.querySelectorAll(locators.links)];
+      const result = [];
+      const seen = new Set();
+      for (const element of elements) {
+        const name = clean(element.innerText);
+        if (!name || /^(home|store)$/i.test(name) || (current && name.toLowerCase() === current)) continue;
+        const anchor = element.matches(locators.links) ? element : element.querySelector(locators.links);
+        const item = { name, url: anchor?.href || null };
+        const key = `${item.name}|${item.url ?? ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(item);
+        }
+      }
+      if (result.length) return result;
+    }
+    return [];
+  }, { locators: msiLocators.breadcrumbs, currentTitle: title });
+
+  if (breadcrumbTree.length) return breadcrumbTree;
+
+  const analyticsText = await page.locator(msiLocators.analytics.scripts).filter({ hasText: msiLocators.analytics.viewItemText }).first().textContent().catch(() => null);
+  if (!analyticsText) return [];
+  return ['item_category', 'item_category2', 'item_category3']
+    .map((key) => cleanText(analyticsText.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`))?.[1]))
+    .filter(Boolean)
+    .map((name) => ({ name, url: null }));
+}
+
+async function extractImages(page) {
+  const baseUrl = page.url();
+
+  const rawImages = await page.evaluate(
+    ({ mainSelector, carouselSelector }) => {
+      const main = document.querySelector(mainSelector);
+
+      return [
+        main?.currentSrc || main?.src,
+        ...[
+          ...document.querySelectorAll(carouselSelector),
+        ].map((image) =>
+          image.getAttribute('popup_img') ||
+          image.currentSrc ||
+          image.src
+        ),
+      ].filter(Boolean);
+    },
+    {
+      mainSelector: msiLocators.mainImage,
+      carouselSelector: msiLocators.carouselImages,
+    }
+  );
+
+  const images = [
+    ...new Set(
+      rawImages
+        .map((value) => {
+          const text = cleanText(value);
+
+          if (!text || text.startsWith('data:')) {
+            return null;
+          }
+
+          try {
+            return new URL(text, baseUrl).href;
+          } catch {
+            return null;
+          }
+        })
+        .filter(
+          (url) =>
+            url &&
+            !/(logo|icon|shipping|warranty|payment)/i.test(url)
+        )
+    ),
+  ];
+
+  return {
+    image_url: images[0] ?? null,
+    additional_image_urls: images.slice(1),
+  };
+}
+
+async function extractSpecs(page) {
+  return page.evaluate((selectors) => {
+    const clean = (value) =>
+      String(value ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const result = [];
+    const seen = new Set();
+
+    const add = (name, value) => {
+      const cleanName = clean(name);
+      const cleanValue = clean(value) || null;
+
+      if (!cleanName || cleanName.length > 120) {
+        return;
+      }
+
+      if (/^(detail )?specification(s)?$/i.test(cleanName)) {
+        return;
+      }
+
+      const key = `${cleanName}\u0000${cleanValue ?? ''}`;
+
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+
+      result.push({
+        name: cleanName,
+        value: cleanValue,
+      });
+    };
+
+    const parseRows = (rows) => {
+      const pairs = [];
+
+      for (const row of rows) {
+        const cells = [
+          ...row.querySelectorAll(selectors.tableCells),
+        ];
+
+        if (cells.length < 2) {
+          continue;
+        }
+
+        const name = clean(cells[0].innerText);
+        const value = clean(cells.slice(1).map((cell) => cell.innerText).join(' '));
+
+        if (name && value) {
+          pairs.push({ name, value, });
+        }
+      }
+
+      return pairs;
+    };
+
+    const tables = [
+      ...document.querySelectorAll(selectors.tables),
+    ].map((table) => {
+        const pairs = parseRows(
+          table.querySelectorAll(selectors.tableRows)
+        );
+
+        const surroundingText = clean(
+          table.parentElement?.innerText
+        ).slice(0, 500).toLowerCase();
+
+        return {
+          pairs,
+          score:
+            pairs.length +
+            (
+              /detail specification|specifications/.test(surroundingText)
+                ? 20
+                : 0
+            ),
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    for (const table of tables) {
+      table.pairs.forEach(({ name, value }) => {
+        add(name, value);
+      });
+    }
+
+    return result;
+  }, msiLocators.specification);
+}
+
+async function extractPricePair(page) {
+  const regularPrice = parseNumber(await firstVisibleText(page, msiLocators.regularPrice));
+  const currentPrice = parseNumber(await firstVisibleText(page, msiLocators.currentPrice));
+
+  return (regularPrice !== null && currentPrice !== null)
+    ? {
+        price: regularPrice,
+        sale_price: currentPrice,
+      }
+    : {
+        price: currentPrice ?? regularPrice,
+        sale_price: null,
+      };
+}
+
+async function extractAvailability(page) {
+  const texts =
+    await Promise.all([
+      firstVisibleText(page, msiLocators.priceWrapper),
+      firstVisibleText(page, msiLocators.productQuantity),
+    ]);
+
+  return normalizeAvailability(texts.filter(Boolean).join(' '));
+}
+
+async function extractItemId(page) {
+  const productId = cleanText(
+    await page
+      .locator(msiLocators.productIdInput)
+      .first()
+      .inputValue()
+      .catch(() => null)
+  );
+
+  if (productId) {
+    return productId;
+  }
+
+  const bodyText = await page
+    .locator(msiLocators.body)
+    .innerText();
+
+  return cleanText(
+    bodyText.match(
+      /\b(?:SKU|Product ID|Item ID)\s*[:#]?\s*([A-Za-z0-9._-]+)/i
+    )?.[1]
+  );
+}
+
+async function extractBrand(page) {
+  const body = await page.locator(msiLocators.body).innerText().catch(() => '');
+  return /\bMSI\b/i.test(body) ? 'MSI' : null;
+}
+
+async function extractRating(page) {
+  const text = await firstVisibleText(
+    page,
+    msiLocators.rating
+  );
+
+  const bodyFallback = text || cleanText(
+    await page.locator(msiLocators.body).innerText().catch(() => null)
+  );
+
+  const ratingMatch = bodyFallback?.match(
+    /Average Customer Rating[\s\S]{0,250}?Overall[\s★☆]*([0-5](?:\.\d+)?)/i
+  ) || bodyFallback?.match(/\b([0-5](?:\.\d+)?)\s*\((\d+)\)/);
+
+  const reviewMatch = bodyFallback?.match(
+    /Average Customer Rating[\s\S]{0,300}?Overall[\s★☆]*[0-5](?:\.\d+)?\s*\((\d+)\)/i
+  ) || bodyFallback?.match(/\((\d+)\)/);
+
+  return {
+    star_rating: parseNumber(ratingMatch?.[1]),
+    review_count: parseNumber(reviewMatch?.[1] || ratingMatch?.[2]),
+  };
+}
+
+function findProductNode(value) {
+  if (!value || typeof value !== 'object') return null;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findProductNode(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const type = value['@type'];
+  if (type === 'Product' || (Array.isArray(type) && type.includes('Product'))) {
+    return value;
+  }
+
+  if (value['@graph']) {
+    const found = findProductNode(value['@graph']);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+async function extractStructuredProductData(page) {
+  const scripts = await page
+    .locator(msiLocators.structuredProductData.jsonLd)
+    .allTextContents()
+    .catch(() => []);
+
+  for (const text of scripts) {
+    try {
+      const node = findProductNode(JSON.parse(text));
+      if (node) return node;
+    } catch {
+      // Ignore malformed/non-JSON structured-data blocks.
+    }
+  }
+
+  return null;
+}
+
+async function extractGtin(page, specs, structuredProduct) {
+  const fromSpecs = findSpecValue(
+    specs,
+    /^(gtin(?:-?\d+)?|upc|ean|ucc14)$/i
+  );
+
+  if (fromSpecs) {
+    return fromSpecs;
+  }
+
+  const structuredCandidates = [
+    structuredProduct?.gtin,
+    structuredProduct?.gtin8,
+    structuredProduct?.gtin12,
+    structuredProduct?.gtin13,
+    structuredProduct?.gtin14,
+  ];
+
+  for (const candidate of structuredCandidates) {
+    const value = cleanText(candidate);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  const microdataValue = await page.evaluate((selectors) => {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+
+      if (!element) {
+        continue;
+      }
+
+      const value =
+        element.getAttribute('content') ||
+        element.getAttribute('value') ||
+        element.textContent;
+
+      if (value?.trim()) {
+        return value.trim();
+      }
+    }
+
+    return null;
+  }, msiLocators.structuredProductData.gtin);
+
+  return cleanText(microdataValue);
+}
+
+export async function extractMsiProduct(
+  page,
+  url,
+  { navigationAttempts = 4, navigationTimeout = DEFAULT_NAVIGATION_TIMEOUT_MS } = {}
+) {
+  await gotoWithRetry(page, url, {
+    attempts: navigationAttempts,
+    timeout: navigationTimeout,
+  });
+  await acceptCookiesIfPresent(page);
+
+  await waitForAnyVisible(
+    page,
+    msiLocators.productTitle[0],
+    15000
+  );
+
+  const title = await firstVisibleText(
+    page,
+    msiLocators.productTitle
+  );
+
+  if (!title) {
+    throw new Error(
+      `Not a product page: ${page.url() || url}`
+    );
+  }
+
+  const description = await firstVisibleText(
+    page,
+    msiLocators.description
+  );
+
+  const categoryTree = await extractCategoryTree(
+    page,
+    title
+  );
+
+  const images = await extractImages(page);
+  const specs = await extractSpecs(page);
+  const prices = await extractPricePair(page);
+  const rating = await extractRating(page);
+  const structuredProduct = await extractStructuredProductData(page);
+
+  return {
+    url: page.url(),
+
+    item_id: await extractItemId(page),
+
+    title,
+
+    brand: await extractBrand(page),
+
+    product_category: categoryTree.length
+      ? categoryTree
+          .map((item) => item.name)
+          .join(' > ')
+      : null,
+
+    category_tree: categoryTree,
+
+    description,
+
+    price: prices.price,
+
+    sale_price: prices.sale_price,
+
+    availability: await extractAvailability(page),
+
+    image_url: images.image_url,
+
+    additional_image_urls: images.additional_image_urls,
+
+    specs,
+
+    star_rating: rating.star_rating,
+
+    review_count: rating.review_count,
+
+    gtin: await extractGtin(page, specs, structuredProduct),
+
+    mpn: findSpecValue(
+      specs,
+      /^(mpn|manufacturer (part|number))/i
+    ),
+
+    scraped_at: new Date().toISOString(),
+  };
+}
