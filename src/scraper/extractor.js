@@ -339,8 +339,14 @@ async function extractStructuredProductData(page) {
 }
 
 async function extractGtin(page, specs, structuredProduct) {
-  const fromSpecs = findSpecValue(specs, /^(gtin(?:-?\d+)?|upc|ean|ucc14)$/i);
-  if (fromSpecs) return fromSpecs;
+  const fromSpecs = findSpecValue(
+    specs,
+    /^(gtin(?:-?\d+)?|upc|ean|ucc14)$/i
+  );
+
+  if (fromSpecs) {
+    return fromSpecs;
+  }
 
   const structuredCandidates = [
     structuredProduct?.gtin,
@@ -352,20 +358,34 @@ async function extractGtin(page, specs, structuredProduct) {
 
   for (const candidate of structuredCandidates) {
     const value = cleanText(candidate);
-    if (value) return value;
+
+    if (value) {
+      return value;
+    }
   }
 
-  for (const selector of msiLocators.structuredProductData.gtin) {
-    const locator = page.locator(selector).first();
-    const value = cleanText(
-      await locator.getAttribute('content').catch(() => null)
-      || await locator.getAttribute('value').catch(() => null)
-      || await locator.innerText().catch(() => null)
-    );
-    if (value) return value;
-  }
+  const microdataValue = await page.evaluate((selectors) => {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
 
-  return null;
+      if (!element) {
+        continue;
+      }
+
+      const value =
+        element.getAttribute('content') ||
+        element.getAttribute('value') ||
+        element.textContent;
+
+      if (value?.trim()) {
+        return value.trim();
+      }
+    }
+
+    return null;
+  }, msiLocators.structuredProductData.gtin);
+
+  return cleanText(microdataValue);
 }
 
 export async function extractMsiProduct(

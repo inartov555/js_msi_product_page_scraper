@@ -32,7 +32,7 @@ export class JsonCatalogRepository {
     }, null, 2)}\n`;
     await fs.writeFile(tmp, payload, 'utf8');
     await fs.rename(tmp, this.filePath);
-    console.info(`Saved catalog to ${this.filePath}`)
+    console.log(`Saved catalog to ${this.filePath}`)
   }
 
   async upsertMany(products) {

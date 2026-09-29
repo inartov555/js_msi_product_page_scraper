@@ -1,111 +1,129 @@
 {
-  "url": "https://us-store.msi.com/PC-Components/MAG-A650BN",
-  "item_id": "1833",
-  "title": "MAG A650BN 650W Power Supply",
+  "url": "https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II",
+  "item_id": "3075",
+  "title": "Z890 GAMING PLUS WIFI6E 16GB Starter Kit",
   "brand": "MSI",
-  "product_category": "Components",
+  "product_category": "Motherboards",
   "category_tree": [
     {
-      "name": "Components",
-      "url": "https://us-store.msi.com/PC-Components"
+      "name": "Motherboards",
+      "url": "https://us-store.msi.com/Motherboards"
     }
   ],
-  "description": "The MSI MAG A650BN provides players with a safe, reliable, and efficient entry-level power supply option. Its core features include 80 PLUS Bronze certification, DC to DC circuit design, 12V single rail, active PFC, and low-noise fan. The MAG A650BN will be one of the best choices for players who are just getting started with looking into DIY computers. After installation, gamers can immediately enjoy a reliable performance experience without additional settings. The efficiency of your power supply directly influences your system’s performance and your power consumption. The 80 PLUS BRONZE certification promises lower energy consumption and higher efficiency.",
-  "price": 64.99,
-  "sale_price": null,
+  "description": "Upgrade to the pinnacle of Intel performance. This power-packed bundle pairs the MSI Z890 GAMING PLUS WIFI6E with 16GB of high-performance DDR5 memory, giving you a day-one advantage on the new LGA 1851 socket.",
+  "price": 399.99,
+  "sale_price": 349.99,
   "availability": "in_stock",
-  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/PSU/MAG%20A650BN/MAG%20A650BN-1-1024x1024.png",
+  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSWIFI16GM-MAIN-1024x1024.png",
   "additional_image_urls": [
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/PSU/MAG%20A650BN/MAG%20A650BN-2-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/PSU/MAG%20A650BN/MAG%20A650BN-3-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/PSU/MAG%20A650BN/MAG%20A650BN-4-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/PSU/MAG%20A650BN/MAG%20A650BN-5-1024x1024.png"
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-2-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-3-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-4-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-6-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-7-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-1-1024x1024.png"
   ],
   "specs": [
     {
+      "name": "OPERATING SYSTEM",
+      "value": "Support for Windows® 11 64-bit"
+    },
+    {
       "name": "MANUFACTURER NUMBER",
-      "value": "MAG A650BN"
+      "value": "Z890 GAMING PLUS WIFI6E"
     },
     {
       "name": "PRODUCT CONDITION",
       "value": "New"
     },
     {
+      "name": "CPU",
+      "value": "Supports Intel® Core™ Ultra Processors (Series 2) LGA 1851"
+    },
+    {
+      "name": "CHIPSET",
+      "value": "INTEL Z890 Chipset"
+    },
+    {
+      "name": "CPU SOCKET",
+      "value": "LGA 1851"
+    },
+    {
       "name": "FORM FACTOR",
-      "value": "ATX"
+      "value": "ATX Form Factor"
     },
     {
-      "name": "POWER SUPPLY",
-      "value": "650 Watt"
+      "name": "MEMORY",
+      "value": "4 DIMMs, Dual Channel DDR5-9200+ MT/s (OC)"
     },
     {
-      "name": "POWER EFFICIENCY LEVEL",
-      "value": "Bronze (Up to 85%)"
+      "name": "LAN",
+      "value": "Intel® Killer™ E5000B 5G LAN"
     },
     {
-      "name": "INPUT VOLTAGE",
-      "value": "100-240 VAC"
+      "name": "WIRELESS LAN",
+      "value": "Wi-Fi 6E Solution"
     },
     {
-      "name": "INPUT CURRENT",
-      "value": "115Vac/8.0A max. 230Vac/4.0A max."
+      "name": "BLUETOOTH",
+      "value": "Bluetooth 5.3"
     },
     {
-      "name": "INPUT FREQUENCY",
-      "value": "47 - 63Hz"
+      "name": "AUDIO",
+      "value": "8-Channel (7.1) HD Audio with Audio Boost"
     },
     {
-      "name": "FAN SIZE",
-      "value": "120 mm"
+      "name": "MULTI-GPU",
+      "value": "-"
     },
     {
-      "name": "PFC TYPE",
-      "value": "Active PFC"
+      "name": "STORAGE",
+      "value": "1x M.2 Gen5 x4 128Gbps slot 3x M.2 Gen4 x4 64Gbps slots 4x SATA 6Gbps ports"
     },
     {
-      "name": "PROTECTION",
-      "value": "OCP / OVP / OPP / OTP / SCP"
+      "name": "ONBOARD GRAPHICS",
+      "value": "1x HDMI™ 1x DisplayPort"
     },
     {
-      "name": "ATX (24 PIN)",
-      "value": "1"
+      "name": "RAID",
+      "value": "Supports RAID 0, RAID 1, RAID 5 and RAID 10 for SATA storage devices Supports RAID 0, RAID 1, RAID 5 and RAID 10 for M.2 NVMe storage devices"
     },
     {
-      "name": "EPS (4+4 PIN)",
-      "value": "1"
+      "name": "I/O (REAR)",
+      "value": "DisplayPort Keyboard / Mouse USB 2.0 5G LAN Wi-Fi / Bluetooth Flash BIOS Button HDMI™ USB 2.0 USB 5Gbps Type A ports USB 10 Gbps Type C ports USB 10 Gbps Type A ports Audio Connectors"
     },
     {
-      "name": "PCI-E (6+2 PIN)",
-      "value": "2"
+      "name": "EXPANSION SLOTS",
+      "value": "1x PCIe 5.0 x16 slot 2x PCIe 4.0 x4 slots 1x PCIe 3.0 x1 slot"
     },
     {
-      "name": "SATA (15 PIN)",
-      "value": "5"
+      "name": "USB (FRONT)",
+      "value": "4x USB 2.0 4x USB 5Gbps Type A 1x USB 20Gbps Type C"
     },
     {
-      "name": "MOLEX (4 PIN)",
-      "value": "2"
+      "name": "USB (REAR)",
+      "value": "4x USB 2.0 2x USB 5Gbps Type A 1x USB 10Gbps Type A 1x USB 10Gbps Type C"
     },
     {
-      "name": "FDD (4 PIN)",
-      "value": "1"
+      "name": "TYPE-C PORT",
+      "value": "1x USB 10Gbps Type C (Rear) 1x USB 20Gbps Type C (Front)"
+    },
+    {
+      "name": "INTERNAL CONNECTORS",
+      "value": "1x Power Connector(ATX_PWR) 2x Power Connector(CPU_PWR) 1x Power Connector(PCIE_PWR 8pin) 1x CPU Fan 1x Combo Fan (Pump_Sys Fan) 5x System Fan 1x EZ Conn-header (JAF_1) 2x Front Panel (JFP) 1x Chassis Intrusion (JCI) 1x Front Audio (JAUD) 1x Tuning Controller connector(JDASH) 3x Addressable V2 RGB LED connector (JARGB_V2) 1x RGB LED connector(JRGB) 1x TPM pin header(Support TPM 2.0) 4x USB 2.0 ports 4x USB 5Gbps Type A ports 1x USB 20Gbps Type C ports"
     },
     {
       "name": "DIMENSIONS",
-      "value": "9.29\" x 7.2\" x 4.13\""
-    },
-    {
-      "name": "WEIGHT",
-      "value": "4.37 lbs"
+      "value": "12.00\" x 9.60\""
     },
     {
       "name": "MANUFACTURER WARRANTY",
-      "value": "5 Years"
+      "value": "1 Year"
     }
   ],
   "star_rating": null,
   "review_count": null,
   "gtin": null,
-  "mpn": "MAG A650BN",
-  "scraped_at": "2026-09-29T13:21:24.742Z"
+  "mpn": "Z890 GAMING PLUS WIFI6E",
+  "scraped_at": "2026-09-29T15:01:06.262Z"
 }

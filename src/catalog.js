@@ -183,7 +183,7 @@ export function createCatalogService({
 
   async function crawl(context) {
     const urls = await discover(context);
-    logger.log(`Discovered ${urls.length} product URLs.`);
+    logger.debug(`Discovered ${urls.length} product URLs.`);
 
     const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
