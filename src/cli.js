@@ -100,15 +100,17 @@ function comparisonCsv(rows, products) {
   return `${lines.join('\n')}\n`;
 }
 
-function searchCsv(rows, products) {
-  const titles = products.map((product) => product.title);
-  const header = ['parameter', ...titles];
+function searchCsv(products) {
+  const header = ['id', 'title', 'price', 'availability', 'category'];
   const lines = [header.map(csvValue).join(',')];
 
-  for (const row of rows) {
+  for (const product of products) {
     lines.push([
-      row.parameter,
-      ...row.values,
+      product.item_id ?? product.mpn ?? '',
+      product.title,
+      product.sale_price ?? product.price,
+      product.availability,
+      product.product_category,
     ].map(csvValue).join(','));
   }
 
@@ -182,9 +184,9 @@ async function commandSearch(args) {
     limit: numberFlag(flags, 'limit', 20),
   });
 
-  //const output = flag(flags, 'output', DEFAULT_SEARCH_FILE);
-  //const csv = searchCsv(rows, selected);
-  //await writeFile(output, csv);
+  const output = flag(flags, 'output', DEFAULT_SEARCH_FILE);
+  const csv = searchCsv(results);
+  await writeFile(output, csv);
 
   if (booleanFlag(flags, 'json', false)) {
     console.log(`Search results:\n${JSON.stringify(results, null, 2)}`);
