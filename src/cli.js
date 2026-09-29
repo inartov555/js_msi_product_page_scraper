@@ -171,7 +171,6 @@ async function commandCrawl(args) {
 }
 
 async function commandSearch(args) {
-  console.debug('Art Zaragoza');
   const { positional, flags } = parseArgs(args);
   const { catalog } = createRuntime(flags);
   const products = await catalog.getProducts();
