@@ -28,4 +28,4 @@ USER pwuser
 # serve: CMD npm run serve # if you need a scrapper service
 # test: CMD npm run test # if you need to run tests to check whether project is working well
 
-CMD ["bash", "-lc", "eval \"npm run ${SCRAPER_COMMAND}\""]
+CMD ["npm", "test"]

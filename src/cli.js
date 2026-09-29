@@ -168,9 +168,9 @@ function createRuntime(flags) {
 async function commandScrape(args) {
   const { positional, flags } = parseArgs(args);
   const { repository, catalog } = createRuntime(flags);
-  const url = positional[0] || process.env.PRODUCT_URL;
+  const url = positional[0];
   if (!url) {
-    throw new Error('Product URL is required. Pass it as an argument or set PRODUCT_URL.');
+    throw new Error('Product URL is required. Pass it as an argument');
   }
   const output = flag(flags, 'output', DEFAULT_SINGLE_PRODUCT_FILE);
   const product = await catalog.scrapeOne(url);
