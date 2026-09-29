@@ -142,9 +142,12 @@ function outstandingPageCount(state) {
   return state.inFlightPages.size + state.completedPages.size;
 }
 
-function perSeedLookahead(states, concurrency) {
-  const openSeeds = states.filter((state) => !state.done).length;
-  return Math.max(1, Math.ceil(concurrency / Math.max(1, openSeeds)));
+function perSeedLookahead() {
+  // Pagination within a category is intentionally sequential. Scheduling page
+  // N+1 before page N has completed creates a burst of speculative requests
+  // (for example pages 5-11 at once) and MSI responds to that pattern with
+  // HTTP 403. Global concurrency is still used across independent categories.
+  return 1;
 }
 
 function takeNextJob(states, concurrency, cursor) {
@@ -265,11 +268,10 @@ function commitReadyPages(state, discovered, onProgress) {
 /**
  * Discover product URLs with one global listing-request concurrency limit.
  *
- * To make a value such as concurrency=50 meaningful even when there are only
- * eight category seeds, pages are prefetched speculatively across categories.
- * Up to `concurrency` listing pages are therefore in flight at once. Results are
- * still committed in page order per category, and once an empty/repeated page is
- * reached, any already-fetched later pages for that category are discarded.
+ * Pagination inside each category is sequential because page N determines
+ * whether page N+1 should be requested. Independent category seeds still run
+ * concurrently, bounded by `concurrency`. This avoids the speculative request
+ * bursts that MSI's store can reject with HTTP 403.
  *
  * A single failed listing request must not abort the entire discovery run. A
  * failed page is retried on a fresh Playwright page while unrelated categories

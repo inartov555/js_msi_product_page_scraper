@@ -87,7 +87,7 @@ test('discovery applies its concurrency limit to listing-page requests globally'
   assert.equal(stats.closedPages, stats.createdPages);
 });
 
-test('discovery can use all 50 request slots with only eight category seeds', async () => {
+test('discovery keeps pagination sequential per seed even with concurrency=50', async () => {
   const context = createFakeContext({
     requestDelayMs: 25,
     lastPage: 10,
@@ -110,7 +110,7 @@ test('discovery can use all 50 request slots with only eight category seeds', as
 
   const stats = context.stats();
   assert.equal(urls.length, 8 * 10 * 2);
-  assert.equal(stats.maxActiveRequests, 50);
+  assert.equal(stats.maxActiveRequests, seeds.length);
   assert.equal(stats.activeRequests, 0);
   assert.equal(stats.closedPages, stats.createdPages);
 });
@@ -164,7 +164,7 @@ test('speculative pages after the first empty page are discarded', async () => {
 });
 
 
-test('discovery reports and refills fast slots without waiting for the slowest request', async () => {
+test('discovery lets other seeds progress while a slow seed remains sequential', async () => {
   let createdPages = 0;
   let closedPages = 0;
   let releaseSlow;
@@ -234,12 +234,18 @@ test('discovery reports and refills fast slots without waiting for the slowest r
   await slowStarted;
 
   const deadline = Date.now() + 500;
-  while ((progress.length === 0 || createdPages <= 4) && Date.now() < deadline) {
+  while (!progress.some((entry) => entry.seedUrl.endsWith('/Desktops')) && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
 
-  assert.ok(progress.length > 0, 'progress should be emitted while another request is still blocked');
-  assert.ok(createdPages > 4, 'a freed slot should be refilled before the slow request finishes');
+  assert.ok(
+    progress.some((entry) => entry.seedUrl.endsWith('/Desktops')),
+    'another category should make progress while the slow category is blocked'
+  );
+  assert.ok(
+    createdPages <= 4,
+    'the slow category must not trigger speculative page requests beyond its next page'
+  );
 
   releaseSlow();
   const urls = await discovery;
