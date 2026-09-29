@@ -64,72 +64,12 @@ async function runPool(items, concurrency, workerFactory) {
   return results;
 }
 
-export function createAdaptiveNavigationGate({
-  intervalMs = DEFAULT_CRAWL_DELAY_MS,
-  maxIntervalMs = 5000,
-  accessDeniedPauseMs = 10000,
-  sleepFn = sleep,
-  now = Date.now,
-  logger = null,
-} = {}) {
-  let nextStartAt = 0;
-  let blockedUntil = 0;
-  let currentIntervalMs = Math.max(0, intervalMs);
-  let successStreak = 0;
-  let mutex = Promise.resolve();
-
-  async function beforeAttempt() {
-    // Serialize only admission to page.goto(). Once a navigation has started,
-    // that worker is free to load/extract concurrently with all other workers.
-    const previous = mutex;
-    let release;
-    mutex = new Promise((resolve) => { release = resolve; });
-    await previous;
-
-    try {
-      const waitMs = Math.max(nextStartAt, blockedUntil) - now();
-      if (waitMs > 0) await sleepFn(waitMs);
-      nextStartAt = now() + currentIntervalMs;
-    } finally {
-      release();
-    }
-  }
-
-  async function onAttemptResult(result) {
-    if (result?.accessDenied || result?.status === 403 || result?.status === 429) {
-      successStreak = 0;
-      const retryAfterMs = Number.isFinite(result?.retryAfterMs)
-        ? result.retryAfterMs
-        : 0;
-      const pauseMs = Math.max(accessDeniedPauseMs, retryAfterMs);
-      blockedUntil = Math.max(blockedUntil, now() + pauseMs);
-      currentIntervalMs = Math.min(
-        maxIntervalMs,
-        Math.max(currentIntervalMs * 2, intervalMs || 100)
-      );
-      logger?.warn?.(
-        `[throttle] MSI returned ${result.status ?? 'access denied'}; `
-        + `pausing new navigations for ${pauseMs}ms and pacing at ${currentIntervalMs}ms.`
-      );
-      return;
-    }
-
-    if (result?.ok) {
-      successStreak += 1;
-      // Recover conservatively after a sustained healthy run. Never go faster
-      // than the configured interval; this prevents another 50-request burst.
-      if (successStreak >= 25 && currentIntervalMs > intervalMs) {
-        currentIntervalMs = Math.max(intervalMs, Math.floor(currentIntervalMs * 0.8));
-        successStreak = 0;
-      }
-    }
-  }
-
-  return {
-    beforeAttempt,
-    onAttemptResult,
-    snapshot: () => ({ currentIntervalMs, blockedUntil, nextStartAt }),
-  };
+function workerStartDelayMs(delayMs, workerIndex, workerCount) {
+  if (!(delayMs > 0) || workerCount < 2) return 0;
+  // Spread only the initial wave across one configured delay window. This
+  // avoids a perfectly synchronized 50-request burst without serializing the
+  // whole pool behind a single global 300 ms gate.
+  return Math.floor((delayMs * workerIndex) / workerCount);
 }
 
 
@@ -153,9 +93,9 @@ export function createCatalogService({
     }
   }
 
-  async function scrapePage(page, url, navigation = undefined) {
+  async function scrapePage(page, url) {
     const { extractMsiProduct } = await loadScraperModules();
-    const product = await extractMsiProduct(page, url, { navigation });
+    const product = await extractMsiProduct(page, url);
     if (!product?.title) throw new Error(`Not a product page: ${url}`);
 
     const problems = validateProduct(product);
@@ -190,27 +130,28 @@ export function createCatalogService({
     logger.log(`Discovered ${urls.length} product URLs.`);
 
     const errors = [];
-    const navigationGate = createAdaptiveNavigationGate({
-      intervalMs: delayMs,
-      logger,
-    });
+    const workerCount = Math.min(concurrency, urls.length);
     const products = (
-      await runPool(urls, concurrency, async () => {
+      await runPool(urls, concurrency, async (workerIndex) => {
         // Keep exactly one page per logical worker. At concurrency=50 this
         // remains 50-way parallel, but avoids creating/destroying hundreds of
         // renderer/page objects during a long crawl. Navigation replaces the
         // previous document before the next product is extracted.
         let page = await context.newPage();
+        let firstRun = true;
 
         return {
           run: async (url, index) => {
             try {
               if (page.isClosed()) page = await context.newPage();
 
-              const product = await scrapePage(page, url, {
-                beforeAttempt: navigationGate.beforeAttempt,
-                onAttemptResult: navigationGate.onAttemptResult,
-              });
+              if (firstRun) {
+                firstRun = false;
+                const staggerMs = workerStartDelayMs(delayMs, workerIndex, workerCount);
+                if (staggerMs > 0) await sleep(staggerMs);
+              }
+
+              const product = await scrapePage(page, url);
               logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
               return product;
             } catch (error) {
@@ -218,8 +159,9 @@ export function createCatalogService({
               logger.error(`[scrape ${index + 1}/${urls.length}] ${url}: ${error.message}`);
               return null;
             } finally {
-              // Navigation pacing is handled by the shared adaptive gate. DOM
-              // extraction remains fully parallel across all 50 workers.
+              // Pace each worker independently. A 300 ms delay therefore no
+              // longer serializes all 50 workers into one request every 300 ms.
+              if (delayMs > 0) await sleep(delayMs);
             }
           },
           close: async () => {
