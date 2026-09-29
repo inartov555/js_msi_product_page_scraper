@@ -293,8 +293,8 @@ async function extractRating(page) {
   };
 }
 
-export async function extractMsiProduct(page, url) {
-  await gotoWithRetry(page, url);
+export async function extractMsiProduct(page, url, { navigation = {} } = {}) {
+  await gotoWithRetry(page, url, navigation);
   await acceptCookiesIfPresent(page);
 
   await waitForAnyVisible(

@@ -176,12 +176,20 @@ export async function gotoWithRetry(
     timeout = 30000,
     sleepFn = sleep,
     random = Math.random,
+    beforeAttempt = null,
+    onAttemptResult = null,
   } = {}
 ) {
   let lastError;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    let attemptReported = false;
+
     try {
+      if (beforeAttempt) {
+        await beforeAttempt({ url, attempt });
+      }
+
       const response = await page.goto(url, {
         waitUntil: 'domcontentloaded',
         timeout,
@@ -214,12 +222,49 @@ export async function gotoWithRetry(
         error.status = status ?? null;
         error.accessDenied = accessDenied || status === 403 || status === 429;
         error.retryAfterMs = parseRetryAfterMs(headers['retry-after']);
+
+        if (onAttemptResult) {
+          await onAttemptResult({
+            url,
+            attempt,
+            ok: false,
+            status: error.status,
+            accessDenied: error.accessDenied,
+            retryAfterMs: error.retryAfterMs,
+            error,
+          });
+        }
+        attemptReported = true;
         throw error;
       }
 
+      if (onAttemptResult) {
+        await onAttemptResult({
+          url,
+          attempt,
+          ok: true,
+          status: status ?? null,
+          accessDenied: false,
+          retryAfterMs: null,
+          response,
+        });
+      }
+      attemptReported = true;
       return response;
     } catch (error) {
       lastError = error;
+
+      if (!attemptReported && onAttemptResult) {
+        await onAttemptResult({
+          url,
+          attempt,
+          ok: false,
+          status: error?.status ?? null,
+          accessDenied: Boolean(error?.accessDenied),
+          retryAfterMs: error?.retryAfterMs ?? null,
+          error,
+        });
+      }
 
       if (attempt >= attempts || !isRetryableNavigationError(error)) {
         break;

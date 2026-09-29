@@ -33,7 +33,6 @@ export const DEFAULT_SEED_URLS = [
 ];
 
 export const DEFAULT_BROWSER_CONTEXT = {
-  userAgent: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0',
   viewport: { width: 1440, height: 1000 },
   screen: { width: 1440, height: 1000 },
   isMobile: false,
