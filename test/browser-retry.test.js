@@ -63,3 +63,27 @@ test('non-retryable 404 responses fail without repeated requests', async () => {
   assert.equal(page.calls, 1);
   assert.deepEqual(delays, []);
 });
+
+
+test('ERR_INVALID_ARGUMENT fails without retrying', async () => {
+  let calls = 0;
+  const page = {
+    async goto() {
+      calls += 1;
+      throw new Error('page.goto: net::ERR_INVALID_ARGUMENT');
+    },
+  };
+  const delays = [];
+
+  await assert.rejects(
+    gotoWithRetry(page, 'https://us-store.msi.com/test', {
+      attempts: 4,
+      sleepFn: async (delay) => delays.push(delay),
+      random: () => 0.5,
+    }),
+    /ERR_INVALID_ARGUMENT/
+  );
+
+  assert.equal(calls, 1);
+  assert.deepEqual(delays, []);
+});

@@ -1,3 +1,4 @@
+import { DEFAULT_NAVIGATION_TIMEOUT_MS } from '../config.js';
 import { msiLocators } from './locators.js';
 import { cleanText, parseNumber } from '../shared/text.js';
 import { findSpecValue, normalizeAvailability } from '../product.js';
@@ -291,7 +292,7 @@ async function extractRating(page) {
 export async function extractMsiProduct(
   page,
   url,
-  { navigationAttempts = 4, navigationTimeout = 45000 } = {}
+  { navigationAttempts = 4, navigationTimeout = DEFAULT_NAVIGATION_TIMEOUT_MS } = {}
 ) {
   await gotoWithRetry(page, url, {
     attempts: navigationAttempts,

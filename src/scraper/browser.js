@@ -1,4 +1,8 @@
-import { DEFAULT_BROWSER_CONTEXT, DEFAULT_BLOCKED_RESOURCE_TYPES } from '../config.js';
+import {
+  DEFAULT_BROWSER_CONTEXT,
+  DEFAULT_BLOCKED_RESOURCE_TYPES,
+  DEFAULT_NAVIGATION_TIMEOUT_MS,
+} from '../config.js';
 import { msiLocators } from './locators.js';
 
 function parseBoolean(value, fallback = false) {
@@ -134,6 +138,8 @@ function retryDelayMs(error, attempt) {
 }
 
 function isRetryableNavigationError(error) {
+  const message = String(error?.message ?? error);
+  if (/net::ERR_INVALID_ARGUMENT/i.test(message)) return false;
   if (error?.accessDenied) return true;
   if (error?.status === 408 || error?.status === 429) return true;
   if (error?.status >= 500) return true;
@@ -146,7 +152,7 @@ export async function gotoWithRetry(
   url,
   {
     attempts = 4,
-    timeout = 45000,
+    timeout = DEFAULT_NAVIGATION_TIMEOUT_MS,
     sleepFn = sleep,
     random = Math.random,
   } = {}

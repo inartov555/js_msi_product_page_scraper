@@ -1,6 +1,7 @@
 import {
   DEFAULT_CRAWL_CONCURRENCY,
   DEFAULT_CRAWL_DELAY_MS,
+  DEFAULT_NAVIGATION_TIMEOUT_MS,
   DEFAULT_PRODUCT_RETRY_ATTEMPTS,
   DEFAULT_SEED_URLS,
 } from './config.js';
@@ -111,7 +112,7 @@ export function createCatalogService({
   async function scrapePage(
     page,
     url,
-    { navigationAttempts = 4, navigationTimeout = 45000 } = {}
+    { navigationAttempts = 4, navigationTimeout = DEFAULT_NAVIGATION_TIMEOUT_MS } = {}
   ) {
     const { extractMsiProduct } = await loadScraperModules();
     const product = await extractMsiProduct(page, url, {
@@ -138,7 +139,7 @@ export function createCatalogService({
       if (current?.status >= 400) return false;
 
       const message = String(current?.message ?? current);
-      if (/Not a product page|HTTP 404|HTTP 410/i.test(message)) return false;
+      if (/Not a product page|HTTP 404|HTTP 410|net::ERR_INVALID_ARGUMENT/i.test(message)) return false;
       if (/Timeout .*exceeded|page\.goto|net::|Target page, context or browser has been closed/i.test(message)) {
         return true;
       }
