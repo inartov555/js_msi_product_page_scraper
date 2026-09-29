@@ -8,7 +8,7 @@ export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.j
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
 export const DEFAULT_SEARCH_FILE = path.resolve(__dirname, '../output/search.csv');
-export const DEFAULT_CRAWL_CONCURRENCY = 50;
+export const DEFAULT_CRAWL_CONCURRENCY = 70;
 export const DEFAULT_CRAWL_DELAY_MS = 300;
 export const DEFAULT_PRODUCT_RETRY_ATTEMPTS = 3;
 export const DEFAULT_NAVIGATION_TIMEOUT_MS = 45000;
@@ -33,14 +33,14 @@ export const DEFAULT_BROWSER_CONTEXT = {
   hasTouch: false,
   extraHTTPHeaders: {
     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0',
-    // 'Accept': 'application/json, text/plain, */*',
-    // 'Accept-Language': 'en-US,en;q=0.9',
-    // 'Accept-Encoding': 'gzip, deflate, br, zstd',
-    // 'Origin': 'https://us-store.msi.com',
-    // 'Connection': 'keep-alive',
-    // 'Referer': 'https://us-store.msi.com/',
-    // 'Sec-Fetch-Dest': 'empty',
-    // 'Sec-Fetch-Mode': 'cors',
-    // 'Sec-Fetch-Site': 'cross-site',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br, zstd',
+    'Origin': 'https://us-store.msi.com',
+    'Connection': 'keep-alive',
+    'Referer': 'https://us-store.msi.com/',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'cross-site',
   },
 };
