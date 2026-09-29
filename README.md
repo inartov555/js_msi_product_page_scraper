@@ -12,8 +12,8 @@ JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports sing
 Start with Docker
 
 ```bash
-./run_sraper.sh "scrape"
 ./run_sraper.sh "crawl -- --refresh false"
+./run_sraper.sh "scrape"
 ./run_sraper.sh "search -- 'A520M-A PRO'"
 ./run_sraper.sh "compare -- 'MAG Z890 TOMAHAWK WIFI' 'PRO Z890-P WIFI'"
 ./run_sraper.sh "test"
@@ -22,8 +22,8 @@ Start with Docker
 Start with NPM
 
 ```bash
-npm run scrape
 npm run crawl
+npm run scrape
 npm run search -- "RTX 5090"
 npm run compare -- "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 npm test
