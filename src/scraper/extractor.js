@@ -17,20 +17,13 @@ async function firstVisibleText(page, selectors) {
   return null;
 }
 
-async function waitForAnyVisible(page, selector, timeout = 15000) {
-  await page.waitForFunction(
-    (targetSelector) => [...document.querySelectorAll(targetSelector)].some((element) => {
-      const style = window.getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
-
-      return style.display !== 'none'
-        && style.visibility !== 'hidden'
-        && rect.width > 0
-        && rect.height > 0;
-    }),
-    selector,
-    { timeout }
-  );
+async function waitForAnyVisible(page, selector, timeout = 8000) {
+  // Locator waiting is handled natively by Playwright and avoids repeatedly
+  // executing a polling function in the page just to detect the title.
+  await page.locator(selector).first().waitFor({
+    state: 'visible',
+    timeout,
+  });
 }
 
 async function extractCategoryTree(page, title) {
@@ -307,7 +300,7 @@ export async function extractMsiProduct(page, url) {
   await waitForAnyVisible(
     page,
     msiLocators.productTitle[0],
-    15000
+    8000
   );
 
   const title = await firstVisibleText(
@@ -321,29 +314,38 @@ export async function extractMsiProduct(page, url) {
     );
   }
 
-  const description = await firstVisibleText(
-    page,
-    msiLocators.description
-  );
-
-  const categoryTree = await extractCategoryTree(
-    page,
-    title
-  );
-
-  const images = await extractImages(page);
-  const specs = await extractSpecs(page);
-  const prices = await extractPricePair(page);
-  const rating = await extractRating(page);
+  // These reads are independent once the product DOM is ready. Running them
+  // together cuts sequential Playwright round-trips for each worker.
+  const [
+    description,
+    categoryTree,
+    images,
+    specs,
+    prices,
+    rating,
+    itemId,
+    brand,
+    availability,
+  ] = await Promise.all([
+    firstVisibleText(page, msiLocators.description),
+    extractCategoryTree(page, title),
+    extractImages(page),
+    extractSpecs(page),
+    extractPricePair(page),
+    extractRating(page),
+    extractItemId(page),
+    extractBrand(page),
+    extractAvailability(page),
+  ]);
 
   return {
     url: page.url(),
 
-    item_id: await extractItemId(page),
+    item_id: itemId,
 
     title,
 
-    brand: await extractBrand(page),
+    brand,
 
     product_category: categoryTree.length
       ? categoryTree
@@ -359,7 +361,7 @@ export async function extractMsiProduct(page, url) {
 
     sale_price: prices.sale_price,
 
-    availability: await extractAvailability(page),
+    availability,
 
     image_url: images.image_url,
 
