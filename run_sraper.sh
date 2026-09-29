@@ -14,8 +14,12 @@
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
-# command_to_run="${1:-test}"
 command_to_run="${*:-test}"
+# Preserving the string parameters when they contain space characters
+if [[ $# -ne 0 ]]; then
+    printf -v command_to_run '%q ' "$@"
+    command_to_run="${command_to_run% }"
+fi
 
 set -Eeuo pipefail
 

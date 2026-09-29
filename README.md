@@ -13,7 +13,7 @@ Start with Docker
 
 ```bash
 ./run_sraper.sh crawl -- --refresh false
-./run_sraper.sh "scrape -- https://us-store.msi.com/PC-Components/MAG-A650BN"
+./run_sraper.sh scrape -- https://us-store.msi.com/PC-Components/MAG-A650BN
 ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 ./run_sraper.sh search "A520M-A PRO"
 ./run_sraper.sh test
