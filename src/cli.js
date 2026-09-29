@@ -221,17 +221,6 @@ async function commandCompare(args) {
 
   await writeFile(output, csv);
 
-  /*
-  if (booleanFlag(flags, 'json', false)) {
-    console.log(JSON.stringify({
-      products: selected.map((product) => ({ id: product.item_id, title: product.title })),
-      rows,
-    }, null, 2));
-    console.log(`Saved comparison table to ${output}`);
-    return;
-  }
-  */
-
   console.log(`Saved comparison table to ${output}`);
   process.stdout.write(csv);
 }
