@@ -5,12 +5,12 @@
 # Input parameters:
 #
 #   - $1 - command to run, e.g.:
-#          "scrape"
-#          "crawl -- --refresh false"
-#          "search A520M-A PRO"
-#          "compare -- MAG Z890 TOMAHAWK WIFI PRO Z890-P WIFI"
-#          "serve" # if you need a scrapper service
-#          "test"
+#          scrape -- --refresh false
+#          crawl -- https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+#          search "A520M-A PRO"
+#          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+#          serve  # if you need a scraper service
+#          test   # unit tests
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
