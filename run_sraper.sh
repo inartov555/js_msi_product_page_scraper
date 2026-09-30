@@ -9,7 +9,7 @@
 #          crawl -- https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
 #          search "A520M-A PRO"
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
-#          serve  # if you need a scraper service
+#          serve  # if you need to make API calls to a scraper service
 #          test   # unit tests
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
