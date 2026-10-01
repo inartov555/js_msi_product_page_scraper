@@ -1,18 +1,21 @@
 /*
+ * End-to-end tests for the public application entry point.
+ *
+ * These are intentionally E2E/system tests rather than integration tests:
+ * they execute ./run_sraper.sh exactly as a user does and validate the
+ * resulting files / HTTP API instead of importing application internals.
+ *
  * Covered commands:
- * 
- * bash
- *  ./run_sraper.sh crawl --refresh false
- *  ./run_sraper.sh crawl --refresh true
- *  ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
- *  ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
- *  ./run_sraper.sh search "Motherboards"
- *  ./run_sraper.sh serve
- *  ./run_sraper.sh test
- * 
+ *   ./run_sraper.sh crawl --refresh false
+ *   ./run_sraper.sh crawl --refresh true
+ *   ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+ *   ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+ *   ./run_sraper.sh search "Motherboards"
+ *   ./run_sraper.sh serve
+ *   ./run_sraper.sh test
  */
 
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
@@ -24,19 +27,28 @@ const OUTPUT_DIR = path.join(ROOT, 'output');
 const PRODUCT_URL = 'https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II';
 const PRODUCT_A = 'MAG Z890 TOMAHAWK WIFI';
 const PRODUCT_B = 'PRO Z890-P WIFI';
-const API_BASE_URL = 'http://127.0.0.1:3000';
+const API_PORT = Number(process.env.E2E_API_PORT || 3000);
+const API_BASE_URL = `http://127.0.0.1:${API_PORT}`;
 const COMMAND_TIMEOUT_MS = Number(process.env.REAL_APP_COMMAND_TIMEOUT_MS || 30 * 60 * 1000);
+const SKIP_E2E = process.env.SKIP_E2E_TESTS === '1';
+const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
+const snapshots = new Map();
 
 function runProcess(command, args, {
   cwd = ROOT,
-  env = process.env,
+  env = {},
   timeout = COMMAND_TIMEOUT_MS,
   detached = false,
 } = {}) {
   return new Promise((resolve, reject) => {
+    const childEnv = { ...process.env, ...env };
+    for (const [name, value] of Object.entries(childEnv)) {
+      if (value === undefined) delete childEnv[name];
+    }
+
     const child = spawn(command, args, {
       cwd,
-      env: { ...process.env, ...env },
+      env: childEnv,
       stdio: ['ignore', 'pipe', 'pipe'],
       detached,
     });
@@ -51,7 +63,9 @@ function runProcess(command, args, {
         if (detached && child.pid) process.kill(-child.pid, 'SIGTERM');
         else child.kill('SIGTERM');
       } catch {}
-      reject(new Error(`Timed out after ${timeout}ms: ${command} ${args.join(' ')}\n${stdout}\n${stderr}`));
+      reject(new Error(
+        `Timed out after ${timeout}ms: ${command} ${args.join(' ')}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
+      ));
     }, timeout);
 
     child.once('error', (error) => {
@@ -66,8 +80,8 @@ function runProcess(command, args, {
   });
 }
 
-async function runScraper(...args) {
-  const result = await runProcess('bash', [RUNNER, ...args]);
+async function runScraper(args, options = {}) {
+  const result = await runProcess('bash', [RUNNER, ...args], options);
   assert.equal(
     result.code,
     0,
@@ -75,18 +89,6 @@ async function runScraper(...args) {
   );
   return result;
 }
-
-async function commandWorks(command, args) {
-  try {
-    const result = await runProcess(command, args, { timeout: 15_000 });
-    return result.code === 0;
-  } catch {
-    return false;
-  }
-}
-
-const dockerAvailable = await commandWorks('docker', ['compose', 'version']);
-const liveSkip = dockerAvailable ? false : 'Docker Compose is required for real application tests';
 
 async function readText(fileName) {
   return fs.readFile(path.join(OUTPUT_DIR, fileName), 'utf8');
@@ -108,7 +110,7 @@ async function waitForApi(url = `${API_BASE_URL}/health`, timeoutMs = 120_000) {
     } catch (error) {
       lastError = error;
     }
-    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   throw new Error(`API did not become ready within ${timeoutMs}ms: ${lastError?.message || 'unknown error'}`);
@@ -119,10 +121,12 @@ async function stopProcessGroup(child) {
   try {
     if (child.pid) process.kill(-child.pid, 'SIGINT');
   } catch {}
+
   await Promise.race([
     new Promise((resolve) => child.once('close', resolve)),
-    new Promise((resolve) => setTimeout(resolve, 15_000)),
+    new Promise((resolve) => setTimeout(resolve, 10_000)),
   ]);
+
   if (child.exitCode === null) {
     try {
       if (child.pid) process.kill(-child.pid, 'SIGKILL');
@@ -130,16 +134,42 @@ async function stopProcessGroup(child) {
   }
 }
 
-// These tests deliberately execute the public bash entry point, not internal JS functions.
-// This file lives under test/ but is intentionally named *.integration.js.
-// The normal npm test script runs only test/*.test.js, so the test below can safely
-// execute ./run_sraper.sh test without recursively launching this integration suite.
+before(async () => {
+  if (SKIP_E2E) return;
 
-test('real usage: crawl with existing catalog (--refresh false)', {
-  skip: liveSkip,
+  // These commands intentionally use the real default output paths. Preserve the
+  // user's files and restore them once the E2E suite has finished.
+  for (const fileName of OUTPUT_FILES) {
+    const filePath = path.join(OUTPUT_DIR, fileName);
+    try {
+      snapshots.set(fileName, await fs.readFile(filePath));
+    } catch (error) {
+      if (error.code === 'ENOENT') snapshots.set(fileName, null);
+      else throw error;
+    }
+  }
+});
+
+after(async () => {
+  if (SKIP_E2E) return;
+
+  for (const [fileName, content] of snapshots) {
+    const filePath = path.join(OUTPUT_DIR, fileName);
+    if (content === null) {
+      await fs.rm(filePath, { force: true });
+    } else {
+      await fs.writeFile(filePath, content);
+    }
+  }
+});
+
+const e2eOptions = {
+  skip: SKIP_E2E ? 'Nested test run: E2E tests are skipped to prevent recursive ./run_sraper.sh test execution' : false,
   timeout: COMMAND_TIMEOUT_MS,
-}, async () => {
-  const result = await runScraper('crawl', '--refresh', 'false');
+};
+
+test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
+  const result = await runScraper(['crawl', '--refresh', 'false']);
   assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
 
   const catalog = await readJson('catalog.json');
@@ -147,23 +177,17 @@ test('real usage: crawl with existing catalog (--refresh false)', {
   assert.ok(catalog.products.length > 0, 'catalog should contain products');
 });
 
-test('real usage: crawl live MSI catalog (--refresh true)', {
-  skip: liveSkip,
-  timeout: COMMAND_TIMEOUT_MS,
-}, async () => {
-  const result = await runScraper('crawl', '--refresh', 'true');
+test('E2E: ./run_sraper.sh crawl --refresh true', e2eOptions, async () => {
+  const result = await runScraper(['crawl', '--refresh', 'true']);
   assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
 
   const catalog = await readJson('catalog.json');
-  assert.ok(Array.isArray(catalog.products));
+  assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
   assert.ok(catalog.products.length > 0, 'live crawl should produce at least one product');
 });
 
-test('real usage: scrape a real product through run_sraper.sh', {
-  skip: liveSkip,
-  timeout: COMMAND_TIMEOUT_MS,
-}, async () => {
-  await runScraper('scrape', PRODUCT_URL);
+test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () => {
+  await runScraper(['scrape', PRODUCT_URL]);
 
   const product = await readJson('single-product.json');
   assert.equal(product.url, PRODUCT_URL);
@@ -171,11 +195,8 @@ test('real usage: scrape a real product through run_sraper.sh', {
   assert.ok(Array.isArray(product.specs), 'scraped product should contain specs');
 });
 
-test('real usage: compare two products through run_sraper.sh', {
-  skip: liveSkip,
-  timeout: COMMAND_TIMEOUT_MS,
-}, async () => {
-  const result = await runScraper('compare', PRODUCT_A, PRODUCT_B);
+test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async () => {
+  const result = await runScraper(['compare', PRODUCT_A, PRODUCT_B]);
   const csv = await readText('comparison.csv');
 
   assert.match(result.stdout + result.stderr, /MAG Z890 TOMAHAWK WIFI/);
@@ -184,11 +205,8 @@ test('real usage: compare two products through run_sraper.sh', {
   assert.ok(csv.split(/\r?\n/).filter(Boolean).length > 1, 'comparison should contain parameter rows');
 });
 
-test('real usage: search Motherboards through run_sraper.sh', {
-  skip: liveSkip,
-  timeout: COMMAND_TIMEOUT_MS,
-}, async () => {
-  await runScraper('search', 'Motherboards');
+test('E2E: ./run_sraper.sh search Motherboards', e2eOptions, async () => {
+  await runScraper(['search', 'Motherboards']);
   const csv = await readText('search.csv');
 
   assert.match(csv, /^ID,Title,Price,Availability,Category/m);
@@ -196,23 +214,23 @@ test('real usage: search Motherboards through run_sraper.sh', {
   assert.ok(csv.split(/\r?\n/).filter(Boolean).length > 1, 'search should return at least one product');
 });
 
-test('real usage: serve starts API and API methods work', {
-  skip: liveSkip,
+test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
+  ...e2eOptions,
   timeout: 5 * 60 * 1000,
 }, async (t) => {
   const child = spawn('bash', [RUNNER, 'serve'], {
     cwd: ROOT,
-    env: process.env,
+    env: { ...process.env, PORT: String(API_PORT) },
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
   });
 
   let serverOutput = '';
-  child.stdout.on('data', (chunk) => { serverOutput += chunk.toString(); });
-  child.stderr.on('data', (chunk) => { serverOutput += chunk.toString(); });
+  child.stdout?.on('data', (chunk) => { serverOutput += chunk.toString(); });
+  child.stderr?.on('data', (chunk) => { serverOutput += chunk.toString(); });
+
   t.after(async () => {
     await stopProcessGroup(child);
-    await runProcess('docker', ['compose', 'down', '--remove-orphans'], { timeout: 60_000 }).catch(() => {});
   });
 
   await waitForApi();
@@ -224,7 +242,9 @@ test('real usage: serve starts API and API methods work', {
   assert.ok(Number.isInteger(health.products));
   assert.ok(health.products > 0);
 
-  const productsResponse = await fetch(`${API_BASE_URL}/products?q=${encodeURIComponent('Motherboards')}&limit=5`);
+  const productsResponse = await fetch(
+    `${API_BASE_URL}/products?q=${encodeURIComponent('Motherboards')}&limit=5`,
+  );
   assert.equal(productsResponse.status, 200);
   const products = await productsResponse.json();
   assert.ok(Array.isArray(products.products));
@@ -242,7 +262,9 @@ test('real usage: serve starts API and API methods work', {
   assert.ok(Array.isArray(comparison.rows));
   assert.ok(comparison.rows.length > 0);
 
-  const missingCompareSelector = await fetch(`${API_BASE_URL}/compare?id=${encodeURIComponent(PRODUCT_A)}`);
+  const missingCompareSelector = await fetch(
+    `${API_BASE_URL}/compare?id=${encodeURIComponent(PRODUCT_A)}`,
+  );
   assert.equal(missingCompareSelector.status, 400);
   assert.match((await missingCompareSelector.json()).error, /at least two/i);
 
@@ -264,13 +286,17 @@ test('real usage: serve starts API and API methods work', {
   assert.doesNotMatch(serverOutput, /EADDRINUSE/);
 });
 
-test('real usage: run_sraper.sh test executes the normal JS test suite', {
-  skip: liveSkip,
+test('E2E: ./run_sraper.sh test executes the JS test suite', {
+  ...e2eOptions,
   timeout: 10 * 60 * 1000,
 }, async () => {
-  const result = await runScraper('test');
+  const result = await runScraper(['test'], {
+    env: { SKIP_E2E_TESTS: '1', NODE_TEST_CONTEXT: undefined },
+    timeout: 10 * 60 * 1000,
+  });
   const output = result.stdout + result.stderr;
-  assert.match(output, /npm run test/);
+
+  assert.match(output, /> node --test test\/\*\.test\.js/);
   assert.match(output, /# pass\s+\d+/);
   assert.match(output, /# fail\s+0/);
 });

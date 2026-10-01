@@ -23,14 +23,6 @@ fi
 
 shift
 
-if (( $# > 0 )); then
-    printf -v command_args '%q ' "$@"
-    command_args="${command_args% }"
-    command_to_run="$command_name -- $command_args"
-else
-    command_to_run="$command_name"
-fi
-
 set -Eeuo pipefail
 
 cleanup() {
@@ -40,6 +32,32 @@ cleanup() {
 
 echo "Setting the exit function..."
 trap cleanup EXIT HUP ERR SIGINT SIGTERM
+
+# The public runner is also exercised by the E2E tests that already run inside
+# the scraper container. Starting Docker from inside that container would require
+# Docker-in-Docker and would test Docker availability instead of the application.
+# In that case execute the exact same npm command directly in the current image.
+if [[ "${SCRAPER_IN_CONTAINER:-}" == "1" || -f /.dockerenv ]]; then
+    echo "Starting the service (current container)"
+    if (( $# > 0 )); then
+        printf 'Command: npm run %q --' "$command_name"
+        printf ' %q' "$@"
+        printf '\n'
+        npm run "$command_name" -- "$@"
+    else
+        echo "Command: npm run $command_name"
+        npm run "$command_name"
+    fi
+    exit $?
+fi
+
+if (( $# > 0 )); then
+    printf -v command_args '%q ' "$@"
+    command_args="${command_args% }"
+    command_to_run="$command_name -- $command_args"
+else
+    command_to_run="$command_name"
+fi
 
 echo "Starting the service"
 echo "Command: npm run $command_to_run"

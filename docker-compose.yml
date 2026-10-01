@@ -9,6 +9,7 @@ services:
     environment:
       DISPLAY: $DISPLAY
       SCRAPER_COMMAND: "${SCRAPER_COMMAND:-NONE}"
+      SCRAPER_IN_CONTAINER: "1"
     volumes:
       - ./output:/scraper/output
       - /tmp/.X11-unix:/tmp/.X11-unix
