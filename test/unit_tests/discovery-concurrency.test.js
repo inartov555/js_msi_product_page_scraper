@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { discoverMsiProductUrls } from '../src/scraper/discovery.js';
+import { discoverMsiProductUrls } from '../../src/scraper/discovery.js';
 
 function createFakeContext({
   requestDelayMs = 15,

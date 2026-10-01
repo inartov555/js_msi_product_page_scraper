@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
-const scraperDir = path.resolve(testDir, '../src/scraper');
+const scraperDir = path.resolve(testDir, '../../src/scraper');
 
 const literalLocatorPatterns = [
   /\.locator\(\s*['"`]/g,

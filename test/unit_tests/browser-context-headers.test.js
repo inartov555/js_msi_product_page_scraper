@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_BROWSER_CONTEXT,
   createBrowserContextOptions,
-} from '../src/config.js';
+} from '../../src/config.js';
 
 test('browser profile preserves the desktop context shape', () => {
   const options = createBrowserContextOptions(() => 0);
