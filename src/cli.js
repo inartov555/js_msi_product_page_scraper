@@ -159,7 +159,7 @@ async function commandScrape(args) {
 
   await writeFile(output, `${JSON.stringify(product, null, 2)}\n`);
   if (booleanFlag(flags, 'index', false)) await repository.upsertMany([product]);
-  console.log(`Saved product to ${output}`);
+  console.debug(`Saved product to: ${output}`);
 }
 
 async function commandCrawl(args) {
@@ -201,7 +201,7 @@ async function commandSearch(args) {
     availability: product.availability,
     category: product.product_category,
   })));
-  console.log(`Saved search table to ${output}`);
+  console.debug(`Saved search table to: ${output}`);
 }
 
 async function commandCompare(args) {
@@ -221,12 +221,41 @@ async function commandCompare(args) {
 
   await writeFile(output, csv);
 
-  console.log(`Saved comparison table to ${output}`);
+  console.debug(`Saved comparison table to: ${output}`);
   process.stdout.write(csv);
 }
 
 function printHelp() {
   console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all] [--output file]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+}
+
+function formatDuration(milliseconds) {
+  const totalMilliseconds = Math.max(0, Math.round(milliseconds));
+  const hours = Math.floor(totalMilliseconds / 3_600_000);
+  const minutes = Math.floor((totalMilliseconds % 3_600_000) / 60_000);
+  const seconds = Math.floor((totalMilliseconds % 60_000) / 1_000);
+  const millis = totalMilliseconds % 1_000;
+
+  return [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, '0'))
+    .join(':') + `.${String(millis).padStart(3, '0')}`;
+}
+
+async function runTimedOperation(name, operation) {
+  const startedAt = new Date();
+  const startedNs = process.hrtime.bigint();
+
+  console.debug(`Operation "${name}" start time: ${startedAt.toISOString()}`);
+
+  try {
+    return await operation();
+  } finally {
+    const endedAt = new Date();
+    const elapsedMs = Number(process.hrtime.bigint() - startedNs) / 1_000_000;
+
+    console.debug(`Operation "${name}" end time: ${endedAt.toISOString()}`);
+    console.debug(`Operation "${name}" total time: ${formatDuration(elapsedMs)}`);
+  }
 }
 
 async function main() {
@@ -243,7 +272,8 @@ async function main() {
 
   const handler = commands[command];
   if (!handler) throw new Error(`Unknown command: ${command}`);
-  return handler(args);
+
+  return runTimedOperation(command, () => handler(args));
 }
 
 main().catch((error) => {

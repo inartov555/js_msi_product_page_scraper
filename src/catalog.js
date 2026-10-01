@@ -195,7 +195,7 @@ export function createCatalogService({
               attempts: productRetryAttempts,
               waitForStartSlot,
             });
-            logger.log(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
+            logger.debug(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
             return product;
           } catch (error) {
             errors.push({ url, error: error.message });
@@ -214,7 +214,7 @@ export function createCatalogService({
     }
 
     const catalog = await repository.replaceAll(products);
-    logger.debug(`Crawling is completed`);
+    logger.log(`Crawling is completed`);
     return catalog;
   }
 
@@ -277,7 +277,7 @@ export function createCatalogService({
             : 'Catalog data requested; analyzing MSI catalog automatically...'
         );
         const catalog = await withBrowser(crawl);
-        logger.debug('Catalog is refreshed');
+        logger.log('Catalog is refreshed');
         return catalog;
       })().finally(() => {
         buildPromise = null;
