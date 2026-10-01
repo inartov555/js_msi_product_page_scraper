@@ -31,27 +31,56 @@ export const DEFAULT_BROWSER_CONTEXT = {
   screen: { width: 1440, height: 1000 },
   isMobile: false,
   hasTouch: false,
+  extraHTTPHeaders: {
+    //'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0',
+    'User-Agent': 'AQUI',
+    'Accept': 'application/x-clarity-gzip',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br, zstd',
+    'Origin': 'https://us-store.msi.com',
+    'Sec-Fetch-Storage-Access': 'none',
+    'Connection': 'keep-alive',
+    'Referer': 'https://us-store.msi.com/',
+    'Cookie': 'MUID=35F9AA8F67FD6A3E0BFBBD6A66D56BE7',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'cross-site',
+  },
 };
 
-// Keep these profiles internally consistent and intentionally small. Chromium
-// generates protocol-sensitive headers (Sec-Fetch-*, Sec-CH-UA, Referer,
-// Accept-Encoding, Connection, cookies, etc.) itself; overriding those with
-// stale/static values can make requests look less browser-like, not more.
-export const BROWSER_HEADER_PROFILES = [
-  {
-    locale: 'en-US',
-    acceptLanguage: 'en-US,en;q=0.9',
-  },
-  {
-    locale: 'en-US',
-    acceptLanguage: 'en-US,en;q=0.8',
-  },
-  {
-    locale: 'en-US',
-    acceptLanguage: 'en-US,en;q=0.9,en-GB;q=0.8',
-  },
-  {
-    locale: 'en-US',
-    acceptLanguage: 'en-US,en;q=0.7',
-  },
+
+const RANDOM_USER_AGENTS = [
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
 ];
+
+const RANDOM_ACCEPT_LANGUAGES = [
+  'en-US,en;q=0.9',
+  'en-US,en;q=0.8',
+  'en-GB,en;q=0.9,en-US;q=0.8',
+  'en-US,en;q=0.9,et;q=0.7',
+];
+
+const RANDOM_REFERERS = [
+  'https://us-store.msi.com/',
+  'https://us-store.msi.com/Laptops',
+  'https://us-store.msi.com/Monitors',
+  'https://us-store.msi.com/Motherboards',
+];
+
+function randomItem(items, random = Math.random) {
+  return items[Math.floor(random() * items.length)];
+}
+
+export function createBrowserContextOptions(random = Math.random) {
+  return {
+    ...DEFAULT_BROWSER_CONTEXT,
+    extraHTTPHeaders: {
+      ...DEFAULT_BROWSER_CONTEXT.extraHTTPHeaders,
+      'User-Agent': randomItem(RANDOM_USER_AGENTS, random),
+      'Accept-Language': randomItem(RANDOM_ACCEPT_LANGUAGES, random),
+      'Referer': randomItem(RANDOM_REFERERS, random),
+    },
+  };
+}
