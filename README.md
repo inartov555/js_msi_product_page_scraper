@@ -77,18 +77,15 @@ src/
 
 See `ARCHITECTURE.md` for module responsibilities.
 
-## Real application / Docker smoke tests
+## Real application integration tests
 
-The repository also contains an end-to-end smoke suite that uses the public
-`./run_sraper.sh` entry point exactly like a user does:
+The real-usage tests are JavaScript tests (`node:test`) that invoke the same Bash entry point used manually (`./run_sraper.sh`). They exercise Docker and the live MSI site instead of mocking the CLI.
 
 ```bash
-./test/real-app-usage.sh
-# or
 npm run test:real
 ```
 
-It verifies these real application flows:
+Covered commands:
 
 ```bash
 ./run_sraper.sh crawl --refresh false
@@ -100,20 +97,4 @@ It verifies these real application flows:
 ./run_sraper.sh test
 ```
 
-While `serve` is running, the smoke suite makes real HTTP requests to `/health`,
-`/products`, and `/compare`, validates their JSON payloads, and also verifies
-400/404 API error handling. Docker Compose publishes the API on
-`http://127.0.0.1:3000` by default. Set `SCRAPER_HOST_PORT` to use another host
-port.
-
-`crawl --refresh true` performs a full live crawl and can be slow or affected by
-network/store availability. For a shorter local or CI smoke run that still
-covers all other commands, use:
-
-```bash
-REAL_APP_SKIP_REFRESH=true ./test/real-app-usage.sh
-```
-
-The real-app suite backs up the checked-in output files and restores them when
-it finishes so running the tests does not leave test-generated catalog/search/
-comparison files behind.
+The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. The tests are intentionally stored in `integration/real-app-usage.js`, rather than `*.test.js`, so `./run_sraper.sh test` can safely run the normal unit suite without recursively launching the real-usage suite.

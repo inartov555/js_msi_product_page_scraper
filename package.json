@@ -10,7 +10,7 @@
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
     "test": "node --test",
-    "test:real": "bash test/real-app-usage.sh"
+    "test:real": "node --test integration/real-app-usage.js"
   },
   "engines": {
     "node": ">=20"
