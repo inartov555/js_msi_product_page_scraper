@@ -16,7 +16,7 @@ Start with Docker
 ```bash
 ./run_sraper.sh crawl --refresh false
 ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
-./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"  # collect data of a product
 ./run_sraper.sh search "A520M-A PRO"
 ./run_sraper.sh serve  # Scraper service with APIs
 ./run_sraper.sh test

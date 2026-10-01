@@ -5,8 +5,8 @@
 # Input parameters:
 #
 #   - $1 - command to run, e.g.:
-#          scrape -- --refresh false
-#          crawl -- https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+#          crawl --refresh false  # if false - use existing catalog, if true - crawl the MSI web site and collect all product into new catalog
+#          scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II  # collect data of a product
 #          search "A520M-A PRO"
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 #          serve  # if you need to make API calls to a scraper service

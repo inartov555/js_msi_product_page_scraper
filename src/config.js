@@ -49,27 +49,37 @@ export const DEFAULT_BROWSER_CONTEXT = {
 
 
 const RANDOM_USER_AGENTS = [
-  // Chrome
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.92 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.93 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.93 Safari/537.36',
+  // Chrome / Chromium - Windows
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.58 Safari/537.36',
 
-  // Microsoft Edge
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.93 Safari/537.36 Edg/154.0.4258.48',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.93 Safari/537.36 Edg/154.0.4258.48',
+  // Chrome / Chromium - Linux
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Safari/537.36',
 
-  // Opera
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.7977.134 Safari/537.36 OPR/136.0.6008.80',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.7977.134 Safari/537.36 OPR/136.0.6008.80',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.7977.134 Safari/537.36 OPR/136.0.6008.80',
+  // Chrome / Chromium - macOS Intel
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.58 Safari/537.36',
 
-  // Firefox
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:157.0) Gecko/20100101 Firefox/157.0',
-  'Mozilla/5.0 (X11; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:157.0) Gecko/20100101 Firefox/157.0',
+  // Chrome / Chromium - macOS Apple Silicon
+  'Mozilla/5.0 (Macintosh; ARM Mac OS X 15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.58 Safari/537.36',
 
-  // Chrome Android
+  // Chrome Android - Pixel
   'Mozilla/5.0 (Linux; Android 16; Pixel 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Mobile Safari/537.36',
+
+  // Chrome Android - Samsung
+  'Mozilla/5.0 (Linux; Android 16; SM-S938B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Mobile Safari/537.36',
+
+  // Chrome Android - generic phone
+  'Mozilla/5.0 (Linux; Android 16; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Mobile Safari/537.36',
+
+  // Chrome Android - tablet
+  'Mozilla/5.0 (Linux; Android 16; Pixel Tablet) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Safari/537.36',
+
+  // Chrome iOS / iPhone
+  // IMPORTANT: this is WebKit + CriOS, not Chromium.
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/154.0.8037.57 Mobile/15E148 Safari/604.1',
+
+  // Chrome iOS / iPad
+  // IMPORTANT: also WebKit, not Chromium.
+  'Mozilla/5.0 (iPad; CPU OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/154.0.8037.57 Mobile/15E148 Safari/604.1',
 ];
 
 const RANDOM_ACCEPT_LANGUAGES = [
@@ -77,15 +87,6 @@ const RANDOM_ACCEPT_LANGUAGES = [
   'en-US,en;q=0.8',
   'en-GB,en;q=0.9,en-US;q=0.8',
   'en-US,en;q=0.9,et;q=0.7',
-];
-
-const RANDOM_REFERERS = [
-  'https://us-store.msi.com/',
-  'https://us-store.msi.com/Laptops',
-  'https://us-store.msi.com/Desktops',
-  'https://us-store.msi.com/Monitors',
-  'https://us-store.msi.com/Graphics-Cards',
-  'https://us-store.msi.com/Motherboards',
 ];
 
 function randomItem(items, random = Math.random) {
@@ -99,7 +100,6 @@ export function createBrowserContextOptions(random = Math.random) {
       ...DEFAULT_BROWSER_CONTEXT.extraHTTPHeaders,
       'User-Agent': randomItem(RANDOM_USER_AGENTS, random),
       'Accept-Language': randomItem(RANDOM_ACCEPT_LANGUAGES, random),
-      'Referer': randomItem(RANDOM_REFERERS, random),
     },
   };
 }
