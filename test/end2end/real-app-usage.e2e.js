@@ -20,7 +20,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+const ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
 const RUNNER = './run_sraper.sh';
 const OUTPUT_DIR = path.join(ROOT, 'output');
 const PRODUCT_URL = 'https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II';
@@ -161,15 +161,6 @@ const e2eOptions = {
   timeout: COMMAND_TIMEOUT_MS,
 };
 
-test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
-  const result = await runScraper(['crawl', '--refresh', 'false']);
-  assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
-
-  const catalog = await readJson('catalog.json');
-  assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
-  assert.ok(catalog.products.length > 0, 'catalog should contain products');
-});
-
 // Let's skip it to make push GitHub Actions be faster
 test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
   const result = await runScraper(['crawl', '--refresh', 'true']);
@@ -178,6 +169,15 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   const catalog = await readJson('catalog.json');
   assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
   assert.ok(catalog.products.length > 0, 'live crawl should produce at least one product');
+});
+
+test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
+  const result = await runScraper(['crawl', '--refresh', 'false']);
+  assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
+
+  const catalog = await readJson('catalog.json');
+  assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
+  assert.ok(catalog.products.length > 0, 'catalog should contain products');
 });
 
 test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () => {
