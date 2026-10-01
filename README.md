@@ -30,7 +30,7 @@ Start with Docker
   GitHub Actions now runs the complete unit and end-to-end test suite through `npm run test:all`.
 
 - **Automatic environment initialization**  
-  `run_sraper.sh` creates `.env` from `.env.example` or `env.example` when no local environment file exists.
+  `run_scraper.sh` creates `.env` from `.env.example` or `env.example` when no local environment file exists.
 
 ## Catalog
 
