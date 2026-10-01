@@ -177,7 +177,7 @@ export function createCatalogService({
       delayMs,
       concurrency,
       onProgress: ({ seedUrl, pageNumber, added, total }) =>
-        logger.log(`[discover] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
+        logger.debug(`[discover pages] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
     });
   }
 
