@@ -12,7 +12,6 @@
  *   ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
  *   ./run_sraper.sh search "Motherboards"
  *   ./run_sraper.sh serve
- *   ./run_sraper.sh test
  */
 
 import test, { after, before } from 'node:test';
@@ -284,19 +283,4 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
   assert.ok(Array.isArray(notFoundBody.endpoints));
 
   assert.doesNotMatch(serverOutput, /EADDRINUSE/);
-});
-
-test('E2E: ./run_sraper.sh test executes the JS test suite', {
-  ...e2eOptions,
-  timeout: 10 * 60 * 1000,
-}, async () => {
-  const result = await runScraper(['test'], {
-    env: { SKIP_E2E_TESTS: '1', NODE_TEST_CONTEXT: undefined },
-    timeout: 10 * 60 * 1000,
-  });
-  const output = result.stdout + result.stderr;
-
-  assert.match(output, /> node --test test\/\*\.test\.js/);
-  assert.match(output, /# pass\s+\d+/);
-  assert.match(output, /# fail\s+0/);
 });

@@ -33,10 +33,6 @@ cleanup() {
 echo "Setting the exit function..."
 trap cleanup EXIT HUP ERR SIGINT SIGTERM
 
-# The public runner is also exercised by the E2E tests that already run inside
-# the scraper container. Starting Docker from inside that container would require
-# Docker-in-Docker and would test Docker availability instead of the application.
-# In that case execute the exact same npm command directly in the current image.
 if [[ "${SCRAPER_IN_CONTAINER:-}" == "1" || -f /.dockerenv ]]; then
     echo "Starting the service (current container)"
     if (( $# > 0 )); then
@@ -57,6 +53,16 @@ if (( $# > 0 )); then
     command_to_run="$command_name -- $command_args"
 else
     command_to_run="$command_name"
+fi
+
+if [[ ! -f .env ]]; then
+    if [[ -f .env.example ]]; then
+        echo ".env not found, creating it from .env.example..."
+        cp .env.example .env
+    else
+        echo "ERROR: neither .env nor .env.example exists"
+        exit 1
+    fi
 fi
 
 echo "Starting the service"
