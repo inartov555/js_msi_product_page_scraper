@@ -1,5 +1,3 @@
-# MSI Product Page Scraper
-
 # MSI Catalog Scraper
 
 JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
