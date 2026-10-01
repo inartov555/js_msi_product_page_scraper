@@ -25,7 +25,14 @@ Start with Docker
 
 ## Changes
 
+- **Separate unit and E2E test suites**  
+  Tests are now organized into dedicated `test/unit_tests/` and `test/end2end/` suites and can be run independently with `test:unit`, `test:e2e`, or together with `test:all`.
 
+- **Reliable CI test execution**  
+  GitHub Actions now runs the complete unit and end-to-end test suite through `npm run test:all`.
+
+- **Automatic environment initialization**  
+  `run_sraper.sh` creates `.env` from `.env.example` or `env.example` when no local environment file exists.
 
 ## Catalog
 
