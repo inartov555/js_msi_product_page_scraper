@@ -5,7 +5,7 @@
 # Input parameters:
 #
 #   - $1 - command to run, e.g.:
-#          crawl --refresh false  # if false - use existing catalog, if true - crawl the MSI web site and collect all product into new catalog
+#          crawl --refresh false  # if false - use existing catalog; if true - crawl the MSI website and collect all products into a new catalog
 #          scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US  # collect data of a product
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 #          search "Motherboards"
