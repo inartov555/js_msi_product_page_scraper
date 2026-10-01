@@ -9,8 +9,8 @@
     "search": "node src/cli.js search",
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
-    "test": "node --test",
-    "test:real": "node --test integration/real-app-usage.js"
+    "test": "node --test test/*.test.js",
+    "test:real": "node --test test/real-app-usage.integration.js"
   },
   "engines": {
     "node": ">=20"

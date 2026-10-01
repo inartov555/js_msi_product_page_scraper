@@ -117,8 +117,9 @@ async function stopProcessGroup(child) {
 }
 
 // These tests deliberately execute the public bash entry point, not internal JS functions.
-// Keep this file named *.integration.js so `npm test` does not recursively execute it
-// when the test below runs `./run_sraper.sh test`.
+// This file lives under test/ but is intentionally named *.integration.js.
+// The normal npm test script runs only test/*.test.js, so the test below can safely
+// execute ./run_sraper.sh test without recursively launching this integration suite.
 
 test('real usage: crawl with existing catalog (--refresh false)', {
   skip: liveSkip,
