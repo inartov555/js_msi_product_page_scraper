@@ -1,12 +1,8 @@
 /*
- * End-to-end tests for the public application entry point.
- *
- * These are intentionally E2E/system tests rather than integration tests:
- * they execute ./run_sraper.sh exactly as a user does and validate the
- * resulting files / HTTP API instead of importing application internals.
+ * End-to-end tests.
  *
  * Covered commands:
- *   ./run_sraper.sh crawl --refresh true  # skipped by default, so push GitHub Actions can be faster
+ *   ./run_sraper.sh crawl --refresh true
  *   ./run_sraper.sh crawl --refresh false
  *   ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
  *   ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
@@ -216,9 +212,7 @@ const e2eOptions = {
 
 // Let's skip it to make push GitHub Actions be faster
 test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
-  // Explicitly exercise the cold-start path. --refresh false means "reuse a
-  // usable catalog if one exists"; when it does not, the application must
-  // discover/scrape products and persist a new catalog automatically.
+  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assertCommandOutput(
