@@ -8,8 +8,8 @@ export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.j
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
 export const DEFAULT_SEARCH_FILE = path.resolve(__dirname, '../output/search.csv');
-export const DEFAULT_CRAWL_CONCURRENCY = 20;
-export const DEFAULT_CRAWL_DELAY_MS = 30;
+export const DEFAULT_CRAWL_CONCURRENCY = 150;
+export const DEFAULT_CRAWL_DELAY_MS = 120;
 export const DEFAULT_PRODUCT_RETRY_ATTEMPTS = 3;
 export const DEFAULT_NAVIGATION_TIMEOUT_MS = 45000;
 export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
@@ -79,6 +79,15 @@ const RANDOM_ACCEPT_LANGUAGES = [
   'en-US,en;q=0.9,et;q=0.7',
 ];
 
+const RANDOM_REFERERS = [
+  'https://us-store.msi.com/',
+  'https://us-store.msi.com/Laptops',
+  'https://us-store.msi.com/Desktops',
+  'https://us-store.msi.com/Monitors',
+  'https://us-store.msi.com/Graphics-Cards',
+  'https://us-store.msi.com/Motherboards',
+];
+
 function randomItem(items, random = Math.random) {
   return items[Math.floor(random() * items.length)];
 }
@@ -90,6 +99,7 @@ export function createBrowserContextOptions(random = Math.random) {
       ...DEFAULT_BROWSER_CONTEXT.extraHTTPHeaders,
       'User-Agent': randomItem(RANDOM_USER_AGENTS, random),
       'Accept-Language': randomItem(RANDOM_ACCEPT_LANGUAGES, random),
+      'Referer': randomItem(RANDOM_REFERERS, random),
     },
   };
 }

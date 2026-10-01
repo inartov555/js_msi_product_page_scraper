@@ -31,6 +31,26 @@ function getHeadlessMode(
   return parseBoolean(process.env.HEADLESS, true);
 }
 
+export async function createConfiguredBrowserContext(browser, { random = Math.random } = {}) {
+  const contextOptions = createBrowserContextOptions(random);
+
+  const context = await browser.newContext(contextOptions);
+  const blockedResourceTypes = new Set(DEFAULT_BLOCKED_RESOURCE_TYPES);
+
+  await context.route('**/*', async (route) => {
+    if (blockedResourceTypes.has(route.request().resourceType())) {
+      await route.abort();
+      return;
+    }
+
+    await route.continue();
+  });
+
+  context.setDefaultTimeout(15000);
+
+  return { context, contextOptions };
+}
+
 export async function createBrowserSession({
   headless: explicitHeadless,
 } = {}) {
@@ -48,30 +68,15 @@ export async function createBrowserSession({
       channel: 'chromium',
     });
 
-    const contextOptions = createBrowserContextOptions();
+    const configured = await createConfiguredBrowserContext(browser);
+    context = configured.context;
+    const { contextOptions } = configured;
 
     console.log(
       `Browser headers: userAgent=${contextOptions.extraHTTPHeaders['User-Agent']} ` +
       `acceptLanguage=${contextOptions.extraHTTPHeaders['Accept-Language']} ` +
       `referer=${contextOptions.extraHTTPHeaders.Referer}`
     );
-
-    context = await browser.newContext(contextOptions);
-
-    const blockedResourceTypes = new Set(
-      DEFAULT_BLOCKED_RESOURCE_TYPES
-    );
-
-    await context.route('**/*', async (route) => {
-      if (blockedResourceTypes.has(route.request().resourceType())) {
-        await route.abort();
-        return;
-      }
-
-      await route.continue();
-    });
-
-    context.setDefaultTimeout(15000);
 
     return {
       get browser() {

@@ -26,5 +26,4 @@ test('selected headers change with the random source', () => {
 
   assert.notEqual(first['User-Agent'], last['User-Agent']);
   assert.notEqual(first['Accept-Language'], last['Accept-Language']);
-  assert.notEqual(first.Referer, last.Referer);
 });

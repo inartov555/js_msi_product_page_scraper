@@ -84,7 +84,7 @@ export function createCatalogService({
     const { createBrowserSession } = await import('./scraper/browser.js');
     const session = await createBrowserSession({ headless });
     try {
-      return await callback(session.context);
+      return await callback(session);
     } finally {
       await session.close();
     }
@@ -194,8 +194,8 @@ export function createCatalogService({
     });
   }
 
-  async function crawl(context) {
-    const urls = await discover(context);
+  async function crawl(session) {
+    const urls = await discover(session.context);
     logger.debug(`Discovered ${urls.length} product URLs.`);
 
     const waitForStartSlot = createStartRateGate(delayMs);
@@ -208,11 +208,23 @@ export function createCatalogService({
     );
 
     const products = (
-      await runPool(urls, concurrency, async (workerIndex) => ({
+      await runPool(urls, concurrency, async (workerIndex) => {
+        const { createConfiguredBrowserContext } = await import('./scraper/browser.js');
+        const workerId = workerIndex + 1;
+        const { context: workerContext, contextOptions } = await createConfiguredBrowserContext(session.browser);
+        const headers = contextOptions.extraHTTPHeaders;
+
+        logger.debug(
+          `[scrape worker ${workerId}] headers initialized `
+          + `userAgent=${headers['User-Agent']} `
+          + `acceptLanguage=${headers['Accept-Language']} `
+          + `referer=${headers.Referer}`
+        );
+
+        return {
         run: async (url, index) => {
-          const workerId = workerIndex + 1;
           try {
-            const product = await scrapeOneInContext(context, url, {
+            const product = await scrapeOneInContext(workerContext, url, {
               attempts: productRetryAttempts,
               waitForStartSlot,
               onAttemptStart: ({ attempt, attempts }) => {
@@ -241,7 +253,12 @@ export function createCatalogService({
             return null;
           }
         },
-      }))
+        close: async () => {
+          await workerContext.close().catch(() => {});
+          logger.debug(`[scrape worker ${workerId}] context closed`);
+        },
+      };
+      })
     ).filter(Boolean);
 
     logger.log(
@@ -334,7 +351,7 @@ export function createCatalogService({
   }
 
   async function scrapeOne(url) {
-    return withBrowser((context) => scrapeOneInContext(context, url));
+    return withBrowser((session) => scrapeOneInContext(session.context, url));
   }
 
   async function resolveProducts(selectors) {
@@ -352,7 +369,7 @@ export function createCatalogService({
 
     if (missing.length) {
       logger.log(`Resolving ${missing.length} missing comparison product(s) directly from MSI...`);
-      await withBrowser((context) => scrapeSelectorsInContext(context, missing));
+      await withBrowser((session) => scrapeSelectorsInContext(session.context, missing));
       catalog = await repository.load();
     }
 
