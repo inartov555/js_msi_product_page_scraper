@@ -1,3 +1,17 @@
+/*
+ * Covered commands:
+ * 
+ * bash
+ *  ./run_sraper.sh crawl --refresh false
+ *  ./run_sraper.sh crawl --refresh true
+ *  ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+ *  ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+ *  ./run_sraper.sh search "Motherboards"
+ *  ./run_sraper.sh serve
+ *  ./run_sraper.sh test
+ * 
+ */
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';

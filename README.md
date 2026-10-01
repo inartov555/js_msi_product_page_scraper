@@ -52,6 +52,8 @@ The `output` directory is mounted into the container so the catalog persists bet
 
 It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
 
+The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. The tests are intentionally stored in `integration/real-app-usage.js`, rather than `*.test.js`, so `./run_sraper.sh test` can safely run the normal unit suite without recursively launching the real-usage suite.
+
 ## Source layout
 
 ```text
@@ -76,25 +78,3 @@ src/
 ```
 
 See `ARCHITECTURE.md` for module responsibilities.
-
-## Real application integration tests
-
-The real-usage tests are JavaScript tests (`node:test`) that invoke the same Bash entry point used manually (`./run_sraper.sh`). They exercise Docker and the live MSI site instead of mocking the CLI.
-
-```bash
-npm run test:real
-```
-
-Covered commands:
-
-```bash
-./run_sraper.sh crawl --refresh false
-./run_sraper.sh crawl --refresh true
-./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
-./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
-./run_sraper.sh search "Motherboards"
-./run_sraper.sh serve
-./run_sraper.sh test
-```
-
-The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. The tests are intentionally stored in `integration/real-app-usage.js`, rather than `*.test.js`, so `./run_sraper.sh test` can safely run the normal unit suite without recursively launching the real-usage suite.
