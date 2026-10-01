@@ -193,8 +193,8 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assertCommandOutput(
     result,
-    /Refreshing MSI catalog[.]{3}/,
-    '"Refreshing MSI catalog..."',
+    /Catalog is refreshed/,
+    '"Catalog is refreshed"',
   );
   assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
 

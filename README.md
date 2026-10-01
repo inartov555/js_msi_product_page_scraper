@@ -52,9 +52,8 @@ output/single-product.json
 
 The `output` directory is mounted into the container so the catalog persists between runs.
 
+The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. 
 It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
-
-The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. The tests are intentionally stored in `integration/real-app-usage.js`, rather than `*.test.js`, so `./run_sraper.sh test` can safely run the normal unit suite without recursively launching the real-usage suite.
 
 ## Source layout
 
