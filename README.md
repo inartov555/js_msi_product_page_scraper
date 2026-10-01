@@ -2,7 +2,7 @@
 
 Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript + Playwright**, runs Chromium in headless mode, normalizes the requested fields, and writes the result to `output/product.json`.
 
-## Changes
+## Changes in V1
 
 - **MSI product page scraping**  
   Added a Playwright-based scraper that extracts structured product data directly from MSI US Store product pages.
