@@ -15,7 +15,7 @@ Start with Docker
 ./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US
 ./run_scraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"  # collect data of a product
 ./run_scraper.sh search "Motherboards"
-./run_scraper.sh serve  # Scraper service with APIs
+./run_scraper.sh serve      # Scraper service with APIs
 ./run_scraper.sh test:unit  # only unit tests
 ./run_scraper.sh test:e2e   # only end-to-end tests
 ./run_scraper.sh test:all   # all available tests
