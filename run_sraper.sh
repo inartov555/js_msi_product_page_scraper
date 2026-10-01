@@ -61,17 +61,21 @@ if [[ ! -f .env ]]; then
     if [[ -f .env.example ]]; then
         echo ".env not found, creating it from .env.example..."
         cp .env.example .env
-    elif [[ -f env.example ]]; then
-        echo ".env not found, creating it from env.example..."
-        cp env.example .env
     else
         echo "ERROR: none of .env, .env.example, or env.example exists"
         exit 1
     fi
 fi
 
+# docker-compose bind mounts ./output into /scraper/output. Run the container
+# with the invoking user's uid/gid so CI and local output files are writable
+# without making the directory world-writable.
+mkdir -p output
+export HOST_UID="${HOST_UID:-$(id -u)}"
+export HOST_GID="${HOST_GID:-$(id -g)}"
+
 echo "Starting the service"
 echo "Command: npm run $command_to_run"
-SCRAPER_COMMAND="$command_to_run" docker compose up --build
+SCRAPER_COMMAND="$command_to_run" docker compose up --build --abort-on-container-exit --exit-code-from scraper
 # If you need to store console output log to a file
 # SCRAPER_COMMAND="$command_to_run" docker compose up --build 2>&1 | tee log_output.txt

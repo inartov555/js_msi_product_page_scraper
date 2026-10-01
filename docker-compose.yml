@@ -3,13 +3,16 @@ services:
   scraper:
     build: { context: ., dockerfile: Dockerfile }
     env_file: .env
-    dns: [8.8.8.8, 1.1.1.1]
+    # Match the invoking host user so bind-mounted output files stay writable.
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    # dns: [8.8.8.8, 1.1.1.1]
     ports:
       - "3000:3000"
     environment:
       DISPLAY: $DISPLAY
       SCRAPER_COMMAND: "${SCRAPER_COMMAND:-NONE}"
       SCRAPER_IN_CONTAINER: "1"
+      HOME: /tmp
     volumes:
       - ./output:/scraper/output
       - /tmp/.X11-unix:/tmp/.X11-unix

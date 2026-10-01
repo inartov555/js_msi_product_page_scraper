@@ -26,8 +26,7 @@ const PRODUCT_B = 'PRO Z890-P WIFI';
 const API_PORT = Number(process.env.E2E_API_PORT || 3000);
 const API_BASE_URL = `http://127.0.0.1:${API_PORT}`;
 const COMMAND_TIMEOUT_MS = Number(process.env.REAL_APP_COMMAND_TIMEOUT_MS || 30 * 60 * 1000);
-// const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
-const OUTPUT_FILES = [];
+const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
 const snapshots = new Map();
 
 function runProcess(command, args, {
@@ -145,11 +144,15 @@ async function readJson(fileName) {
   return JSON.parse(await readText(fileName));
 }
 
-async function waitForApi(url = `${API_BASE_URL}/health`, timeoutMs = 120_000) {
+async function waitForApi(child, url = `${API_BASE_URL}/health`, timeoutMs = 120_000) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
 
   while (Date.now() < deadline) {
+    if (child.exitCode !== null) {
+      throw new Error(`API process exited before becoming ready (exit code ${child.exitCode})`);
+    }
+
     try {
       const response = await fetch(url);
       if (response.ok) return response;
@@ -227,7 +230,28 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   assert.ok(catalog.products.length > 0, 'live crawl should produce at least one product');
 });
 
+test('E2E: ./run_sraper.sh crawl --refresh false uses existing catalog', { ...e2eOptions, skip: true }, async () => {
+  const result = await runScraper([
+    'crawl',
+    '--refresh', 'false',
+    // Keep the cold-start E2E representative but bounded to one real MSI
+    // catalog section instead of crawling every configured product category.
+    '--seed', MISSING_CATALOG_SEED,
+  ]);
+
+  assertCommandOutput(result, /Using saved catalog/, '"Using saved catalog"',);
+  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"');
+
+  const catalog = await readJson('catalog.json');
+  assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
+  assert.ok(catalog.products.length > 0, 'missing catalog should be rebuilt with products');
+  assert.ok(catalog.updated_at, 'rebuilt catalog should have an updated_at timestamp');
+});
+
 test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missing', e2eOptions, async () => {
+  // Let's remove the file before test
+  await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
+
   const result = await runScraper([
     'crawl',
     '--refresh', 'false',
@@ -238,8 +262,8 @@ test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missin
 
   assertCommandOutput(
     result,
-    /Using saved catalog:/,
-    '"Using saved catalog:"',
+    /Catalog data requested; analyzing MSI catalog automatically[.]{3}/,
+    '"Catalog data requested; analyzing MSI catalog automatically..."',
   );
   assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"');
 
@@ -262,7 +286,7 @@ test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () 
 
 test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async () => {
   // Let's remove the file before test
-  await fs.rm(path.join(OUTPUT_DIR, 'comparison.json'), { force: true });
+  await fs.rm(path.join(OUTPUT_DIR, 'comparison.csv'), { force: true });
   const result = await runScraper(['compare', PRODUCT_A, PRODUCT_B]);
   const csv = await readText('comparison.csv');
 
@@ -274,7 +298,7 @@ test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async (
 
 test('E2E: ./run_sraper.sh search Motherboards', e2eOptions, async () => {
   // Let's remove the file before test
-  await fs.rm(path.join(OUTPUT_DIR, 'search.json'), { force: true });
+  await fs.rm(path.join(OUTPUT_DIR, 'search.csv'), { force: true });
   await runScraper(['search', 'Motherboards']);
   const csv = await readText('search.csv');
 
@@ -302,7 +326,7 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
     await stopProcessGroup(child);
   });
 
-  await waitForApi();
+  await waitForApi(child);
 
   const healthResponse = await fetch(`${API_BASE_URL}/health`);
   assert.equal(healthResponse.status, 200);
