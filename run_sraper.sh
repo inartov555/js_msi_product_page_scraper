@@ -38,14 +38,41 @@ fi
 
 set -Eeuo pipefail
 
+operation_start_epoch_ms=$(date +%s%3N)
+operation_start_time=$(date --iso-8601=milliseconds)
+
+format_duration() {
+  local total_ms="$1"
+  local hours=$((total_ms / 3600000))
+  local minutes=$(((total_ms % 3600000) / 60000))
+  local seconds=$(((total_ms % 60000) / 1000))
+  local milliseconds=$((total_ms % 1000))
+
+  printf '%02d:%02d:%02d.%03d' "$hours" "$minutes" "$seconds" "$milliseconds"
+}
+
 cleanup() {
+  local exit_code=$?
+  local operation_end_epoch_ms
+  local operation_end_time
+  local total_ms
+
+  operation_end_epoch_ms=$(date +%s%3N)
+  operation_end_time=$(date --iso-8601=milliseconds)
+  total_ms=$((operation_end_epoch_ms - operation_start_epoch_ms))
+
   echo "Cleaning up..."
+  echo "Operation end time:   $operation_end_time"
+  echo "Total time:           $(format_duration "$total_ms")"
   echo "Done."
+
+  return "$exit_code"
 }
 
 echo "Setting the exit function..."
-trap cleanup EXIT HUP ERR SIGINT SIGTERM
+trap cleanup EXIT
 
+echo "Operation start time: $operation_start_time"
 echo "Starting the service"
 echo "Command: npm run $command_to_run"
 SCRAPER_COMMAND="$command_to_run" docker compose up --build

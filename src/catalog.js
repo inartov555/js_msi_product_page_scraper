@@ -214,7 +214,7 @@ export function createCatalogService({
     }
 
     const catalog = await repository.replaceAll(products);
-    logger.log(`Crawling is completed`);
+    logger.debug(`Crawling is completed`);
     return catalog;
   }
 
