@@ -10,7 +10,9 @@
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 #          search "Motherboards"
 #          serve  # if you need to make API calls to a scraper service
-#          test
+#          test:unit  # only unit tests
+#          test:e2e   # only end-to-end tests
+#          test:all   # all available tests
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 

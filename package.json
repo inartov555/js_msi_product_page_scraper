@@ -9,10 +9,9 @@
     "search": "node src/cli.js search",
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
-    "test": "node --test test/unit_tests/*.js",
-    "test:unit": "npm test",
+    "test:unit": "node --test test/unit_tests/*.js",
     "test:e2e": "node --test test/end2end/real-app-usage.e2e.js",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "engines": {
     "node": ">=20"

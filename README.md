@@ -19,7 +19,9 @@ Start with Docker
 ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"  # collect data of a product
 ./run_sraper.sh search "Motherboards"
 ./run_sraper.sh serve  # Scraper service with APIs
-./run_sraper.sh test
+./run_sraper.sh test:unit  # only unit tests
+./run_sraper.sh test:e2e   # only end-to-end tests
+./run_sraper.sh test:all   # all available tests
 ```
 
 ## Catalog
