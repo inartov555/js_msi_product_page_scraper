@@ -1,3 +1,6 @@
+# Version 2.1 is in progress...
+# See version 2 to check the app
+
 # MSI Catalog Scraper
 
 JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
