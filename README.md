@@ -21,7 +21,7 @@ Start with Docker
 ./run_scraper.sh test:all   # all available tests
 ```
 
-## Changes
+## Changes: Main vs. V2.1
 
 - **Separate unit and E2E test suites**  
   Tests are now organized into dedicated `test/unit_tests/` and `test/end2end/` suites and can be run independently with `test:unit`, `test:e2e`, or together with `test:all`.
