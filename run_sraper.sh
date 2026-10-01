@@ -14,14 +14,26 @@
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
-command_to_run="${*:-NONE}"
+# command_to_run="${*:-NONE}"
 # Preserving the string parameters when they contain space characters
-if [[ $# -ne 0 ]]; then
-    printf -v command_to_run '%q ' "$@"
-    command_to_run="${command_to_run% }"
+# if [[ $# -ne 0 ]]; then
+#    printf -v command_to_run '%q ' "$@"
+#    command_to_run="${command_to_run% }"
+# else
+#    echo "ERROR: no command provided"
+#    exit 1
+# fi
+
+command_name="${1:-NONE}"
+shift
+
+printf -v command_args '%q ' "$@"
+command_args="${command_args% }"
+
+if [[ -n "$command_args" ]]; then
+    command_to_run="$command_name -- $command_args"
 else
-    echo "ERROR: no command provided"
-    exit 1
+    command_to_run="$command_name"
 fi
 
 set -Eeuo pipefail

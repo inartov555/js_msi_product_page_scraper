@@ -16,12 +16,12 @@
   "availability": "in_stock",
   "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSWIFI16GM-MAIN-1024x1024.png",
   "additional_image_urls": [
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-1-1024x1024.png",
     "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-2-1024x1024.png",
     "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-3-1024x1024.png",
     "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-4-1024x1024.png",
     "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-6-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-7-1024x1024.png",
-    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-1-1024x1024.png"
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-7-1024x1024.png"
   ],
   "specs": [
     {
@@ -125,5 +125,5 @@
   "review_count": null,
   "gtin": null,
   "mpn": "Z890 GAMING PLUS WIFI6E",
-  "scraped_at": "2026-09-29T15:01:06.262Z"
+  "scraped_at": "2026-09-30T10:17:28.119Z"
 }
