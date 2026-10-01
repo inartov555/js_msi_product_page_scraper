@@ -61,8 +61,11 @@ if [[ ! -f .env ]]; then
     if [[ -f .env.example ]]; then
         echo ".env not found, creating it from .env.example..."
         cp .env.example .env
+    elif [[ -f env.example ]]; then
+        echo ".env not found, creating it from env.example..."
+        cp env.example .env
     else
-        echo "ERROR: neither .env nor .env.example exists"
+        echo "ERROR: none of .env, .env.example, or env.example exists"
         exit 1
     fi
 fi
