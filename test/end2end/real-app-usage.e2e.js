@@ -78,13 +78,55 @@ function runProcess(command, args, {
   });
 }
 
+function assertCommandOutput(result, pattern, description = 'expected output') {
+  const output = `${result.stdout}${result.stderr}`;
+
+  assert.ok(
+    output.length > 0,
+    [
+      `Command produced no output while checking for ${description}.`,
+      `exit code: ${result.code}`,
+      `signal: ${result.signal ?? 'none'}`,
+      'stdout:',
+      result.stdout || '<empty>',
+      'stderr:',
+      result.stderr || '<empty>',
+    ].join('\n'),
+  );
+
+  assert.match(
+    output,
+    pattern,
+    [
+      `Command output did not contain ${description}.`,
+      `Expected: ${pattern}`,
+      `exit code: ${result.code}`,
+      `signal: ${result.signal ?? 'none'}`,
+      'stdout:',
+      result.stdout || '<empty>',
+      'stderr:',
+      result.stderr || '<empty>',
+    ].join('\n'),
+  );
+}
+
 async function runScraper(args, options = {}) {
   const result = await runProcess('bash', [RUNNER, ...args], options);
+
   assert.equal(
     result.code,
     0,
-    `Command failed: ${RUNNER} ${args.join(' ')}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    [
+      `Command failed: ${RUNNER} ${args.join(' ')}`,
+      `exit code: ${result.code}`,
+      `signal: ${result.signal ?? 'none'}`,
+      'stdout:',
+      result.stdout || '<empty>',
+      'stderr:',
+      result.stderr || '<empty>',
+    ].join('\n'),
   );
+
   return result;
 }
 
@@ -164,7 +206,7 @@ const e2eOptions = {
 // Let's skip it to make push GitHub Actions be faster
 test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
   const result = await runScraper(['crawl', '--refresh', 'true']);
-  assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
+  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
 
   const catalog = await readJson('catalog.json');
   assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
@@ -173,7 +215,7 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
 
 test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
   const result = await runScraper(['crawl', '--refresh', 'false']);
-  assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
+  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
 
   const catalog = await readJson('catalog.json');
   assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
@@ -193,7 +235,7 @@ test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async (
   const result = await runScraper(['compare', PRODUCT_A, PRODUCT_B]);
   const csv = await readText('comparison.csv');
 
-  assert.match(result.stdout + result.stderr, /MAG Z890 TOMAHAWK WIFI/);
+  assertCommandOutput(result, /MAG Z890 TOMAHAWK WIFI/, '"MAG Z890 TOMAHAWK WIFI"',);
   assert.match(csv, /MAG Z890 TOMAHAWK WIFI/);
   assert.match(csv, /PRO Z890-P WIFI/);
   assert.ok(csv.split(/\r?\n/).filter(Boolean).length > 1, 'comparison should contain parameter rows');
