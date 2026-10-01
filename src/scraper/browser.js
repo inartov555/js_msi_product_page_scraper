@@ -73,7 +73,7 @@ export async function createBrowserSession({
     const { contextOptions } = configured;
 
     console.log(
-      `Browser headers: userAgent=${contextOptions.extraHTTPHeaders['User-Agent']} ` +
+      `Browser profile: userAgent=${contextOptions.userAgent} ` +
       `acceptLanguage=${contextOptions.extraHTTPHeaders['Accept-Language']} ` +
       `referer=${contextOptions.extraHTTPHeaders.Referer}`
     );

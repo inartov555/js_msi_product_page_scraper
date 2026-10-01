@@ -10,8 +10,9 @@
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
     "test": "node --test test/*.test.js",
-    "test:unit": "SKIP_E2E_TESTS=1 node --test test/*.test.js",
-    "test:e2e": "node --test test/real-app-usage.e2e.test.js"
+    "test:unit": "npm test",
+    "test:e2e": "node --test test/real-app-usage.e2e.js",
+    "test:all": "npm test && npm run test:e2e"
   },
   "engines": {
     "node": ">=20"

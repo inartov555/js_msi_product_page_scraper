@@ -127,9 +127,9 @@ export function createCatalogService({
       current = current?.cause;
     }
 
-    // Extraction can fail transiently if the storefront returns an incomplete
-    // document. One fresh-page retry is safer than treating that as permanent.
-    return true;
+    // Unknown failures are not assumed to be transient. Retrying programming
+    // errors hides defects and delays failure without improving reliability.
+    return false;
   }
 
   function productRetryDelayMs(attempt) {
@@ -215,10 +215,9 @@ export function createCatalogService({
         const headers = contextOptions.extraHTTPHeaders;
 
         logger.debug(
-          `[scrape worker ${workerId}] headers initialized `
-          + `userAgent=${headers['User-Agent']} `
-          + `acceptLanguage=${headers['Accept-Language']} `
-          + `referer=${headers.Referer}`
+          `[scrape worker ${workerId}] browser profile initialized `
+          + `userAgent=${contextOptions.userAgent} `
+          + `acceptLanguage=${headers['Accept-Language']}`
         );
 
         return {

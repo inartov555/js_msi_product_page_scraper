@@ -5,25 +5,22 @@ import {
   createBrowserContextOptions,
 } from '../src/config.js';
 
-test('randomized browser context preserves all original header keys', () => {
+test('browser profile preserves the desktop context shape', () => {
   const options = createBrowserContextOptions(() => 0);
-  const originalHeaders = DEFAULT_BROWSER_CONTEXT.extraHTTPHeaders;
 
-  assert.deepEqual(
-    Object.keys(options.extraHTTPHeaders).sort(),
-    Object.keys(originalHeaders).sort()
-  );
-
-  for (const [key, value] of Object.entries(originalHeaders)) {
-    if (['User-Agent', 'Accept-Language', 'Referer'].includes(key)) continue;
-    assert.equal(options.extraHTTPHeaders[key], value);
-  }
+  assert.deepEqual(options.viewport, DEFAULT_BROWSER_CONTEXT.viewport);
+  assert.deepEqual(options.screen, DEFAULT_BROWSER_CONTEXT.screen);
+  assert.equal(options.isMobile, false);
+  assert.equal(options.hasTouch, false);
+  assert.match(options.userAgent, /Windows NT/);
+  assert.equal(options.locale, 'en-US');
+  assert.equal(options.extraHTTPHeaders['Accept-Language'], 'en-US,en;q=0.9');
 });
 
-test('selected headers change with the random source', () => {
-  const first = createBrowserContextOptions(() => 0).extraHTTPHeaders;
-  const last = createBrowserContextOptions(() => 0.999999).extraHTTPHeaders;
+test('profile selection is deterministic from the supplied random source', () => {
+  const first = createBrowserContextOptions(() => 0);
+  const last = createBrowserContextOptions(() => 0.999999);
 
-  assert.notEqual(first['User-Agent'], last['User-Agent']);
-  assert.notEqual(first['Accept-Language'], last['Accept-Language']);
+  assert.notEqual(first.userAgent, last.userAgent);
+  assert.equal(first.extraHTTPHeaders['Accept-Language'], last.extraHTTPHeaders['Accept-Language']);
 });

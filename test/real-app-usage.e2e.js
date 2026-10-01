@@ -7,7 +7,7 @@
  *
  * Covered commands:
  *   ./run_sraper.sh crawl --refresh false
- *   ./run_sraper.sh crawl --refresh true  # skipped by default, so push actions do not take long
+ *   ./run_sraper.sh crawl --refresh true
  *   ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
  *   ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
  *   ./run_sraper.sh search "Motherboards"
@@ -176,7 +176,7 @@ test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
   assert.ok(catalog.products.length > 0, 'catalog should contain products');
 });
 
-test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
+test('E2E: ./run_sraper.sh crawl --refresh true', e2eOptions, async () => {
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
 

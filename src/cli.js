@@ -221,7 +221,7 @@ async function commandCompare(args) {
 }
 
 function printHelp() {
-  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all] [--output file]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n  --json           Machine-readable output for search/compare\n`);
+  console.log(`MSI catalog scraper\n\nCommands:\n  scrape [url] [--output file] [--index]\n  crawl [--refresh true] [--seed url ...] [--concurrency ${DEFAULT_CRAWL_CONCURRENCY}] [--delay-ms ${DEFAULT_CRAWL_DELAY_MS}]\n  search [query] [--category text] [--min-price N] [--max-price N] [--availability in_stock] [--spec NAME=VALUE]\n  compare <id|mpn|title|url> <id|mpn|title|url> [more] [--field NAME] [--all] [--output file]\n\nGlobal:\n  --catalog file   Catalog JSON path (default: output/catalog.json)\n`);
 }
 
 function formatDuration(milliseconds) {

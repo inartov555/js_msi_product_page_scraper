@@ -125,128 +125,68 @@ async function fetchListingPage(
   }
 }
 
-function createSeedState(seedUrl) {
+function createSemaphore(limit) {
+  let active = 0;
+  const queue = [];
+
+  async function acquire() {
+    if (active < limit) {
+      active += 1;
+      return;
+    }
+
+    await new Promise((resolve) => queue.push(resolve));
+    active += 1;
+  }
+
+  function release() {
+    active -= 1;
+    queue.shift()?.();
+  }
+
+  return { acquire, release, get active() { return active; } };
+}
+
+function getErrorDetails(error) {
+  let current = error;
+  let status = null;
+  let accessDenied = false;
+
+  for (let depth = 0; current && depth < 8; depth += 1) {
+    if (status == null && Number.isFinite(current.status)) status = current.status;
+    accessDenied ||= Boolean(current.accessDenied);
+    current = current.cause;
+  }
+
   return {
-    seedUrl,
-    nextPage: 1,
-    active: false,
-    done: false,
-    seenForSeed: new Set(),
-    seenPageFingerprints: new Set(),
+    status,
+    accessDenied: accessDenied || status === 403 || status === 429,
   };
 }
 
-function takeNextJob(states, cursor) {
-  if (states.length === 0) return { job: null, cursor };
+function isRetryableDiscoveryError(error) {
+  const { status, accessDenied } = getErrorDetails(error);
+  if (accessDenied || status === 408 || status === 429) return true;
+  if (status != null) return status >= 500;
 
-  let nextCursor = cursor;
-
-  for (let checked = 0; checked < states.length; checked += 1) {
-    const stateIndex = nextCursor % states.length;
-    nextCursor = (nextCursor + 1) % states.length;
-    const state = states[stateIndex];
-
-    // One active page per category keeps pagination strictly sequential while
-    // allowing independent categories to consume the global concurrency budget.
-    if (state.done || state.active) continue;
-
-    const pageNumber = state.nextPage;
-    state.nextPage += 1;
-    state.active = true;
-
-    return {
-      job: { state, seedUrl: state.seedUrl, pageNumber },
-      cursor: nextCursor,
-    };
-  }
-
-  return { job: null, cursor: nextCursor };
+  const message = String(error?.message ?? error);
+  return /Timeout|page\.goto|net::|Target page, context or browser has been closed/i.test(message);
 }
 
-function commitListingPage(state, result, discovered, onProgress) {
-  if (state.done) return;
-
-  const {
-    seedUrl,
-    pageNumber,
-    uniqueLinks,
-  } = result;
-
-  // Pagination is over when the page is empty. Pagination for a category is
-  // sequential, so no later page for this seed can already be in flight.
-  if (uniqueLinks.length === 0) {
-    state.done = true;
-    onProgress({
-      seedUrl,
-      pageNumber,
-      foundOnPage: 0,
-      added: 0,
-      total: discovered.size,
-      done: true,
-      reason: 'empty-page',
-    });
-    return;
-  }
-
-  // Some stores return the last page again for page numbers past the end.
-  const fingerprint = [...uniqueLinks].sort().join('\\n');
-  if (state.seenPageFingerprints.has(fingerprint)) {
-    state.done = true;
-    onProgress({
-      seedUrl,
-      pageNumber,
-      foundOnPage: uniqueLinks.length,
-      added: 0,
-      total: discovered.size,
-      done: true,
-      reason: 'repeated-page',
-    });
-    return;
-  }
-  state.seenPageFingerprints.add(fingerprint);
-
-  let added = 0;
-  let newForSeed = 0;
-
-  for (const productUrl of uniqueLinks) {
-    if (!state.seenForSeed.has(productUrl)) {
-      state.seenForSeed.add(productUrl);
-      newForSeed += 1;
-    }
-
-    if (!discovered.has(productUrl)) {
-      discovered.add(productUrl);
-      added += 1;
-    }
-  }
-
-  onProgress({
-    seedUrl,
-    pageNumber,
-    foundOnPage: uniqueLinks.length,
-    added,
-    total: discovered.size,
-  });
-
-  // No new product for this category means pagination has wrapped/repeated.
-  if (newForSeed === 0) {
-    state.done = true;
-  }
+function discoveryRetryDelay(attempt, error, retryBaseDelayMs, random) {
+  const { accessDenied } = getErrorDetails(error);
+  const base = accessDenied ? retryBaseDelayMs : Math.max(1000, retryBaseDelayMs / 2);
+  const exponential = Math.min(base * (2 ** Math.max(0, attempt - 1)), 60000);
+  const jitter = 0.85 + (Math.max(0, Math.min(1, random())) * 0.30);
+  return Math.round(exponential * jitter);
 }
 
 /**
- * Discover product URLs with one global listing-request concurrency limit.
+ * Discover product URLs.
  *
- * Pagination inside each category is sequential because page N determines
- * whether page N+1 should be requested. Independent category seeds still run
- * concurrently, bounded by `concurrency`. This avoids the speculative request
- * bursts that MSI's store can reject with HTTP 403.
- *
- * A single failed listing request must not abort the entire discovery run. A
- * failed page is retried on a fresh Playwright page while unrelated categories
- * keep making progress. 403/429 responses additionally trigger a short global
- * scheduling pause so the crawler does not immediately refill all 50 slots into
- * a server-side throttle window.
+ * Each seed paginates sequentially because the result of page N determines
+ * whether page N+1 should be requested. A small semaphore is the only global
+ * scheduler: it caps the number of listing requests across all seeds.
  */
 export async function discoverMsiProductUrls(
   context,
@@ -266,250 +206,142 @@ export async function discoverMsiProductUrls(
   if (!Number.isInteger(concurrency) || concurrency < 1) {
     throw new Error('discovery concurrency must be a positive integer.');
   }
-
   if (!Number.isInteger(discoveryAttempts) || discoveryAttempts < 1) {
     throw new Error('discovery attempts must be a positive integer.');
   }
 
   const discovered = new Set();
-  const states = seedUrls.map(createSeedState);
-  const events = new Set();
   const failures = [];
-  let schedulingCursor = 0;
-  let globalPauseUntil = 0;
-  let resumeEvent = null;
-  let activeRequests = 0;
+  const semaphore = createSemaphore(concurrency);
   let peakActiveRequests = 0;
+  let pauseUntil = 0;
 
-  function errorDetails(error) {
-    let current = error;
-    let status = null;
-    let accessDenied = false;
-
-    for (let depth = 0; current && depth < 8; depth += 1) {
-      if (status == null && Number.isFinite(current.status)) {
-        status = current.status;
-      }
-      accessDenied ||= Boolean(current.accessDenied);
-      current = current.cause;
-    }
-
-    return {
-      status,
-      accessDenied: accessDenied || status === 403 || status === 429,
-    };
+  async function waitForGlobalPause() {
+    const waitMs = pauseUntil - Date.now();
+    if (waitMs > 0) await sleep(waitMs);
   }
 
-  function isRetryableDiscoveryError(error) {
-    const { status, accessDenied } = errorDetails(error);
-    if (accessDenied) return true;
-    if (status === 408 || status === 429) return true;
-    if (status != null) return status >= 500;
+  async function fetchWithRetry(seedUrl, pageNumber) {
+    let lastError;
 
-    // Network/protocol/time-out failures often do not carry an HTTP status.
-    return true;
-  }
-
-  function retryDelay(attempt, error) {
-    const { accessDenied } = errorDetails(error);
-    const base = accessDenied ? retryBaseDelayMs : Math.max(1000, retryBaseDelayMs / 2);
-    const exponential = Math.min(base * (2 ** Math.max(0, attempt - 1)), 60000);
-    const jitter = 0.85 + (Math.max(0, Math.min(1, random())) * 0.30);
-    return Math.round(exponential * jitter);
-  }
-
-  function launchRequest(job) {
-    activeRequests += 1;
-    peakActiveRequests = Math.max(peakActiveRequests, activeRequests);
-    const url = listingUrl(job.seedUrl, job.pageNumber);
-    onConcurrency({
-      phase: 'start',
-      active: activeRequests,
-      peak: peakActiveRequests,
-      limit: concurrency,
-      url,
-    });
-
-    let event;
-    event = fetchListingPage(
-      context,
-      job.seedUrl,
-      job.pageNumber,
-      { navigationAttempts }
-    ).then(
-      (result) => ({ type: 'request', event, job, result }),
-      (error) => ({ type: 'request', event, job, error })
-    );
-    events.add(event);
-  }
-
-  function launchCooldown() {
-    if (!(delayMs > 0)) return false;
-
-    let event;
-    event = sleep(delayMs).then(() => ({ type: 'cooldown', event }));
-    events.add(event);
-    return true;
-  }
-
-  function launchRetry(job, error) {
-    const delay = retryDelay(job.discoveryAttempt, error);
-    const nextAttempt = job.discoveryAttempt + 1;
-
-    console.warn(
-      `[discover retry ${nextAttempt}/${discoveryAttempts}] ${listingUrl(job.seedUrl, job.pageNumber)} ` +
-      `after ${delay}ms: ${error?.message ?? error}`
-    );
-
-    let event;
-    event = sleep(delay).then(() => ({
-      type: 'retry',
-      event,
-      job: { ...job, discoveryAttempt: nextAttempt },
-    }));
-    events.add(event);
-  }
-
-  function ensureResumeEvent() {
-    if (resumeEvent || Date.now() >= globalPauseUntil) return;
-
-    const waitMs = Math.max(1, globalPauseUntil - Date.now());
-    let event;
-    event = sleep(waitMs).then(() => ({ type: 'resume', event }));
-    resumeEvent = event;
-    events.add(event);
-  }
-
-  function pauseNewScheduling(error) {
-    const { accessDenied } = errorDetails(error);
-    if (!accessDenied || !(accessDeniedPauseMs > 0)) return;
-
-    globalPauseUntil = Math.max(globalPauseUntil, Date.now() + accessDeniedPauseMs);
-    ensureResumeEvent();
-  }
-
-  function fillAvailableSlots() {
-    let scheduled = 0;
-
-    if (Date.now() < globalPauseUntil) {
-      ensureResumeEvent();
-      return scheduled;
-    }
-
-    while (events.size < concurrency) {
-      const selection = takeNextJob(states, schedulingCursor);
-      schedulingCursor = selection.cursor;
-      if (!selection.job) break;
-
-      launchRequest({ ...selection.job, discoveryAttempt: 1 });
-      scheduled += 1;
-    }
-
-    return scheduled;
-  }
-
-  fillAvailableSlots();
-
-  while (events.size > 0 || states.some((state) => !state.done)) {
-    if (events.size === 0) {
-      if (Date.now() < globalPauseUntil) {
-        ensureResumeEvent();
-      } else if (fillAvailableSlots() === 0) {
-        break;
-      }
-    }
-
-    const outcome = await Promise.race(events);
-    events.delete(outcome.event);
-
-    if (outcome.type === 'resume') {
-      if (resumeEvent === outcome.event) resumeEvent = null;
-      if (Date.now() < globalPauseUntil) {
-        ensureResumeEvent();
-      } else {
-        fillAvailableSlots();
-      }
-      continue;
-    }
-
-    if (outcome.type === 'cooldown') {
-      fillAvailableSlots();
-      continue;
-    }
-
-    if (outcome.type === 'retry') {
-      const { job } = outcome;
-
-      if (job.state.done) {
-        job.state.active = false;
-        fillAvailableSlots();
-      } else {
-        launchRequest(job);
-      }
-      continue;
-    }
-
-    const { job } = outcome;
-    activeRequests = Math.max(0, activeRequests - 1);
-    onConcurrency({
-      phase: 'end',
-      active: activeRequests,
-      peak: peakActiveRequests,
-      limit: concurrency,
-      url: listingUrl(job.seedUrl, job.pageNumber),
-    });
-
-    if (outcome.error) {
-      pauseNewScheduling(outcome.error);
-
-      if (
-        !job.state.done &&
-        job.discoveryAttempt < discoveryAttempts &&
-        isRetryableDiscoveryError(outcome.error)
-      ) {
-        // Keep the category active while this required page cools down so the
-        // scheduler cannot advance its pagination during the retry window.
-        launchRetry(job, outcome.error);
-        continue;
-      }
-
-      job.state.active = false;
-      job.state.done = true;
-
-      failures.push({
-        seedUrl: job.seedUrl,
-        pageNumber: job.pageNumber,
-        error: outcome.error,
+    for (let attempt = 1; attempt <= discoveryAttempts; attempt += 1) {
+      await waitForGlobalPause();
+      await semaphore.acquire();
+      peakActiveRequests = Math.max(peakActiveRequests, semaphore.active);
+      const url = listingUrl(seedUrl, pageNumber);
+      onConcurrency({
+        phase: 'start',
+        active: semaphore.active,
+        peak: peakActiveRequests,
+        limit: concurrency,
+        url,
       });
 
-      console.error(
-        `[discover failed] ${listingUrl(job.seedUrl, job.pageNumber)}: ` +
-        `${outcome.error?.message ?? outcome.error}`
-      );
+      try {
+        return await fetchListingPage(context, seedUrl, pageNumber, { navigationAttempts });
+      } catch (error) {
+        lastError = error;
+        const { accessDenied } = getErrorDetails(error);
+        if (accessDenied && accessDeniedPauseMs > 0) {
+          pauseUntil = Math.max(pauseUntil, Date.now() + accessDeniedPauseMs);
+        }
 
-      fillAvailableSlots();
-      continue;
+        if (attempt >= discoveryAttempts || !isRetryableDiscoveryError(error)) {
+          throw error;
+        }
+
+        const retryDelayMs = discoveryRetryDelay(attempt, error, retryBaseDelayMs, random);
+        console.warn(
+          `[discover retry ${attempt + 1}/${discoveryAttempts}] ${url} ` +
+          `after ${retryDelayMs}ms: ${error?.message ?? error}`
+        );
+        if (retryDelayMs > 0) await sleep(retryDelayMs);
+      } finally {
+        const activeBeforeRelease = semaphore.active;
+        semaphore.release();
+        onConcurrency({
+          phase: 'end',
+          active: Math.max(0, activeBeforeRelease - 1),
+          peak: peakActiveRequests,
+          limit: concurrency,
+          url,
+        });
+      }
     }
 
-    job.state.active = false;
+    throw lastError;
+  }
 
-    if (!job.state.done) {
-      commitListingPage(job.state, outcome.result, discovered, onProgress);
-    }
+  async function crawlSeed(seedUrl) {
+    const seenForSeed = new Set();
+    const seenPageFingerprints = new Set();
 
-    // A completed request frees one worker slot. Preserve the configured
-    // inter-request delay without blocking progress processing for other
-    // completed requests: the slot cools down independently, then refills.
-    if (states.some((state) => !state.done)) {
-      if (!launchCooldown()) fillAvailableSlots();
+    for (let pageNumber = 1; ; pageNumber += 1) {
+      let result;
+      try {
+        result = await fetchWithRetry(seedUrl, pageNumber);
+      } catch (error) {
+        failures.push({ seedUrl, pageNumber, error });
+        console.error(`[discover failed] ${listingUrl(seedUrl, pageNumber)}: ${error?.message ?? error}`);
+        return;
+      }
+
+      const { uniqueLinks } = result;
+      if (uniqueLinks.length === 0) {
+        onProgress({
+          seedUrl,
+          pageNumber,
+          foundOnPage: 0,
+          added: 0,
+          total: discovered.size,
+          done: true,
+          reason: 'empty-page',
+        });
+        return;
+      }
+
+      const fingerprint = [...uniqueLinks].sort().join('\n');
+      if (seenPageFingerprints.has(fingerprint)) {
+        onProgress({
+          seedUrl,
+          pageNumber,
+          foundOnPage: uniqueLinks.length,
+          added: 0,
+          total: discovered.size,
+          done: true,
+          reason: 'repeated-page',
+        });
+        return;
+      }
+      seenPageFingerprints.add(fingerprint);
+
+      let added = 0;
+      let newForSeed = 0;
+      for (const productUrl of uniqueLinks) {
+        if (!seenForSeed.has(productUrl)) {
+          seenForSeed.add(productUrl);
+          newForSeed += 1;
+        }
+        if (!discovered.has(productUrl)) {
+          discovered.add(productUrl);
+          added += 1;
+        }
+      }
+
+      onProgress({
+        seedUrl,
+        pageNumber,
+        foundOnPage: uniqueLinks.length,
+        added,
+        total: discovered.size,
+      });
+
+      if (newForSeed === 0) return;
+      if (delayMs > 0) await sleep(delayMs);
     }
   }
 
-  // Retry/cooldown timers can still be outstanding when all categories have
-  // become terminal. Drain them so no asynchronous work escapes this operation.
-  if (events.size > 0) {
-    await Promise.allSettled([...events]);
-  }
+  await Promise.all(seedUrls.map(crawlSeed));
 
   if (failures.length > 0) {
     const detail = failures
