@@ -9,7 +9,8 @@
     "search": "node src/cli.js search",
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:real": "bash test/real-app-usage.sh"
   },
   "engines": {
     "node": ">=20"

@@ -6,7 +6,10 @@ services:
     dns: [8.8.8.8, 1.1.1.1]
     environment:
       DISPLAY: $DISPLAY
+      PORT: "3000"
       SCRAPER_COMMAND: "${SCRAPER_COMMAND:-NONE}"
+    ports:
+      - "${SCRAPER_HOST_PORT:-3000}:3000"
     volumes:
       - ./output:/scraper/output
       - /tmp/.X11-unix:/tmp/.X11-unix

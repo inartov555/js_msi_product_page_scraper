@@ -76,3 +76,44 @@ src/
 ```
 
 See `ARCHITECTURE.md` for module responsibilities.
+
+## Real application / Docker smoke tests
+
+The repository also contains an end-to-end smoke suite that uses the public
+`./run_sraper.sh` entry point exactly like a user does:
+
+```bash
+./test/real-app-usage.sh
+# or
+npm run test:real
+```
+
+It verifies these real application flows:
+
+```bash
+./run_sraper.sh crawl --refresh false
+./run_sraper.sh crawl --refresh true
+./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
+./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
+./run_sraper.sh search "Motherboards"
+./run_sraper.sh serve
+./run_sraper.sh test
+```
+
+While `serve` is running, the smoke suite makes real HTTP requests to `/health`,
+`/products`, and `/compare`, validates their JSON payloads, and also verifies
+400/404 API error handling. Docker Compose publishes the API on
+`http://127.0.0.1:3000` by default. Set `SCRAPER_HOST_PORT` to use another host
+port.
+
+`crawl --refresh true` performs a full live crawl and can be slow or affected by
+network/store availability. For a shorter local or CI smoke run that still
+covers all other commands, use:
+
+```bash
+REAL_APP_SKIP_REFRESH=true ./test/real-app-usage.sh
+```
+
+The real-app suite backs up the checked-in output files and restores them when
+it finishes so running the tests does not leave test-generated catalog/search/
+comparison files behind.
