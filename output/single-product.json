@@ -1,0 +1,129 @@
+{
+  "url": "https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II",
+  "item_id": "3075",
+  "title": "Z890 GAMING PLUS WIFI6E 16GB Starter Kit",
+  "brand": "MSI",
+  "product_category": "Motherboards",
+  "category_tree": [
+    {
+      "name": "Motherboards",
+      "url": "https://us-store.msi.com/Motherboards"
+    }
+  ],
+  "description": "Upgrade to the pinnacle of Intel performance. This power-packed bundle pairs the MSI Z890 GAMING PLUS WIFI6E with 16GB of high-performance DDR5 memory, giving you a day-one advantage on the new LGA 1851 socket.",
+  "price": 399.99,
+  "sale_price": 349.99,
+  "availability": "in_stock",
+  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSWIFI16GM-MAIN-1024x1024.png",
+  "additional_image_urls": [
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-2-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-3-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-4-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-6-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-7-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Motherboard/2026/Z890GAMINGPLUSW6E/Z890GAMINGPLUSW6E-1-1024x1024.png"
+  ],
+  "specs": [
+    {
+      "name": "OPERATING SYSTEM",
+      "value": "Support for Windows® 11 64-bit"
+    },
+    {
+      "name": "MANUFACTURER NUMBER",
+      "value": "Z890 GAMING PLUS WIFI6E"
+    },
+    {
+      "name": "PRODUCT CONDITION",
+      "value": "New"
+    },
+    {
+      "name": "CPU",
+      "value": "Supports Intel® Core™ Ultra Processors (Series 2) LGA 1851"
+    },
+    {
+      "name": "CHIPSET",
+      "value": "INTEL Z890 Chipset"
+    },
+    {
+      "name": "CPU SOCKET",
+      "value": "LGA 1851"
+    },
+    {
+      "name": "FORM FACTOR",
+      "value": "ATX Form Factor"
+    },
+    {
+      "name": "MEMORY",
+      "value": "4 DIMMs, Dual Channel DDR5-9200+ MT/s (OC)"
+    },
+    {
+      "name": "LAN",
+      "value": "Intel® Killer™ E5000B 5G LAN"
+    },
+    {
+      "name": "WIRELESS LAN",
+      "value": "Wi-Fi 6E Solution"
+    },
+    {
+      "name": "BLUETOOTH",
+      "value": "Bluetooth 5.3"
+    },
+    {
+      "name": "AUDIO",
+      "value": "8-Channel (7.1) HD Audio with Audio Boost"
+    },
+    {
+      "name": "MULTI-GPU",
+      "value": "-"
+    },
+    {
+      "name": "STORAGE",
+      "value": "1x M.2 Gen5 x4 128Gbps slot 3x M.2 Gen4 x4 64Gbps slots 4x SATA 6Gbps ports"
+    },
+    {
+      "name": "ONBOARD GRAPHICS",
+      "value": "1x HDMI™ 1x DisplayPort"
+    },
+    {
+      "name": "RAID",
+      "value": "Supports RAID 0, RAID 1, RAID 5 and RAID 10 for SATA storage devices Supports RAID 0, RAID 1, RAID 5 and RAID 10 for M.2 NVMe storage devices"
+    },
+    {
+      "name": "I/O (REAR)",
+      "value": "DisplayPort Keyboard / Mouse USB 2.0 5G LAN Wi-Fi / Bluetooth Flash BIOS Button HDMI™ USB 2.0 USB 5Gbps Type A ports USB 10 Gbps Type C ports USB 10 Gbps Type A ports Audio Connectors"
+    },
+    {
+      "name": "EXPANSION SLOTS",
+      "value": "1x PCIe 5.0 x16 slot 2x PCIe 4.0 x4 slots 1x PCIe 3.0 x1 slot"
+    },
+    {
+      "name": "USB (FRONT)",
+      "value": "4x USB 2.0 4x USB 5Gbps Type A 1x USB 20Gbps Type C"
+    },
+    {
+      "name": "USB (REAR)",
+      "value": "4x USB 2.0 2x USB 5Gbps Type A 1x USB 10Gbps Type A 1x USB 10Gbps Type C"
+    },
+    {
+      "name": "TYPE-C PORT",
+      "value": "1x USB 10Gbps Type C (Rear) 1x USB 20Gbps Type C (Front)"
+    },
+    {
+      "name": "INTERNAL CONNECTORS",
+      "value": "1x Power Connector(ATX_PWR) 2x Power Connector(CPU_PWR) 1x Power Connector(PCIE_PWR 8pin) 1x CPU Fan 1x Combo Fan (Pump_Sys Fan) 5x System Fan 1x EZ Conn-header (JAF_1) 2x Front Panel (JFP) 1x Chassis Intrusion (JCI) 1x Front Audio (JAUD) 1x Tuning Controller connector(JDASH) 3x Addressable V2 RGB LED connector (JARGB_V2) 1x RGB LED connector(JRGB) 1x TPM pin header(Support TPM 2.0) 4x USB 2.0 ports 4x USB 5Gbps Type A ports 1x USB 20Gbps Type C ports"
+    },
+    {
+      "name": "DIMENSIONS",
+      "value": "12.00\" x 9.60\""
+    },
+    {
+      "name": "MANUFACTURER WARRANTY",
+      "value": "1 Year"
+    }
+  ],
+  "star_rating": null,
+  "review_count": null,
+  "gtin": null,
+  "mpn": "Z890 GAMING PLUS WIFI6E",
+  "scraped_at": "2026-10-01T21:52:36.780Z"
+}
