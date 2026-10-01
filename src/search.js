@@ -51,6 +51,10 @@ export function searchProducts(products, {
   specs = [],
   limit = 20,
 } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
+    throw new Error('limit must be an integer between 1 and 500.');
+  }
+
   const tokens = normalizeText(query).split(' ').filter(Boolean);
   const normalizedCategory = normalizeText(category);
   return products

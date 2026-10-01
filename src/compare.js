@@ -14,6 +14,7 @@ const CORE_FIELDS = [
 
 export function resolveProduct(products, selector) {
   const needle = normalizeText(selector);
+  if (!needle) throw new Error('Product selector cannot be empty.');
   const exact = products.find((product) =>
     [product.item_id, product.mpn, product.url, product.title].some((value) => normalizeText(value) === needle));
   if (exact) return exact;

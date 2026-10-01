@@ -193,8 +193,8 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assertCommandOutput(
     result,
-    /Catalog data requested; analyzing MSI catalog automatically[.]{3}/,
-    '"Catalog data requested; analyzing MSI catalog automatically..."',
+    /Refreshing MSI catalog[.]{3}/,
+    '"Refreshing MSI catalog..."',
   );
   assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
 
@@ -204,21 +204,32 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
 });
 
 test('E2E: ./run_sraper.sh crawl --refresh false uses existing catalog', e2eOptions, async () => {
-  const result = await runScraper([
-    'crawl',
-    '--refresh', 'false',
-    // Keep the cold-start E2E representative but bounded to one real MSI
-    // catalog section instead of crawling every configured product category.
-    '--seed', MISSING_CATALOG_SEED,
-  ]);
+  const fixtureCatalog = {
+    version: 1,
+    updated_at: '2026-01-01T00:00:00.000Z',
+    products: [{
+      item_id: 'fixture-1',
+      title: 'Existing Catalog Fixture',
+      url: 'https://us-store.msi.com/fixture-product',
+      specs: [],
+    }],
+  };
+  await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, 'catalog.json'),
+    `${JSON.stringify(fixtureCatalog, null, 2)}\n`,
+    'utf8',
+  );
 
-  assertCommandOutput(result, /Using saved catalog/, '"Using saved catalog"',);
-  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"');
+  const result = await runScraper(['crawl', '--refresh', 'false']);
+
+  assertCommandOutput(result, /Using saved catalog: 1 products[.]/, '"Using saved catalog"');
+  assertCommandOutput(result, /Catalog analysis complete: 1 products available[.]/, '"Catalog analysis complete:"');
 
   const catalog = await readJson('catalog.json');
-  assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
-  assert.ok(catalog.products.length > 0, 'missing catalog should be rebuilt with products');
-  assert.ok(catalog.updated_at, 'rebuilt catalog should have an updated_at timestamp');
+  assert.equal(catalog.products.length, 1);
+  assert.equal(catalog.products[0].item_id, 'fixture-1');
+  assert.equal(catalog.updated_at, fixtureCatalog.updated_at, 'existing catalog should not be rewritten');
 });
 
 test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missing', e2eOptions, async () => {
@@ -255,6 +266,8 @@ test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () 
   assert.equal(product.url, PRODUCT_URL);
   assert.ok(product.title, 'scraped product should have a title');
   assert.ok(Array.isArray(product.specs), 'scraped product should contain specs');
+  assert.ok(product.specs.length > 0, 'scraped product should contain at least one specification');
+  assert.ok(product.specs.some((spec) => spec?.name && spec?.value), 'scraped specs should contain name/value data');
 });
 
 test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async () => {

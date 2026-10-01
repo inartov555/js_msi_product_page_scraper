@@ -84,3 +84,16 @@ test('comparison can focus on selected parameter names', () => {
   assert.equal(rows.length, 1);
   assert.equal(rows[0].parameter, 'CPU SOCKET');
 });
+
+
+test('empty or punctuation-only product selectors are rejected', () => {
+  assert.throws(() => resolveProduct(products, ''), /cannot be empty/i);
+  assert.throws(() => resolveProduct(products, '---'), /cannot be empty/i);
+});
+
+test('search rejects invalid limits instead of relying on Array.slice semantics', () => {
+  assert.throws(() => searchProducts(products, { limit: 0 }), /integer between 1 and 500/);
+  assert.throws(() => searchProducts(products, { limit: -1 }), /integer between 1 and 500/);
+  assert.throws(() => searchProducts(products, { limit: 1.5 }), /integer between 1 and 500/);
+  assert.throws(() => searchProducts(products, { limit: 501 }), /integer between 1 and 500/);
+});

@@ -8,7 +8,7 @@ import {
 import { resolveProduct } from './compare.js';
 import { validateProduct } from './product.js';
 import { normalizeText } from './shared/text.js';
-import { sleep } from './scraper/browser.js';
+import { createBrowserSession, createConfiguredBrowserContext, sleep } from './scraper/browser.js';
 import { discoverMsiProductUrls } from './scraper/discovery.js';
 import { extractMsiProduct } from './scraper/extractor.js';
 import { buildMsiProductUrlCandidates } from './scraper/productUrl.js';
@@ -81,7 +81,6 @@ export function createCatalogService({
   let buildPromise = null;
 
   async function withBrowser(callback) {
-    const { createBrowserSession } = await import('./scraper/browser.js');
     const session = await createBrowserSession({ headless });
     try {
       return await callback(session);
@@ -126,9 +125,6 @@ export function createCatalogService({
 
       current = current?.cause;
     }
-
-    // Extraction can fail transiently if the storefront returns an incomplete
-    // document. One fresh-page retry is safer than treating that as permanent.
 
     // Unknown failures are not assumed to be transient. Retrying programming
     // errors hides defects and delays failure without improving reliability.
@@ -212,7 +208,6 @@ export function createCatalogService({
 
     const products = (
       await runPool(urls, concurrency, async (workerIndex) => {
-        const { createConfiguredBrowserContext } = await import('./scraper/browser.js');
         const workerId = workerIndex + 1;
         const { context: workerContext, contextOptions } = await createConfiguredBrowserContext(session.browser);
         const headers = contextOptions.extraHTTPHeaders;

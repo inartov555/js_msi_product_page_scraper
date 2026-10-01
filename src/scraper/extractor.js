@@ -272,28 +272,35 @@ async function extractBrand(page) {
   return /\bMSI\b/i.test(body) ? 'MSI' : null;
 }
 
-async function extractRating(page) {
-  const text = await firstVisibleText(
-    page,
-    msiLocators.rating
+export function parseRatingText(ratingText, bodyText = null) {
+  const visibleRating = cleanText(ratingText);
+  const body = cleanText(bodyText);
+  const labeledText = visibleRating || body;
+
+  const labeledMatch = labeledText?.match(
+    /Average Customer Rating[\s\S]{0,300}?Overall[\s★☆]*([0-5](?:\.\d+)?)(?:\s*\((\d+)\))?/i
   );
+  if (labeledMatch) {
+    return {
+      star_rating: parseNumber(labeledMatch[1]),
+      review_count: parseNumber(labeledMatch[2]),
+    };
+  }
 
-  const bodyFallback = text || cleanText(
-    await page.locator(msiLocators.body).innerText().catch(() => null)
-  );
-
-  const ratingMatch = bodyFallback?.match(
-    /Average Customer Rating[\s\S]{0,250}?Overall[\s★☆]*([0-5](?:\.\d+)?)/i
-  ) || bodyFallback?.match(/\b([0-5](?:\.\d+)?)\s*\((\d+)\)/);
-
-  const reviewMatch = bodyFallback?.match(
-    /Average Customer Rating[\s\S]{0,300}?Overall[\s★☆]*[0-5](?:\.\d+)?\s*\((\d+)\)/i
-  ) || bodyFallback?.match(/\((\d+)\)/);
-
+  // Generic "4.8 (123)" parsing is safe only inside the dedicated rating
+  // element. Applying it to the whole page can mistake unrelated counts for
+  // review counts.
+  const compactMatch = visibleRating?.match(/\b([0-5](?:\.\d+)?)\s*\((\d+)\)/);
   return {
-    star_rating: parseNumber(ratingMatch?.[1]),
-    review_count: parseNumber(reviewMatch?.[1] || ratingMatch?.[2]),
+    star_rating: parseNumber(compactMatch?.[1]),
+    review_count: parseNumber(compactMatch?.[2]),
   };
+}
+
+async function extractRating(page) {
+  const text = await firstVisibleText(page, msiLocators.rating);
+  const bodyText = text ? null : await page.locator(msiLocators.body).innerText().catch(() => null);
+  return parseRatingText(text, bodyText);
 }
 
 function findProductNode(value) {
