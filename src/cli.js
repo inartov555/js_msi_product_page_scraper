@@ -188,18 +188,13 @@ async function commandSearch(args) {
   const csv = searchCsv(results);
   await writeFile(output, csv);
 
-  if (booleanFlag(flags, 'json', false)) {
-    console.log(`Search results:\n${JSON.stringify(results, null, 2)}`);
-    return;
-  }
-
   console.log('Search results table:');
   console.table(results.map((product) => ({
-    id: product.item_id ?? product.mpn ?? '',
-    title: product.title,
-    price: product.sale_price ?? product.price,
-    availability: product.availability,
-    category: product.product_category,
+    ID: product.item_id ?? product.mpn ?? '',
+    Title: product.title,
+    Price: product.sale_price ?? product.price,
+    Availability: product.availability,
+    Category: product.product_category,
   })));
   console.debug(`Saved search table to: ${output}`);
 }
