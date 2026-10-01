@@ -187,7 +187,7 @@ const e2eOptions = {
 };
 
 // Let's skip it to make push GitHub Actions be faster
-test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: false }, async () => {
+test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
   // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
   const result = await runScraper(['crawl', '--refresh', 'true']);

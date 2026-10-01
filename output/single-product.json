@@ -121,9 +121,9 @@
       "value": "1 Year"
     }
   ],
-  "star_rating": null,
-  "review_count": null,
+  "star_rating": 0,
+  "review_count": 0,
   "gtin": null,
   "mpn": "Z890 GAMING PLUS WIFI6E",
-  "scraped_at": "2026-10-01T22:11:43.507Z"
+  "scraped_at": "2026-10-01T22:18:56.634Z"
 }

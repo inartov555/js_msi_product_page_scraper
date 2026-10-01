@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-01T22:11:40.822Z",
+  "updated_at": "2026-10-01T22:18:53.663Z",
   "products": [
     {
       "url": "https://us-store.msi.com/Motherboards/A520M-A-PRO",
@@ -125,7 +125,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "A520M-A PRO",
-      "scraped_at": "2026-10-01T22:10:28.429Z"
+      "scraped_at": "2026-10-01T22:16:39.205Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/A520M-A-PRO-V1",
@@ -250,7 +250,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "A520M-A PRO V1",
-      "scraped_at": "2026-10-01T22:10:27.499Z"
+      "scraped_at": "2026-10-01T22:16:38.714Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550-GAMING-WIFI6E",
@@ -363,10 +363,10 @@
         }
       ],
       "star_rating": 0,
-      "review_count": 0,
+      "review_count": null,
       "gtin": null,
       "mpn": "B550 GAMING WIFI6E",
-      "scraped_at": "2026-10-01T22:10:26.607Z"
+      "scraped_at": "2026-10-01T22:16:38.701Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550-A-PRO-V1",
@@ -489,7 +489,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B550-A PRO V1",
-      "scraped_at": "2026-10-01T22:10:27.498Z"
+      "scraped_at": "2026-10-01T22:16:39.394Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550M-GAMING-PLUS-WIFI6E",
@@ -606,7 +606,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "B550M GAMING PLUS WIFI6E",
-      "scraped_at": "2026-10-01T22:10:29.118Z"
+      "scraped_at": "2026-10-01T22:16:38.516Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550M-GAMING-PLUS-WIFI6E-SPATIUM-M480-PRO-1TB-SSD-Power-Pack",
@@ -723,7 +723,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B550M GAMING PLUS WIFI6E",
-      "scraped_at": "2026-10-01T22:10:28.163Z"
+      "scraped_at": "2026-10-01T22:16:38.703Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550M%20PRO-VDH",
@@ -848,7 +848,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B550M PRO-VDH",
-      "scraped_at": "2026-10-01T22:10:28.428Z"
+      "scraped_at": "2026-10-01T22:16:38.517Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B550M-PRO-VDH-WIFI",
@@ -967,11 +967,11 @@
           "value": "3 Year"
         }
       ],
-      "star_rating": 5,
-      "review_count": 2,
+      "star_rating": null,
+      "review_count": null,
       "gtin": null,
       "mpn": "B550M PRO-VDH WIFI",
-      "scraped_at": "2026-10-01T22:10:27.288Z"
+      "scraped_at": "2026-10-01T22:18:53.629Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B650-GAMING-PLUS-WIFI",
@@ -1090,11 +1090,11 @@
           "value": "3 Year"
         }
       ],
-      "star_rating": 4.9,
-      "review_count": 8,
+      "star_rating": null,
+      "review_count": null,
       "gtin": null,
       "mpn": "B650 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:27.480Z"
+      "scraped_at": "2026-10-01T22:17:59.053Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B650E-GAMING-WIFI",
@@ -1211,11 +1211,11 @@
           "value": "3 Year"
         }
       ],
-      "star_rating": 0,
-      "review_count": 0,
+      "star_rating": null,
+      "review_count": null,
       "gtin": null,
       "mpn": "B650E GAMING WIFI",
-      "scraped_at": "2026-10-01T22:10:26.489Z"
+      "scraped_at": "2026-10-01T22:17:43.251Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B760-GAMING-PLUS-WIFI",
@@ -1344,7 +1344,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "B760 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:33.267Z"
+      "scraped_at": "2026-10-01T22:16:42.237Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B840-GAMING-PLUS-WIFI",
@@ -1473,7 +1473,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B840 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:34.199Z"
+      "scraped_at": "2026-10-01T22:16:43.129Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-GAMING-PLUS-WIFI",
@@ -1602,7 +1602,7 @@
       "review_count": 5,
       "gtin": null,
       "mpn": "B850 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:34.742Z"
+      "scraped_at": "2026-10-01T22:16:43.700Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Kit-AMD-B850-I",
@@ -1731,7 +1731,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B850 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:34.557Z"
+      "scraped_at": "2026-10-01T22:16:42.645Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-GAMING-PLUS-WIFI-PZ",
@@ -1862,7 +1862,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B850 GAMING PLUS WIFI PZ",
-      "scraped_at": "2026-10-01T22:10:35.477Z"
+      "scraped_at": "2026-10-01T22:16:43.304Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-GAMING-PLUS-WIFI-V1",
@@ -1991,7 +1991,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B850 GAMING PLUS WIFI V1",
-      "scraped_at": "2026-10-01T22:10:36.242Z"
+      "scraped_at": "2026-10-01T22:16:44.217Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-GAMING-PLUS-WIFI6E",
@@ -2120,7 +2120,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B850 GAMING PLUS WIFI6E",
-      "scraped_at": "2026-10-01T22:10:35.653Z"
+      "scraped_at": "2026-10-01T22:16:43.704Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-GAMING-PRO-WIFI6E",
@@ -2248,7 +2248,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B850 GAMING PRO WIFI6E",
-      "scraped_at": "2026-10-01T22:10:35.595Z"
+      "scraped_at": "2026-10-01T22:16:46.706Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850-MLG-EDITION",
@@ -2373,7 +2373,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "B850 MLG EDITION",
-      "scraped_at": "2026-10-01T22:10:35.216Z"
+      "scraped_at": "2026-10-01T22:16:47.354Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B850MPOWER",
@@ -2503,7 +2503,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "B850MPOWER",
-      "scraped_at": "2026-10-01T22:10:36.467Z"
+      "scraped_at": "2026-10-01T22:16:47.825Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B860-GAMING-PLUS-WIFI",
@@ -2632,7 +2632,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B860 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:40.334Z"
+      "scraped_at": "2026-10-01T22:16:47.585Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/B860M-GAMING-PLUS-WIFI",
@@ -2761,7 +2761,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "B860M GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:10:40.555Z"
+      "scraped_at": "2026-10-01T22:16:48.382Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B550-TOMAHAWK-MAX-WIFI",
@@ -2884,7 +2884,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B550 TOMAHAWK MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:41.932Z"
+      "scraped_at": "2026-10-01T22:16:48.018Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B550-TOMAHAWK-WIFI",
@@ -3005,7 +3005,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B550 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:41.963Z"
+      "scraped_at": "2026-10-01T22:16:49.531Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B650-TOMAHAWK-WIFI",
@@ -3128,7 +3128,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "MAG B650 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:43.162Z"
+      "scraped_at": "2026-10-01T22:16:50.890Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850-GAMING-PLUS-MAX-WIFI",
@@ -3257,7 +3257,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B850 GAMING PLUS MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:42.991Z"
+      "scraped_at": "2026-10-01T22:16:51.550Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850-TOMAHAWK-MAX-WIFI",
@@ -3386,7 +3386,7 @@
       "review_count": 31,
       "gtin": null,
       "mpn": "MAG B850 TOMAHAWK MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:45.772Z"
+      "scraped_at": "2026-10-01T22:16:52.783Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850-TOMAHAWK-MAX-WIFI-II",
@@ -3516,7 +3516,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B850 TOMAHAWK MAX WIFI II",
-      "scraped_at": "2026-10-01T22:10:43.448Z"
+      "scraped_at": "2026-10-01T22:16:51.933Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850-TOMAHAWK-MAX-WIFI-V1",
@@ -3645,7 +3645,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B850 TOMAHAWK MAX WIFI V1",
-      "scraped_at": "2026-10-01T22:10:43.904Z"
+      "scraped_at": "2026-10-01T22:16:52.425Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850-TOMAHAWK-WIFI",
@@ -3774,7 +3774,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B850 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:44.535Z"
+      "scraped_at": "2026-10-01T22:16:53.525Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B850M-MORTAR-WIFI",
@@ -3904,7 +3904,7 @@
       "review_count": 6,
       "gtin": null,
       "mpn": "MAG B850M MORTAR WIFI",
-      "scraped_at": "2026-10-01T22:10:49.526Z"
+      "scraped_at": "2026-10-01T22:16:54.642Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B860-TOMAHAWK-WIFI",
@@ -4033,7 +4033,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG B860 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:48.962Z"
+      "scraped_at": "2026-10-01T22:16:55.122Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-B860M-MORTAR-WIFI",
@@ -4162,7 +4162,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "MAG B860M MORTAR WIFI",
-      "scraped_at": "2026-10-01T22:10:50.597Z"
+      "scraped_at": "2026-10-01T22:16:56.550Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870-TOMAHAWK-WIFI",
@@ -4283,7 +4283,7 @@
       "review_count": 156,
       "gtin": null,
       "mpn": "MAG X870 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:50.599Z"
+      "scraped_at": "2026-10-01T22:16:56.072Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-GAMING-MAX-WIFI",
@@ -4404,7 +4404,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG X870E GAMING MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:51.050Z"
+      "scraped_at": "2026-10-01T22:16:57.150Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-GAMING-PLUS-MAX-WIFI",
@@ -4529,7 +4529,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG X870E GAMING PLUS MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:51.147Z"
+      "scraped_at": "2026-10-01T22:16:57.527Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-GAMING-PLUS-MAX-WIFI-9800X3D-Starter-Kit",
@@ -4654,7 +4654,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG X870E GAMING PLUS MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:52.138Z"
+      "scraped_at": "2026-10-01T22:16:58.675Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-TOMAHAWK-MAX-WIFI",
@@ -4775,7 +4775,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG X870E TOMAHAWK MAX WIFI",
-      "scraped_at": "2026-10-01T22:10:52.604Z"
+      "scraped_at": "2026-10-01T22:16:59.573Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-TOMAHAWK-MAX-WIFI-PZ",
@@ -4896,7 +4896,7 @@
       "review_count": 6,
       "gtin": null,
       "mpn": "MAG X870E TOMAHAWK MAX WIFI PZ",
-      "scraped_at": "2026-10-01T22:10:53.443Z"
+      "scraped_at": "2026-10-01T22:16:59.820Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-X870E-TOMAHAWK-WIFI",
@@ -5016,7 +5016,7 @@
       "review_count": 29,
       "gtin": null,
       "mpn": "MAG X870E TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:54.449Z"
+      "scraped_at": "2026-10-01T22:17:00.853Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-Z790-TOMAHAWK-WIFI",
@@ -5144,7 +5144,7 @@
       "review_count": 5,
       "gtin": null,
       "mpn": "MAG Z790 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:56.667Z"
+      "scraped_at": "2026-10-01T22:17:01.342Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-Z890-TOMAHAWK-WIFI",
@@ -5273,7 +5273,7 @@
       "review_count": 3,
       "gtin": null,
       "mpn": "MAG Z890 TOMAHAWK WIFI",
-      "scraped_at": "2026-10-01T22:10:56.614Z"
+      "scraped_at": "2026-10-01T22:17:00.569Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MAG-Z890-TOMAHAWK-WIFI-II",
@@ -5402,7 +5402,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG Z890 TOMAHAWK WIFI II",
-      "scraped_at": "2026-10-01T22:10:58.834Z"
+      "scraped_at": "2026-10-01T22:17:01.953Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-X870E-ACE-MAX",
@@ -5528,7 +5528,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "MEG X870E ACE MAX",
-      "scraped_at": "2026-10-01T22:10:59.825Z"
+      "scraped_at": "2026-10-01T22:17:03.513Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-X870E-GODLIKE",
@@ -5653,7 +5653,7 @@
       "review_count": 22,
       "gtin": null,
       "mpn": "MEG X870E GODLIKE",
-      "scraped_at": "2026-10-01T22:10:58.374Z"
+      "scraped_at": "2026-10-01T22:17:04.805Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-X870E-GODLIKE-MAX",
@@ -5779,7 +5779,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MEG X870E GODLIKE MAX",
-      "scraped_at": "2026-10-01T22:10:58.833Z"
+      "scraped_at": "2026-10-01T22:17:04.369Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-X870E-GODLIKE-X-EDITION",
@@ -5905,7 +5905,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MEG X870E GODLIKE X EDITION",
-      "scraped_at": "2026-10-01T22:11:00.379Z"
+      "scraped_at": "2026-10-01T22:17:05.491Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-Z890-ACE",
@@ -6036,7 +6036,7 @@
       "review_count": 7,
       "gtin": null,
       "mpn": "MEG Z890 ACE",
-      "scraped_at": "2026-10-01T22:11:00.288Z"
+      "scraped_at": "2026-10-01T22:17:05.105Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-Z890-GODLIKE",
@@ -6166,7 +6166,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "MEG Z890 GODLIKE",
-      "scraped_at": "2026-10-01T22:11:01.661Z"
+      "scraped_at": "2026-10-01T22:17:06.560Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MEG-Z890-UNIFY-X",
@@ -6296,7 +6296,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MEG Z890 UNIFY-X",
-      "scraped_at": "2026-10-01T22:11:02.763Z"
+      "scraped_at": "2026-10-01T22:17:06.503Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-B550-GAMING-PLUS-V1",
@@ -6419,7 +6419,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MPG B550 GAMING PLUS V1",
-      "scraped_at": "2026-10-01T22:11:04.206Z"
+      "scraped_at": "2026-10-01T22:17:08.397Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-B850-EDGE-TI-WIFI",
@@ -6548,7 +6548,7 @@
       "review_count": 7,
       "gtin": null,
       "mpn": "MPG B850 EDGE TI WIFI",
-      "scraped_at": "2026-10-01T22:11:04.197Z"
+      "scraped_at": "2026-10-01T22:17:08.971Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-B850I-EDGE-TI-WIFI",
@@ -6679,7 +6679,7 @@
       "review_count": 3,
       "gtin": null,
       "mpn": "MPG B850I EDGE TI WIFI",
-      "scraped_at": "2026-10-01T22:11:05.123Z"
+      "scraped_at": "2026-10-01T22:17:10.637Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-B860I-EDGE-TI-WIFI",
@@ -6807,7 +6807,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MPG B860I EDGE TI WIFI",
-      "scraped_at": "2026-10-01T22:11:06.090Z"
+      "scraped_at": "2026-10-01T22:17:09.458Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-X870E-CARBON-MAX-WIFI",
@@ -6929,7 +6929,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MPG X870E CARBON MAX WIFI",
-      "scraped_at": "2026-10-01T22:11:07.431Z"
+      "scraped_at": "2026-10-01T22:17:10.844Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-X870E-CARBON-WIFI",
@@ -7050,7 +7050,7 @@
       "review_count": 79,
       "gtin": null,
       "mpn": "MPG X870E CARBON WIFI",
-      "scraped_at": "2026-10-01T22:11:07.177Z"
+      "scraped_at": "2026-10-01T22:17:11.712Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-X870E-EDGE-TI-WIFI",
@@ -7170,7 +7170,7 @@
       "review_count": 16,
       "gtin": null,
       "mpn": "MPG X870E EDGE TI WIFI",
-      "scraped_at": "2026-10-01T22:11:09.139Z"
+      "scraped_at": "2026-10-01T22:17:13.201Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-X870I-EDGE-TI-EVO-WIFI",
@@ -7291,7 +7291,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MPG X870I EDGE TI EVO WIFI",
-      "scraped_at": "2026-10-01T22:11:09.406Z"
+      "scraped_at": "2026-10-01T22:17:14.298Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-Z890-CARBON-WIFI",
@@ -7421,7 +7421,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "MPG Z890 CARBON WIFI",
-      "scraped_at": "2026-10-01T22:11:08.526Z"
+      "scraped_at": "2026-10-01T22:17:12.470Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/MPG-Z890I-EDGE-TI-WIFI",
@@ -7551,7 +7551,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MPG Z890I EDGE TI WIFI",
-      "scraped_at": "2026-10-01T22:11:10.302Z"
+      "scraped_at": "2026-10-01T22:17:13.702Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-A620AM-B-EVO",
@@ -7676,7 +7676,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO A620AM-B EVO",
-      "scraped_at": "2026-10-01T22:11:11.284Z"
+      "scraped_at": "2026-10-01T22:17:15.828Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B550M-P",
@@ -7799,7 +7799,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B550M-P",
-      "scraped_at": "2026-10-01T22:11:11.283Z"
+      "scraped_at": "2026-10-01T22:17:15.201Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B550M-P-WIFI6E",
@@ -7923,7 +7923,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B550M-P WIFI6E",
-      "scraped_at": "2026-10-01T22:11:11.997Z"
+      "scraped_at": "2026-10-01T22:17:16.420Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B550M-VC-WIFI",
@@ -8046,7 +8046,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "PRO B550M-VC WIFI",
-      "scraped_at": "2026-10-01T22:11:12.096Z"
+      "scraped_at": "2026-10-01T22:17:16.694Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B650-P-WIFI",
@@ -8169,7 +8169,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B650-P WIFI",
-      "scraped_at": "2026-10-01T22:11:14.236Z"
+      "scraped_at": "2026-10-01T22:17:18.302Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B650-S-WIFI-V1",
@@ -8293,7 +8293,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B650-S WIFI V1",
-      "scraped_at": "2026-10-01T22:11:14.890Z"
+      "scraped_at": "2026-10-01T22:17:17.594Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B650M-A-WIFI",
@@ -8416,7 +8416,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B650M-A WIFI",
-      "scraped_at": "2026-10-01T22:11:15.790Z"
+      "scraped_at": "2026-10-01T22:17:19.400Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B650M-P-V1",
@@ -8539,7 +8539,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "PRO B650M-P V1",
-      "scraped_at": "2026-10-01T22:11:16.853Z"
+      "scraped_at": "2026-10-01T22:17:19.582Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B760-P-WIFI",
@@ -8667,7 +8667,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B760-P WIFI",
-      "scraped_at": "2026-10-01T22:11:16.639Z"
+      "scraped_at": "2026-10-01T22:17:20.316Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B760-P-WIFI-DDR4",
@@ -8795,7 +8795,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "PRO B760-P WIFI DDR4",
-      "scraped_at": "2026-10-01T22:11:17.848Z"
+      "scraped_at": "2026-10-01T22:17:20.504Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B760M-P",
@@ -8924,7 +8924,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B760M-P",
-      "scraped_at": "2026-10-01T22:11:18.296Z"
+      "scraped_at": "2026-10-01T22:17:20.524Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B760M-P-DDR4",
@@ -9052,7 +9052,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "PRO B760M-P DDR4",
-      "scraped_at": "2026-10-01T22:11:18.360Z"
+      "scraped_at": "2026-10-01T22:17:21.555Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B840-P-WIFI",
@@ -9181,7 +9181,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B840-P WIFI",
-      "scraped_at": "2026-10-01T22:11:20.190Z"
+      "scraped_at": "2026-10-01T22:17:23.680Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B840M-B",
@@ -9303,7 +9303,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B840M-B",
-      "scraped_at": "2026-10-01T22:11:20.749Z"
+      "scraped_at": "2026-10-01T22:17:25.070Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850-P-WIFI",
@@ -9432,7 +9432,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "PRO B850-P WIFI",
-      "scraped_at": "2026-10-01T22:11:23.314Z"
+      "scraped_at": "2026-10-01T22:17:24.728Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850-S-WIFI6E",
@@ -9561,7 +9561,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B850-S WIFI6E",
-      "scraped_at": "2026-10-01T22:11:22.666Z"
+      "scraped_at": "2026-10-01T22:17:25.366Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850-V-EVO-WIFI",
@@ -9690,7 +9690,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B850-V EVO WIFI",
-      "scraped_at": "2026-10-01T22:11:22.630Z"
+      "scraped_at": "2026-10-01T22:17:25.798Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850M-A-WIFI",
@@ -9819,7 +9819,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B850M-A WIFI",
-      "scraped_at": "2026-10-01T22:11:24.685Z"
+      "scraped_at": "2026-10-01T22:17:25.574Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850M-A-WIFI-PZ",
@@ -9950,7 +9950,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B850M-A WIFI PZ",
-      "scraped_at": "2026-10-01T22:11:25.304Z"
+      "scraped_at": "2026-10-01T22:17:26.372Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B850M-P-WIFI",
@@ -10079,7 +10079,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B850M-P WIFI",
-      "scraped_at": "2026-10-01T22:11:24.866Z"
+      "scraped_at": "2026-10-01T22:17:29.402Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B860-P-WIFI",
@@ -10208,7 +10208,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B860-P WIFI",
-      "scraped_at": "2026-10-01T22:11:25.871Z"
+      "scraped_at": "2026-10-01T22:17:28.880Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B860M-A-WIFI",
@@ -10336,7 +10336,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B860M-A WIFI",
-      "scraped_at": "2026-10-01T22:11:26.337Z"
+      "scraped_at": "2026-10-01T22:17:29.869Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-B860M-A-WIFI6E",
@@ -10466,7 +10466,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO B860M-A WIFI6E",
-      "scraped_at": "2026-10-01T22:11:27.571Z"
+      "scraped_at": "2026-10-01T22:17:30.114Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-H610M-A-DDR4",
@@ -10591,7 +10591,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO H610M-A DDR4",
-      "scraped_at": "2026-10-01T22:11:27.592Z"
+      "scraped_at": "2026-10-01T22:17:29.402Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-H610M-G-DDR4",
@@ -10714,7 +10714,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO H610M-G DDR4",
-      "scraped_at": "2026-10-01T22:11:29.526Z"
+      "scraped_at": "2026-10-01T22:17:30.113Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-H610M-G-WIFI-DDR4",
@@ -10838,7 +10838,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO H610M-G WIFI DDR4",
-      "scraped_at": "2026-10-01T22:11:29.579Z"
+      "scraped_at": "2026-10-01T22:17:30.423Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-H810I-WIFI",
@@ -10963,7 +10963,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO H810I WIFI",
-      "scraped_at": "2026-10-01T22:11:29.645Z"
+      "scraped_at": "2026-10-01T22:17:31.609Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-X870-P-WIFI",
@@ -11084,7 +11084,7 @@
       "review_count": 9,
       "gtin": null,
       "mpn": "PRO X870-P WIFI",
-      "scraped_at": "2026-10-01T22:11:33.232Z"
+      "scraped_at": "2026-10-01T22:17:34.402Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-X870-P-WIFI-V1",
@@ -11205,7 +11205,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO X870-P WIFI V1",
-      "scraped_at": "2026-10-01T22:11:31.964Z"
+      "scraped_at": "2026-10-01T22:17:33.685Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-X870E-P-WIFI",
@@ -11325,7 +11325,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "RO X870E-P WIFI",
-      "scraped_at": "2026-10-01T22:11:34.037Z"
+      "scraped_at": "2026-10-01T22:17:35.429Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-X870E-S-EVO-WIFI",
@@ -11445,7 +11445,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "MAG X870E GAMING MAX WIFI",
-      "scraped_at": "2026-10-01T22:11:33.269Z"
+      "scraped_at": "2026-10-01T22:17:36.022Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-Z790-A-WIFI-II",
@@ -11574,7 +11574,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO Z790-A WIFI II",
-      "scraped_at": "2026-10-01T22:11:34.971Z"
+      "scraped_at": "2026-10-01T22:17:34.884Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-Z890-P-WIFI",
@@ -11703,7 +11703,7 @@
       "review_count": 4,
       "gtin": null,
       "mpn": "PRO Z890-P WIFI",
-      "scraped_at": "2026-10-01T22:11:35.784Z"
+      "scraped_at": "2026-10-01T22:17:35.195Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-Z890-S-WIFI",
@@ -11831,7 +11831,7 @@
       "review_count": 1,
       "gtin": null,
       "mpn": "PRO Z890-S WIFI",
-      "scraped_at": "2026-10-01T22:11:36.546Z"
+      "scraped_at": "2026-10-01T22:17:36.712Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-Z890-S-WIFI-PZ",
@@ -11962,7 +11962,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO Z890-S WIFI PZ",
-      "scraped_at": "2026-10-01T22:11:37.980Z"
+      "scraped_at": "2026-10-01T22:17:38.483Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/PRO-Z890-S-WIFI-WHITE",
@@ -12091,7 +12091,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "PRO Z890-S WIFI WHITE",
-      "scraped_at": "2026-10-01T22:11:38.511Z"
+      "scraped_at": "2026-10-01T22:17:39.897Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Thunderbolt-4-PCIe-Expansion-Card",
@@ -12145,7 +12145,7 @@
       "review_count": 5,
       "gtin": null,
       "mpn": "MS-4463v3.0",
-      "scraped_at": "2026-10-01T22:11:37.467Z"
+      "scraped_at": "2026-10-01T22:17:39.629Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/TPM-MODULE-2",
@@ -12201,7 +12201,7 @@
       "review_count": 3,
       "gtin": null,
       "mpn": "TPM2",
-      "scraped_at": "2026-10-01T22:11:38.804Z"
+      "scraped_at": "2026-10-01T22:17:39.132Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/X870-GAMING-PLUS-WIFI",
@@ -12322,7 +12322,7 @@
       "review_count": 9,
       "gtin": null,
       "mpn": "X870 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:11:39.820Z"
+      "scraped_at": "2026-10-01T22:17:40.413Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/X870E-GAMING-PLUS-WIFI",
@@ -12444,7 +12444,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "X870E GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:11:39.526Z"
+      "scraped_at": "2026-10-01T22:17:40.635Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Z790-GAMING-PLUS-WIFI",
@@ -12572,7 +12572,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "Z790 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:11:40.127Z"
+      "scraped_at": "2026-10-01T22:17:40.294Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Z890-GAMING-PLUS-WIFI",
@@ -12700,7 +12700,7 @@
       "review_count": 2,
       "gtin": null,
       "mpn": "Z890 GAMING PLUS WIFI",
-      "scraped_at": "2026-10-01T22:11:40.174Z"
+      "scraped_at": "2026-10-01T22:17:41.287Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Z890-GAMING-PLUS-WIFI6E",
@@ -12829,7 +12829,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "Z890 GAMING PLUS WIFI6E",
-      "scraped_at": "2026-10-01T22:11:40.644Z"
+      "scraped_at": "2026-10-01T22:17:41.495Z"
     },
     {
       "url": "https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II",
@@ -12958,7 +12958,7 @@
       "review_count": 0,
       "gtin": null,
       "mpn": "Z890 GAMING PLUS WIFI6E",
-      "scraped_at": "2026-10-01T22:11:40.773Z"
+      "scraped_at": "2026-10-01T22:17:42.241Z"
     }
   ]
 }
