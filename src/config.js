@@ -8,11 +8,15 @@ export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.j
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
 export const DEFAULT_SEARCH_FILE = path.resolve(__dirname, '../output/search.csv');
-export const DEFAULT_CRAWL_CONCURRENCY = 200;
+export const DEFAULT_CRAWL_CONCURRENCY = 100;
 export const DEFAULT_CRAWL_DELAY_MS = 0;
 export const DEFAULT_PRODUCT_RETRY_ATTEMPTS = 3;
 export const DEFAULT_NAVIGATION_TIMEOUT_MS = 45000;
 export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
+// Header selection strategy:
+//   'random'     - pick a random value on every browser context creation
+//   'sequential' - use each value from the list one by one, then wrap around
+export const HEADER_SELECTION_MODE = 'sequential';
 
 // Top-level catalog pages. They can be overridden with repeated --seed arguments.
 export const DEFAULT_SEED_URLS = [
@@ -255,17 +259,49 @@ const RANDOM_ACCEPT_LANGUAGES = [
   'en-US,en;q=0.9,et;q=0.7',
 ];
 
-function randomItem(items, random = Math.random) {
-  return items[Math.floor(random() * items.length)];
+let userAgentIndex = 0;
+let acceptLanguageIndex = 0;
+
+function selectItem(items, mode, random = Math.random, indexState) {
+  if (mode === 'sequential') {
+    const item = items[indexState.value % items.length];
+    indexState.value = (indexState.value + 1) % items.length;
+    return item;
+  }
+
+  if (mode === 'random') {
+    return items[Math.floor(random() * items.length)];
+  }
+
+  throw new Error(`Unsupported HEADER_SELECTION_MODE: ${mode}`);
 }
 
 export function createBrowserContextOptions(random = Math.random) {
+  const userAgentState = { value: userAgentIndex };
+  const acceptLanguageState = { value: acceptLanguageIndex };
+
+  const userAgent = selectItem(
+    RANDOM_USER_AGENTS,
+    HEADER_SELECTION_MODE,
+    random,
+    userAgentState
+  );
+  const acceptLanguage = selectItem(
+    RANDOM_ACCEPT_LANGUAGES,
+    HEADER_SELECTION_MODE,
+    random,
+    acceptLanguageState
+  );
+
+  userAgentIndex = userAgentState.value;
+  acceptLanguageIndex = acceptLanguageState.value;
+
   return {
     ...DEFAULT_BROWSER_CONTEXT,
     extraHTTPHeaders: {
       ...DEFAULT_BROWSER_CONTEXT.extraHTTPHeaders,
-      'User-Agent': randomItem(RANDOM_USER_AGENTS, random),
-      'Accept-Language': randomItem(RANDOM_ACCEPT_LANGUAGES, random),
+      'User-Agent': userAgent,
+      'Accept-Language': acceptLanguage,
     },
   };
 }
