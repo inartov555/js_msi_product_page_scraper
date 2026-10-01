@@ -31,19 +31,27 @@ export const DEFAULT_BROWSER_CONTEXT = {
   screen: { width: 1440, height: 1000 },
   isMobile: false,
   hasTouch: false,
-  extraHTTPHeaders: {
-    //'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0',
-    'User-Agent': 'AQUI',
-    'Accept': 'application/x-clarity-gzip',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br, zstd',
-    'Origin': 'https://us-store.msi.com',
-    'Sec-Fetch-Storage-Access': 'none',
-    'Connection': 'keep-alive',
-    'Referer': 'https://us-store.msi.com/',
-    'Cookie': 'MUID=35F9AA8F67FD6A3E0BFBBD6A66D56BE7',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'cross-site',
-  },
 };
+
+// Keep these profiles internally consistent and intentionally small. Chromium
+// generates protocol-sensitive headers (Sec-Fetch-*, Sec-CH-UA, Referer,
+// Accept-Encoding, Connection, cookies, etc.) itself; overriding those with
+// stale/static values can make requests look less browser-like, not more.
+export const BROWSER_HEADER_PROFILES = [
+  {
+    locale: 'en-US',
+    acceptLanguage: 'en-US,en;q=0.9',
+  },
+  {
+    locale: 'en-US',
+    acceptLanguage: 'en-US,en;q=0.8',
+  },
+  {
+    locale: 'en-US',
+    acceptLanguage: 'en-US,en;q=0.9,en-GB;q=0.8',
+  },
+  {
+    locale: 'en-US',
+    acceptLanguage: 'en-US,en;q=0.7',
+  },
+];

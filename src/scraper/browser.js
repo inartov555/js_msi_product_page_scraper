@@ -1,9 +1,45 @@
 import {
   DEFAULT_BROWSER_CONTEXT,
+  BROWSER_HEADER_PROFILES,
   DEFAULT_BLOCKED_RESOURCE_TYPES,
   DEFAULT_NAVIGATION_TIMEOUT_MS,
 } from '../config.js';
 import { msiLocators } from './locators.js';
+
+
+function randomItem(items, random = Math.random) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Cannot choose from an empty list.');
+  }
+
+  const value = Number(random());
+  const normalized = Number.isFinite(value) ? Math.min(Math.max(value, 0), 0.999999999999) : 0;
+  return items[Math.floor(normalized * items.length)];
+}
+
+function chromiumMajorVersion(version) {
+  const match = String(version ?? '').match(/^(\d+)/);
+  return match?.[1] ?? '140';
+}
+
+export function buildBrowserContextOptions({
+  browserVersion,
+  random = Math.random,
+} = {}) {
+  const profile = randomItem(BROWSER_HEADER_PROFILES, random);
+  const major = chromiumMajorVersion(browserVersion);
+
+  return {
+    ...DEFAULT_BROWSER_CONTEXT,
+    locale: profile.locale,
+    userAgent:
+      `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 `
+      + `(KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`,
+    extraHTTPHeaders: {
+      'Accept-Language': profile.acceptLanguage,
+    },
+  };
+}
 
 function parseBoolean(value, fallback = false) {
   if (value == null || value === '') {
@@ -48,9 +84,16 @@ export async function createBrowserSession({
       channel: 'chromium',
     });
 
-    context = await browser.newContext({
-      ...DEFAULT_BROWSER_CONTEXT,
+    const contextOptions = buildBrowserContextOptions({
+      browserVersion: browser.version(),
     });
+
+    console.log(
+      `Browser headers: userAgent=${contextOptions.userAgent} `
+      + `acceptLanguage=${contextOptions.extraHTTPHeaders['Accept-Language']}`
+    );
+
+    context = await browser.newContext(contextOptions);
 
     const blockedResourceTypes = new Set(
       DEFAULT_BLOCKED_RESOURCE_TYPES
