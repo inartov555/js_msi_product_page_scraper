@@ -4,7 +4,23 @@ Small scraper for the MSI US Store product page. It uses **Node.js + JavaScript 
 
 ## Changes
 
+- **MSI product page scraping**  
+  Added a Playwright-based scraper that extracts structured product data directly from MSI US Store product pages.
 
+- **Configurable product URL**  
+  The scraper supports a default MSI product page as well as custom product URLs provided through CLI arguments or environment variables.
+
+- **Headless and visible browser modes**  
+  Chromium can run in either headless or non-headless mode for automated runs or easier local debugging.
+
+- **Structured product data extraction**  
+  Extracts product title, description, item ID, brand, pricing, availability, categories, images, specifications, ratings, review count, GTIN, and MPN.
+
+- **Cookie consent handling**  
+  Automatically accepts the MSI cookie consent dialog when it is displayed.
+
+- **JSON output generation**  
+  Saves normalized scraper results to `output/product.json`, creating the output directory automatically when required.
 
 ## Requirements
 
