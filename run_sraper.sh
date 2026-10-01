@@ -59,12 +59,16 @@ fi
 
 if [[ ! -f .env ]]; then
     if [[ -f .env.example ]]; then
-        echo ".env not found, creating it from .env.example..."
-        cp .env.example .env
+        env_template=.env.example
+    elif [[ -f env.example ]]; then
+        env_template=env.example
     else
         echo "ERROR: none of .env, .env.example, or env.example exists"
         exit 1
     fi
+
+    echo ".env not found, creating it from $env_template..."
+    cp "$env_template" .env
 fi
 
 # docker-compose bind mounts ./output into /scraper/output. Run the container
