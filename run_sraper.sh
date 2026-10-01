@@ -49,3 +49,5 @@ trap cleanup EXIT HUP ERR SIGINT SIGTERM
 echo "Starting the service"
 echo "Command: npm run $command_to_run"
 SCRAPER_COMMAND="$command_to_run" docker compose up --build 2>&1 | tee log_output.txt
+# If you need to store console output log to a file
+# SCRAPER_COMMAND="$command_to_run" docker compose up --build 2>&1 | tee log_output.txt
