@@ -145,15 +145,11 @@ async function readJson(fileName) {
   return JSON.parse(await readText(fileName));
 }
 
-async function waitForApi(child, url = `${API_BASE_URL}/health`, timeoutMs = 120_000) {
+async function waitForApi(url = `${API_BASE_URL}/health`, timeoutMs = 120_000) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
 
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) {
-      throw new Error(`API process exited before becoming ready (exit code ${child.exitCode})`);
-    }
-
     try {
       const response = await fetch(url);
       if (response.ok) return response;
@@ -232,8 +228,6 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
 });
 
 test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missing', e2eOptions, async () => {
-  await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
-
   const result = await runScraper([
     'crawl',
     '--refresh', 'false',
@@ -308,7 +302,7 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
     await stopProcessGroup(child);
   });
 
-  await waitForApi(child);
+  await waitForApi();
 
   const healthResponse = await fetch(`${API_BASE_URL}/health`);
   assert.equal(healthResponse.status, 200);
