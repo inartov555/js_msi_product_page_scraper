@@ -1,0 +1,144 @@
+{
+  "url": "https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US",
+  "item_id": "2969",
+  "title": "Vision ZS 9NVV-2080US Gaming Desktop",
+  "brand": "MSI",
+  "product_category": "Desktops",
+  "category_tree": [
+    {
+      "name": "Desktops",
+      "url": "https://us-store.msi.com/Desktops"
+    }
+  ],
+  "description": "The Vision ZS 9NVV-2080US is here to push your gaming to the next level, merging the best of NVIDIA and AMD’s cutting-edge tech for a design that demands attention. With a one-piece curved tempered glass panel, you get an unobstructed panoramic view of your powerful internals, free from any distracting metal corners. It’s all about showcasing your high-performance gear in style—because when you’ve got the power, you’ve got to flaunt it.",
+  "price": 4299,
+  "sale_price": 4099,
+  "availability": "in_stock",
+  "image_url": "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-1-1024x1024.png",
+  "additional_image_urls": [
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-2-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-3-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-4-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-5-1024x1024.png",
+    "https://asset-us-store.msi.com/image/cache/catalog/Pd_page/Desktops/2025/VISIONRSW/VISIONW-7-1024x1024.png"
+  ],
+  "specs": [
+    {
+      "name": "OPERATING SYSTEM",
+      "value": "Windows 11 Home (MSI recommends Windows 11 Pro for business)"
+    },
+    {
+      "name": "MANUFACTURER NUMBER",
+      "value": "VisZS9NVV2080"
+    },
+    {
+      "name": "PRODUCT CONDITION",
+      "value": "New"
+    },
+    {
+      "name": "CPU",
+      "value": "AMD Ryzen™ 9 9950X3D"
+    },
+    {
+      "name": "CHIPSET",
+      "value": "AMD B840"
+    },
+    {
+      "name": "MOTHERBOARD",
+      "value": "B840-VC"
+    },
+    {
+      "name": "CPU COOLING",
+      "value": "360mm Liquid Cooler"
+    },
+    {
+      "name": "GRAPHICS",
+      "value": "NVIDIA® GeForce RTX 5080 16GB GDDR7"
+    },
+    {
+      "name": "MEMORY",
+      "value": "32GB DDR5"
+    },
+    {
+      "name": "LAN",
+      "value": "Realtek® 8111H 1 Gigabit LAN"
+    },
+    {
+      "name": "WIRELESS LAN",
+      "value": "Wifi 6E"
+    },
+    {
+      "name": "BLUETOOTH",
+      "value": "5.3"
+    },
+    {
+      "name": "AUDIO",
+      "value": "7.1 HD Audio Realtek® ALC897"
+    },
+    {
+      "name": "VIDEO PORT",
+      "value": "1 x HDMI™ -out (2.1) 3 x DP-out (1.4a)"
+    },
+    {
+      "name": "I/O (FRONT)",
+      "value": "1 x USB 3.2 Gen 1 Type A (5 Gbps) 1 x USB 3.2 Gen 1 Type C (10 Gbps) 1 x Mic 1 x Headphone"
+    },
+    {
+      "name": "I/O (REAR)",
+      "value": "4x USB 2.0 2x USB 3.2 Gen1 Type A (5 Gbps) 2x USB 3.2 Gen2 Type A (10 Gbps)"
+    },
+    {
+      "name": "EXPANSION SLOTS",
+      "value": "4x PCI-E x16 slot 3x M.2 4x SATA 6G"
+    },
+    {
+      "name": "USB (FRONT)",
+      "value": "1x USB 3.2 Gen 1 Type A (5 Gbps) 1 x USB 3.2 Gen 1 Type C (10 Gbps)"
+    },
+    {
+      "name": "USB (REAR)",
+      "value": "4x USB 2.0 2x USB 3.2 Gen1 Type A (5 Gbps) 2x USB 3.2 Gen2 Type A (10 Gbps)"
+    },
+    {
+      "name": "SSD HDD",
+      "value": "2TB M.2 NVMe Gen4"
+    },
+    {
+      "name": "HDD",
+      "value": "-"
+    },
+    {
+      "name": "OPTICAL DRIVE",
+      "value": "-"
+    },
+    {
+      "name": "PERIPHERALS",
+      "value": "MSI Gaming Keyboard MSI Gaming Mouse"
+    },
+    {
+      "name": "POWER SUPPLY",
+      "value": "850W"
+    },
+    {
+      "name": "POWER EFFICIENCY LEVEL",
+      "value": "80+ Gold"
+    },
+    {
+      "name": "DIMENSIONS",
+      "value": "18.56\" x 12.00\" x 19.5\""
+    },
+    {
+      "name": "WEIGHT",
+      "value": "46.8 Ibs"
+    },
+    {
+      "name": "MANUFACTURER WARRANTY",
+      "value": "1 Year"
+    }
+  ],
+  "star_rating": null,
+  "review_count": null,
+  "gtin": null,
+  "mpn": "VisZS9NVV2080",
+  "scraped_at": "2026-10-01T23:09:06.003Z"
+}
