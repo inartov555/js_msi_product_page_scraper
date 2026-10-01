@@ -8,8 +8,8 @@ export const DEFAULT_CATALOG_FILE = path.resolve(__dirname, '../output/catalog.j
 export const DEFAULT_SINGLE_PRODUCT_FILE = path.resolve(__dirname, '../output/single-product.json');
 export const DEFAULT_COMPARISON_FILE = path.resolve(__dirname, '../output/comparison.csv');
 export const DEFAULT_SEARCH_FILE = path.resolve(__dirname, '../output/search.csv');
-export const DEFAULT_CRAWL_CONCURRENCY = 150;
-export const DEFAULT_CRAWL_DELAY_MS = 120;
+export const DEFAULT_CRAWL_CONCURRENCY = 50;
+export const DEFAULT_CRAWL_DELAY_MS = 0;
 export const DEFAULT_PRODUCT_RETRY_ATTEMPTS = 3;
 export const DEFAULT_NAVIGATION_TIMEOUT_MS = 45000;
 export const DEFAULT_BLOCKED_RESOURCE_TYPES = ['image', 'media', 'font'];
@@ -73,12 +73,10 @@ const RANDOM_USER_AGENTS = [
   // Chrome Android - tablet
   'Mozilla/5.0 (Linux; Android 16; Pixel Tablet) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8037.57 Safari/537.36',
 
-  // Chrome iOS / iPhone
-  // IMPORTANT: this is WebKit + CriOS, not Chromium.
+  // Chrome iOS / iPhone; this is WebKit + CriOS, not Chromium.
   'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/154.0.8037.57 Mobile/15E148 Safari/604.1',
 
-  // Chrome iOS / iPad
-  // IMPORTANT: also WebKit, not Chromium.
+  // Chrome iOS / iPad; also WebKit, not Chromium.
   'Mozilla/5.0 (iPad; CPU OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/154.0.8037.57 Mobile/15E148 Safari/604.1',
 ];
 
