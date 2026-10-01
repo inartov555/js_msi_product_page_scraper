@@ -203,7 +203,7 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   assert.ok(catalog.products.length > 0, 'live crawl should produce at least one product');
 });
 
-test('E2E: ./run_sraper.sh crawl --refresh false uses existing catalog', { ...e2eOptions, skip: true }, async () => {
+test('E2E: ./run_sraper.sh crawl --refresh false uses existing catalog', e2eOptions, async () => {
   const result = await runScraper([
     'crawl',
     '--refresh', 'false',
@@ -292,8 +292,18 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
   });
 
   let serverOutput = '';
-  child.stdout?.on('data', (chunk) => { serverOutput += chunk.toString(); });
-  child.stderr?.on('data', (chunk) => { serverOutput += chunk.toString(); });
+
+  child.stdout?.on('data', (chunk) => {
+    const text = chunk.toString();
+    serverOutput += text;
+    process.stdout.write(text);
+  });
+
+  child.stderr?.on('data', (chunk) => {
+    const text = chunk.toString();
+    serverOutput += text;
+    process.stderr.write(text);
+  });
 
   t.after(async () => {
     await stopProcessGroup(child);
@@ -321,8 +331,10 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
   const compareUrl = new URL(`${API_BASE_URL}/compare`);
   compareUrl.searchParams.append('id', PRODUCT_A);
   compareUrl.searchParams.append('id', PRODUCT_B);
+
   const compareResponse = await fetch(compareUrl);
   assert.equal(compareResponse.status, 200);
+
   const comparison = await compareResponse.json();
   assert.equal(comparison.products.length, 2);
   assert.ok(Array.isArray(comparison.rows));
@@ -337,6 +349,7 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
   const unknownProductUrl = new URL(`${API_BASE_URL}/compare`);
   unknownProductUrl.searchParams.append('id', '__definitely_missing_product_1__');
   unknownProductUrl.searchParams.append('id', '__definitely_missing_product_2__');
+
   const unknownProduct = await fetch(unknownProductUrl);
   assert.equal(unknownProduct.status, 404);
 
@@ -346,6 +359,7 @@ test('E2E: ./run_sraper.sh serve exposes working API endpoints', {
 
   const notFound = await fetch(`${API_BASE_URL}/does-not-exist`);
   assert.equal(notFound.status, 404);
+
   const notFoundBody = await notFound.json();
   assert.ok(Array.isArray(notFoundBody.endpoints));
 
