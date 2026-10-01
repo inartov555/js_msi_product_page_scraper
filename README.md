@@ -19,7 +19,7 @@ Start with Docker
 ./run_sraper.sh test
 ```
 
-## Changes V2 vs. V1
+## Changes: V2 vs. V1
 
 - **Full catalog crawling**
   V2 expands the scraper from a single MSI product page to full catalog discovery across laptops, desktops, monitors, graphics cards, motherboards, PC components, gaming gear, and EV chargers.
