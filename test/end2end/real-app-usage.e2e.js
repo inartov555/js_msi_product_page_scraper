@@ -10,7 +10,7 @@
  *   ./run_sraper.sh serve
  */
 
-import test, { after, before } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
@@ -26,8 +26,6 @@ const PRODUCT_B = 'PRO Z890-P WIFI';
 const API_PORT = Number(process.env.E2E_API_PORT || 3000);
 const API_BASE_URL = `http://127.0.0.1:${API_PORT}`;
 const COMMAND_TIMEOUT_MS = Number(process.env.REAL_APP_COMMAND_TIMEOUT_MS || 30 * 60 * 1000);
-const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
-const snapshots = new Map();
 
 function runProcess(command, args, {
   cwd = ROOT,
@@ -183,31 +181,6 @@ async function stopProcessGroup(child) {
     } catch {}
   }
 }
-
-before(async () => {
-  // These commands intentionally use the real default output paths. Preserve the
-  // user's files and restore them once the E2E suite has finished.
-  for (const fileName of OUTPUT_FILES) {
-    const filePath = path.join(OUTPUT_DIR, fileName);
-    try {
-      snapshots.set(fileName, await fs.readFile(filePath));
-    } catch (error) {
-      if (error.code === 'ENOENT') snapshots.set(fileName, null);
-      else throw error;
-    }
-  }
-});
-
-after(async () => {
-  for (const [fileName, content] of snapshots) {
-    const filePath = path.join(OUTPUT_DIR, fileName);
-    if (content === null) {
-      await fs.rm(filePath, { force: true });
-    } else {
-      await fs.writeFile(filePath, content);
-    }
-  }
-});
 
 const e2eOptions = {
   timeout: COMMAND_TIMEOUT_MS,
