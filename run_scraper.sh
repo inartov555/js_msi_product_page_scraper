@@ -9,7 +9,7 @@
 #          scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US  # collect data of a product
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 #          search "Motherboards"
-#          serve  # if you need to make API calls to a scraper service
+#          serve      # if you need to make API calls to a scraper service
 #          test:unit  # only unit tests
 #          test:e2e   # only end-to-end tests
 #          test:all   # all available tests
