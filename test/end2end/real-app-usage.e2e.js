@@ -188,7 +188,6 @@ const e2eOptions = {
 
 // Let's skip it to make push GitHub Actions be faster
 test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
-  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assertCommandOutput(
@@ -233,7 +232,6 @@ test('E2E: ./run_sraper.sh crawl --refresh false uses existing catalog', e2eOpti
 });
 
 test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missing', e2eOptions, async () => {
-  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
 
   const result = await runScraper([
@@ -258,7 +256,6 @@ test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missin
 });
 
 test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () => {
-  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'single-product.json'), { force: true });
   await runScraper(['scrape', PRODUCT_URL]);
 
@@ -271,7 +268,6 @@ test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () 
 });
 
 test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async () => {
-  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'comparison.csv'), { force: true });
   const result = await runScraper(['compare', PRODUCT_A, PRODUCT_B]);
   const csv = await readText('comparison.csv');
@@ -283,7 +279,6 @@ test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async (
 });
 
 test('E2E: ./run_sraper.sh search Motherboards', e2eOptions, async () => {
-  // Let's remove the file before test
   await fs.rm(path.join(OUTPUT_DIR, 'search.csv'), { force: true });
   await runScraper(['search', 'Motherboards']);
   const csv = await readText('search.csv');

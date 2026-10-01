@@ -35,6 +35,41 @@ test('upsertMany replaces products with the same identity', async (t) => {
   assert.equal(saved.products[0].title, 'New title');
 });
 
+test('upsertMany merges a URL-only product when a later scrape adds item_id', async (t) => {
+  const repository = await withRepository(t);
+  const url = 'https://us-store.msi.com/example-product';
+
+  await repository.replaceAll([{ url, title: 'Old title' }]);
+  const saved = await repository.upsertMany([{ item_id: '123', url, title: 'Enriched title' }]);
+
+  assert.equal(saved.products.length, 1);
+  assert.equal(saved.products[0].item_id, '123');
+  assert.equal(saved.products[0].url, url);
+  assert.equal(saved.products[0].title, 'Enriched title');
+});
+
+test('upsertMany merges products when any stable identity matches', async (t) => {
+  const repository = await withRepository(t);
+
+  await repository.replaceAll([{
+    item_id: 'old-id',
+    mpn: 'MPN-123',
+    url: 'https://us-store.msi.com/old-url',
+    title: 'Old product',
+  }]);
+
+  const saved = await repository.upsertMany([{
+    item_id: 'new-id',
+    mpn: 'MPN-123',
+    url: 'https://us-store.msi.com/new-url',
+    title: 'Updated product',
+  }]);
+
+  assert.equal(saved.products.length, 1);
+  assert.equal(saved.products[0].item_id, 'new-id');
+  assert.equal(saved.products[0].title, 'Updated product');
+});
+
 test('repository rejects products without a stable identity', async (t) => {
   const repository = await withRepository(t);
   await assert.rejects(

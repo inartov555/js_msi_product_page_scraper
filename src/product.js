@@ -26,8 +26,12 @@ export function findSpecValue(specs, matcher) {
   return specs.find((spec) => matcher.test(spec.name ?? ''))?.value ?? null;
 }
 
+export function productIdentities(product) {
+  return [...new Set([product?.item_id, product?.mpn, product?.url].filter(Boolean))];
+}
+
 export function productIdentity(product) {
-  return product.item_id || product.mpn || product.url;
+  return productIdentities(product)[0] ?? null;
 }
 
 export function validateProduct(product) {

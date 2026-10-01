@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { productIdentity } from './product.js';
+import { productIdentity, productIdentities } from './product.js';
 
 function requireProductIdentity(product) {
   const identity = productIdentity(product);
@@ -12,6 +12,10 @@ function requireProductIdentity(product) {
 
 function sortProducts(products) {
   return [...products].sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''));
+}
+
+function sharesIdentity(product, identities) {
+  return productIdentities(product).some((identity) => identities.has(identity));
 }
 
 export class JsonCatalogRepository {
@@ -62,18 +66,26 @@ export class JsonCatalogRepository {
 }
 
 function mergeProducts(catalog, products) {
-  const map = new Map();
-
-  for (const product of catalog.products) {
-    map.set(requireProductIdentity(product), product);
-  }
+  for (const product of catalog.products) requireProductIdentity(product);
+  const merged = [...catalog.products];
 
   for (const product of products) {
-    map.set(requireProductIdentity(product), product);
+    requireProductIdentity(product);
+    const identities = new Set(productIdentities(product));
+
+    // A product may gain a stronger identifier on a later scrape (for example,
+    // URL-only -> item_id + URL). Remove every old record sharing any stable
+    // identifier before inserting the fresh record so enrichment cannot create
+    // duplicates.
+    for (let index = merged.length - 1; index >= 0; index -= 1) {
+      if (sharesIdentity(merged[index], identities)) merged.splice(index, 1);
+    }
+
+    merged.push(product);
   }
 
   return {
     ...catalog,
-    products: sortProducts(map.values()),
+    products: sortProducts(merged),
   };
 }

@@ -1,5 +1,4 @@
-# Version 2.1 is in progress...
-# See version 2 to check the app
+# MSI Product Page Scraper
 
 # MSI Catalog Scraper
 
@@ -21,7 +20,7 @@ Start with Docker
 ./run_sraper.sh serve  # Scraper service with APIs
 ./run_sraper.sh test:unit  # only unit tests
 ./run_sraper.sh test:e2e   # only end-to-end tests
-./run_sraper.sh test:all   # all available tests
+./run_sraper.sh test:all   # unit tests + enabled end-to-end tests
 ```
 
 ## Catalog
@@ -52,8 +51,8 @@ output/single-product.json
 
 The `output` directory is mounted into the container so the catalog persists between runs.
 
-The `serve` test starts the Dockerized API and checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required. 
-It exposes the existing `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
+The `serve` command starts the Dockerized API. The end-to-end serve test checks `/health`, `/products`, `/compare`, validation errors, unknown products, and unknown routes. Docker Compose is required.
+The API exposes the `/health`, `/products`, and `/compare` endpoints from `src/server.js`.
 
 ## Source layout
 
