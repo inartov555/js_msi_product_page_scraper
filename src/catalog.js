@@ -127,6 +127,9 @@ export function createCatalogService({
       current = current?.cause;
     }
 
+    // Extraction can fail transiently if the storefront returns an incomplete
+    // document. One fresh-page retry is safer than treating that as permanent.
+
     // Unknown failures are not assumed to be transient. Retrying programming
     // errors hides defects and delays failure without improving reliability.
     return false;
