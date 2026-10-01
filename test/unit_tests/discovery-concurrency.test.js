@@ -422,3 +422,87 @@ test('permanent discovery failure is reported only after other categories finish
     'healthy categories should finish before the aggregate error is raised'
   );
 });
+
+test('discovery releases its concurrency slot while waiting to retry', async () => {
+  const events = [];
+  let blockedOnce = false;
+
+  const context = {
+    async newPage() {
+      let currentUrl = '';
+
+      return {
+        async goto(url) {
+          currentUrl = url;
+          const parsed = new URL(url);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          events.push(`${category}:request`);
+
+          if (category === 'PC-Components' && !blockedOnce) {
+            blockedOnce = true;
+            return {
+              status: () => 403,
+              headers: () => ({}),
+            };
+          }
+
+          return {
+            status: () => 200,
+            headers: () => ({}),
+          };
+        },
+        async title() { return ''; },
+        locator() { return { innerText: async () => '' }; },
+        getByRole() {
+          return {
+            first() {
+              return { isVisible: async () => false };
+            },
+          };
+        },
+        async evaluate() {
+          const parsed = new URL(currentUrl);
+          const category = parsed.pathname.split('/').filter(Boolean)[0];
+          const pageNumber = Number(parsed.searchParams.get('page') || '1');
+          if (pageNumber > 1) return [];
+          return [`${parsed.origin}/${category}/Product-1`];
+        },
+        async close() {},
+      };
+    },
+  };
+
+  const urls = await discoverMsiProductUrls(
+    context,
+    [
+      'https://us-store.msi.com/PC-Components',
+      'https://us-store.msi.com/Laptops',
+    ],
+    {
+      concurrency: 1,
+      delayMs: 0,
+      discoveryAttempts: 2,
+      retryBaseDelayMs: 60,
+      accessDeniedPauseMs: 0,
+      navigationAttempts: 1,
+      random: () => 0.5,
+    }
+  );
+
+  const firstPcRequest = events.indexOf('PC-Components:request');
+  const laptopRequest = events.indexOf('Laptops:request');
+  const secondPcRequest = events.lastIndexOf('PC-Components:request');
+
+  assert.ok(firstPcRequest !== -1 && laptopRequest !== -1 && secondPcRequest !== -1);
+  assert.ok(
+    firstPcRequest < laptopRequest && laptopRequest < secondPcRequest,
+    `healthy seed should use the free slot during retry backoff; events: ${events.join(', ')}`
+  );
+  assert.deepEqual(
+    [...urls].sort(),
+    [
+      'https://us-store.msi.com/Laptops/Product-1',
+      'https://us-store.msi.com/PC-Components/Product-1',
+    ]
+  );
+});

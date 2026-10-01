@@ -237,6 +237,7 @@ export async function discoverMsiProductUrls(
         url,
       });
 
+      let retryDelayMs = 0;
       try {
         return await fetchListingPage(context, seedUrl, pageNumber, { navigationAttempts });
       } catch (error) {
@@ -250,12 +251,11 @@ export async function discoverMsiProductUrls(
           throw error;
         }
 
-        const retryDelayMs = discoveryRetryDelay(attempt, error, retryBaseDelayMs, random);
+        retryDelayMs = discoveryRetryDelay(attempt, error, retryBaseDelayMs, random);
         console.warn(
           `[discover retry ${attempt + 1}/${discoveryAttempts}] ${url} ` +
           `after ${retryDelayMs}ms: ${error?.message ?? error}`
         );
-        if (retryDelayMs > 0) await sleep(retryDelayMs);
       } finally {
         const activeBeforeRelease = semaphore.active;
         semaphore.release();
@@ -267,6 +267,11 @@ export async function discoverMsiProductUrls(
           url,
         });
       }
+
+      // Back off only after returning the global request slot. Otherwise a
+      // group of throttled seeds can occupy every slot while sleeping and
+      // prevent healthy seeds from making progress.
+      if (retryDelayMs > 0) await sleep(retryDelayMs);
     }
 
     throw lastError;
