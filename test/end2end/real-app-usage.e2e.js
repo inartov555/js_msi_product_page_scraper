@@ -19,7 +19,7 @@ import path from 'node:path';
 const ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
 const RUNNER = './run_sraper.sh';
 const OUTPUT_DIR = path.join(ROOT, 'output');
-const PRODUCT_URL = 'https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II';
+const PRODUCT_URL = 'https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US';
 const MISSING_CATALOG_SEED = 'https://us-store.msi.com/Motherboards';
 const PRODUCT_A = 'MAG Z890 TOMAHAWK WIFI';
 const PRODUCT_B = 'PRO Z890-P WIFI';
