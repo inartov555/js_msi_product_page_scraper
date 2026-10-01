@@ -30,4 +30,4 @@ HTTP API --> repository |--> search / compare
 - `src/shared/consoleLogger.js` — process-wide timestamped console logging.
 - `src/server.js` — optional read-only HTTP API over the saved catalog.
 
-The scraper-specific code is isolated from search/comparison logic so MSI page changes do not leak into the rest of the application.
+The scraper-specific code is isolated from search/comparison logic, so MSI page changes do not leak into the rest of the application.
