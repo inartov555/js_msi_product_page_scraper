@@ -10,7 +10,7 @@
 #          search "A520M-A PRO"
 #          compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 #          serve  # if you need to make API calls to a scraper service
-#          test   # unit tests
+#          test
 #
 #     Full Docker data cleanup (!!! It will remove all Docker data for all projects !!!): docker system prune -a --volumes; sudo systemctl restart docker
 
