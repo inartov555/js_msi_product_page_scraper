@@ -17,7 +17,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
-const RUNNER = './run_sraper.sh';
+const RUNNER = './run_scraper.sh';
 const OUTPUT_DIR = path.join(ROOT, 'output');
 const PRODUCT_URL = 'https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US';
 const MISSING_CATALOG_SEED = 'https://us-store.msi.com/Motherboards';
