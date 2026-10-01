@@ -9,6 +9,7 @@
     "search": "node src/cli.js search",
     "compare": "node src/cli.js compare",
     "serve": "node src/server.js",
+    "test": "npm run test:unit",
     "test:unit": "node --test test/unit_tests/*.js",
     "test:e2e": "node --test test/end2end/real-app-usage.e2e.js",
     "test:all": "npm run test:unit && npm run test:e2e"

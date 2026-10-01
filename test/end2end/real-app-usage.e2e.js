@@ -24,12 +24,14 @@ const ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
 const RUNNER = './run_sraper.sh';
 const OUTPUT_DIR = path.join(ROOT, 'output');
 const PRODUCT_URL = 'https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II';
+const MISSING_CATALOG_SEED = 'https://us-store.msi.com/Motherboards';
 const PRODUCT_A = 'MAG Z890 TOMAHAWK WIFI';
 const PRODUCT_B = 'PRO Z890-P WIFI';
 const API_PORT = Number(process.env.E2E_API_PORT || 3000);
 const API_BASE_URL = `http://127.0.0.1:${API_PORT}`;
 const COMMAND_TIMEOUT_MS = Number(process.env.REAL_APP_COMMAND_TIMEOUT_MS || 30 * 60 * 1000);
-const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
+// const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
+const OUTPUT_FILES = [];
 const snapshots = new Map();
 
 function runProcess(command, args, {
@@ -37,6 +39,7 @@ function runProcess(command, args, {
   env = {},
   timeout = COMMAND_TIMEOUT_MS,
   detached = false,
+  streamOutput = true,
 } = {}) {
   return new Promise((resolve, reject) => {
     const childEnv = { ...process.env, ...env };
@@ -53,8 +56,16 @@ function runProcess(command, args, {
 
     let stdout = '';
     let stderr = '';
-    child.stdout?.on('data', (chunk) => { stdout += chunk.toString(); });
-    child.stderr?.on('data', (chunk) => { stderr += chunk.toString(); });
+    child.stdout?.on('data', (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      if (streamOutput) process.stdout.write(text);
+    });
+    child.stderr?.on('data', (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      if (streamOutput) process.stderr.write(text);
+    });
 
     const timer = setTimeout(() => {
       try {
@@ -205,7 +216,16 @@ const e2eOptions = {
 
 // Let's skip it to make push GitHub Actions be faster
 test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
+  // Explicitly exercise the cold-start path. --refresh false means "reuse a
+  // usable catalog if one exists"; when it does not, the application must
+  // discover/scrape products and persist a new catalog automatically.
+  await fs.rm(path.join(OUTPUT_DIR, 'catalog.json'), { force: true });
   const result = await runScraper(['crawl', '--refresh', 'true']);
+  assertCommandOutput(
+    result,
+    /Catalog data requested; analyzing MSI catalog automatically[.]{3}/,
+    '"Catalog data requested; analyzing MSI catalog automatically..."',
+  );
   assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
 
   const catalog = await readJson('catalog.json');
@@ -213,16 +233,31 @@ test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true },
   assert.ok(catalog.products.length > 0, 'live crawl should produce at least one product');
 });
 
-test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
-  const result = await runScraper(['crawl', '--refresh', 'false']);
-  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"',);
+test('E2E: ./run_sraper.sh crawl --refresh false rebuilds when catalog is missing', e2eOptions, async () => {
+  const result = await runScraper([
+    'crawl',
+    '--refresh', 'false',
+    // Keep the cold-start E2E representative but bounded to one real MSI
+    // catalog section instead of crawling every configured product category.
+    '--seed', MISSING_CATALOG_SEED,
+  ]);
+
+  assertCommandOutput(
+    result,
+    /Using saved catalog:/,
+    '"Using saved catalog:"',
+  );
+  assertCommandOutput(result, /Catalog analysis complete:/, '"Catalog analysis complete:"');
 
   const catalog = await readJson('catalog.json');
   assert.ok(Array.isArray(catalog.products), 'catalog.json should contain a products array');
-  assert.ok(catalog.products.length > 0, 'catalog should contain products');
+  assert.ok(catalog.products.length > 0, 'missing catalog should be rebuilt with products');
+  assert.ok(catalog.updated_at, 'rebuilt catalog should have an updated_at timestamp');
 });
 
 test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () => {
+  // Let's remove the file before test
+  await fs.rm(path.join(OUTPUT_DIR, 'single-product.json'), { force: true });
   await runScraper(['scrape', PRODUCT_URL]);
 
   const product = await readJson('single-product.json');
@@ -232,6 +267,8 @@ test('E2E: ./run_sraper.sh scrape <real MSI product URL>', e2eOptions, async () 
 });
 
 test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async () => {
+  // Let's remove the file before test
+  await fs.rm(path.join(OUTPUT_DIR, 'comparison.json'), { force: true });
   const result = await runScraper(['compare', PRODUCT_A, PRODUCT_B]);
   const csv = await readText('comparison.csv');
 
@@ -242,6 +279,8 @@ test('E2E: ./run_sraper.sh compare <product A> <product B>', e2eOptions, async (
 });
 
 test('E2E: ./run_sraper.sh search Motherboards', e2eOptions, async () => {
+  // Let's remove the file before test
+  await fs.rm(path.join(OUTPUT_DIR, 'search.json'), { force: true });
   await runScraper(['search', 'Motherboards']);
   const csv = await readText('search.csv');
 

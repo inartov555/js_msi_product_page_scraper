@@ -1,3 +1,5 @@
+// Unit tests
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { discoverMsiProductUrls } from '../../src/scraper/discovery.js';
