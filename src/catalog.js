@@ -139,7 +139,12 @@ export function createCatalogService({
   async function scrapeOneInContext(
     context,
     url,
-    { attempts = productRetryAttempts, waitForStartSlot = null } = {}
+    {
+      attempts = productRetryAttempts,
+      waitForStartSlot = null,
+      onAttemptStart = null,
+      onAttemptEnd = null,
+    } = {}
   ) {
     let lastError;
 
@@ -148,8 +153,10 @@ export function createCatalogService({
       // global rate gate do not consume renderer memory while idle.
       if (waitForStartSlot) await waitForStartSlot();
 
-      const page = await context.newPage();
+      onAttemptStart?.({ url, attempt, attempts });
+      let page = null;
       try {
+        page = await context.newPage();
         // Product-level retries recreate the page. A single navigation attempt
         // here avoids spending several 45s timeouts on one stalled renderer.
         return await scrapePage(page, url, { navigationAttempts: 1 });
@@ -165,7 +172,8 @@ export function createCatalogService({
         );
         await sleep(productRetryDelayMs(attempt));
       } finally {
-        await page.close().catch(() => {});
+        if (page) await page.close().catch(() => {});
+        onAttemptEnd?.({ url, attempt, attempts });
       }
     }
 
@@ -178,6 +186,11 @@ export function createCatalogService({
       concurrency,
       onProgress: ({ seedUrl, pageNumber, added, total }) =>
         logger.debug(`[discover pages] ${seedUrl} page=${pageNumber} added=${added} total=${total}`),
+      onConcurrency: ({ phase, active, peak, limit, url }) =>
+        logger.debug(
+          `[discover concurrency] phase=${phase} active=${active} peak=${peak} limit=${limit}`
+          + (url ? ` url=${url}` : '')
+        ),
     });
   }
 
@@ -187,13 +200,38 @@ export function createCatalogService({
 
     const waitForStartSlot = createStartRateGate(delayMs);
     const errors = [];
+    let activeScrapes = 0;
+    let peakActiveScrapes = 0;
+
+    logger.log(
+      `[scrape concurrency] configured=${concurrency} products=${urls.length} delayMs=${delayMs}`
+    );
+
     const products = (
-      await runPool(urls, concurrency, async () => ({
+      await runPool(urls, concurrency, async (workerIndex) => ({
         run: async (url, index) => {
+          const workerId = workerIndex + 1;
           try {
             const product = await scrapeOneInContext(context, url, {
               attempts: productRetryAttempts,
               waitForStartSlot,
+              onAttemptStart: ({ attempt, attempts }) => {
+                activeScrapes += 1;
+                peakActiveScrapes = Math.max(peakActiveScrapes, activeScrapes);
+                logger.debug(
+                  `[scrape worker ${workerId}] start item=${index + 1}/${urls.length} `
+                  + `attempt=${attempt}/${attempts} active=${activeScrapes} `
+                  + `peak=${peakActiveScrapes} limit=${concurrency} url=${url}`
+                );
+              },
+              onAttemptEnd: ({ attempt, attempts }) => {
+                activeScrapes = Math.max(0, activeScrapes - 1);
+                logger.debug(
+                  `[scrape worker ${workerId}] end item=${index + 1}/${urls.length} `
+                  + `attempt=${attempt}/${attempts} active=${activeScrapes} `
+                  + `peak=${peakActiveScrapes} limit=${concurrency} url=${url}`
+                );
+              },
             });
             logger.debug(`[scrape ${index + 1}/${urls.length}] ${product.title ?? url}`);
             return product;
@@ -205,6 +243,10 @@ export function createCatalogService({
         },
       }))
     ).filter(Boolean);
+
+    logger.log(
+      `[scrape concurrency] completed peak=${peakActiveScrapes} configured=${concurrency}`
+    );
 
     if (errors.length) {
       throw new Error(

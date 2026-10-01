@@ -255,6 +255,7 @@ export async function discoverMsiProductUrls(
     delayMs = 250,
     concurrency = seedUrls.length || 1,
     onProgress = () => {},
+    onConcurrency = () => {},
     discoveryAttempts = 3,
     retryBaseDelayMs = 8000,
     accessDeniedPauseMs = 5000,
@@ -277,6 +278,8 @@ export async function discoverMsiProductUrls(
   let schedulingCursor = 0;
   let globalPauseUntil = 0;
   let resumeEvent = null;
+  let activeRequests = 0;
+  let peakActiveRequests = 0;
 
   function errorDetails(error) {
     let current = error;
@@ -316,6 +319,17 @@ export async function discoverMsiProductUrls(
   }
 
   function launchRequest(job) {
+    activeRequests += 1;
+    peakActiveRequests = Math.max(peakActiveRequests, activeRequests);
+    const url = listingUrl(job.seedUrl, job.pageNumber);
+    onConcurrency({
+      phase: 'start',
+      active: activeRequests,
+      peak: peakActiveRequests,
+      limit: concurrency,
+      url,
+    });
+
     let event;
     event = fetchListingPage(
       context,
@@ -436,6 +450,14 @@ export async function discoverMsiProductUrls(
     }
 
     const { job } = outcome;
+    activeRequests = Math.max(0, activeRequests - 1);
+    onConcurrency({
+      phase: 'end',
+      active: activeRequests,
+      peak: peakActiveRequests,
+      limit: concurrency,
+      url: listingUrl(job.seedUrl, job.pageNumber),
+    });
 
     if (outcome.error) {
       pauseNewScheduling(outcome.error);
