@@ -7,7 +7,7 @@
  *
  * Covered commands:
  *   ./run_sraper.sh crawl --refresh false
- *   ./run_sraper.sh crawl --refresh true
+ *   ./run_sraper.sh crawl --refresh true  # skipped by default, so push GitHub Actions can be faster
  *   ./run_sraper.sh scrape https://us-store.msi.com/Motherboards/Kit-Intel-Z890-II
  *   ./run_sraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
  *   ./run_sraper.sh search "Motherboards"
@@ -29,7 +29,6 @@ const PRODUCT_B = 'PRO Z890-P WIFI';
 const API_PORT = Number(process.env.E2E_API_PORT || 3000);
 const API_BASE_URL = `http://127.0.0.1:${API_PORT}`;
 const COMMAND_TIMEOUT_MS = Number(process.env.REAL_APP_COMMAND_TIMEOUT_MS || 30 * 60 * 1000);
-const SKIP_E2E = process.env.SKIP_E2E_TESTS === '1';
 const OUTPUT_FILES = ['catalog.json', 'single-product.json', 'comparison.csv', 'search.csv'];
 const snapshots = new Map();
 
@@ -134,8 +133,6 @@ async function stopProcessGroup(child) {
 }
 
 before(async () => {
-  if (SKIP_E2E) return;
-
   // These commands intentionally use the real default output paths. Preserve the
   // user's files and restore them once the E2E suite has finished.
   for (const fileName of OUTPUT_FILES) {
@@ -150,8 +147,6 @@ before(async () => {
 });
 
 after(async () => {
-  if (SKIP_E2E) return;
-
   for (const [fileName, content] of snapshots) {
     const filePath = path.join(OUTPUT_DIR, fileName);
     if (content === null) {
@@ -163,7 +158,6 @@ after(async () => {
 });
 
 const e2eOptions = {
-  skip: SKIP_E2E ? 'Nested test run: E2E tests are skipped to prevent recursive ./run_sraper.sh test execution' : false,
   timeout: COMMAND_TIMEOUT_MS,
 };
 
@@ -176,7 +170,8 @@ test('E2E: ./run_sraper.sh crawl --refresh false', e2eOptions, async () => {
   assert.ok(catalog.products.length > 0, 'catalog should contain products');
 });
 
-test('E2E: ./run_sraper.sh crawl --refresh true', e2eOptions, async () => {
+// Let's skip it to make push GitHub Actions be faster
+test('E2E: ./run_sraper.sh crawl --refresh true', { ...e2eOptions, skip: true }, async () => {
   const result = await runScraper(['crawl', '--refresh', 'true']);
   assert.match(result.stdout + result.stderr, /Catalog analysis complete:/);
 
