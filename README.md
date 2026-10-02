@@ -11,8 +11,10 @@ JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports sing
 Start with Docker
 
 ```bash
-./run_scraper.sh crawl --refresh false  # if false - use existing catalog; if true - crawl the MSI website and collect all products into a new catalog
-./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US  # collect data of a product
+# If false, use the existing catalog; if true, crawl the MSI website and collect all products into a new catalog
+./run_scraper.sh crawl --refresh false
+# Collect data for a product
+./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US
 ./run_scraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 ./run_scraper.sh search "Motherboards"
 ./run_scraper.sh serve      # scraper service with APIs
