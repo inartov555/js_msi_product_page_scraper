@@ -1,4 +1,4 @@
-# MSI Catalog Scraper
+## MSI Catalog Scraper
 
 JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports single-product scraping, full catalog crawling, local search, and product comparison.
 
@@ -11,7 +11,7 @@ JavaScript + Node.js + Playwright scraper for the MSI US Store. It supports sing
 Start with Docker
 
 ```bash
-./run_scraper.sh crawl --refresh false
+./run_scraper.sh crawl --refresh false  # if false - use existing catalog; if true - crawl the MSI website and collect all products into a new catalog
 ./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US  # collect data of a product
 ./run_scraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 ./run_scraper.sh search "Motherboards"
