@@ -12,8 +12,8 @@ Start with Docker
 
 ```bash
 ./run_scraper.sh crawl --refresh false
-./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US
-./run_scraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"  # collect data of a product
+./run_scraper.sh scrape https://us-store.msi.com/Desktops/Vision-ZS-9NVV-2080US  # collect data of a product
+./run_scraper.sh compare "MAG Z890 TOMAHAWK WIFI" "PRO Z890-P WIFI"
 ./run_scraper.sh search "Motherboards"
 ./run_scraper.sh serve      # scraper service with APIs
 ./run_scraper.sh test:unit  # only unit tests
